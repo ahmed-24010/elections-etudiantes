@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Global()
+@Module({ controllers: [AuditController], providers: [AuditService], exports: [AuditService] })
 export class AuditModule {}

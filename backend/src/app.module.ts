@@ -1,11 +1,16 @@
 import { randomUUID } from 'crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { AuditInterceptor } from './common/authz/audit.interceptor';
+import { AuthzModule } from './common/authz/authz.module';
+import { JwtAuthGuard } from './common/authz/jwt-auth.guard';
+import { PermissionGuard } from './common/authz/permission.guard';
+import { StepUpGuard } from './common/authz/step-up.guard';
 import { CandidatesModule } from './candidates/candidates.module';
 import { validateEnv } from './config/env.validation';
 import { ElectionsModule } from './elections/elections.module';
@@ -57,6 +62,7 @@ function hasModule(name: string): boolean {
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
+    AuthzModule,
     HealthModule,
     AuthModule,
     UsersModule,
@@ -72,6 +78,13 @@ function hasModule(name: string): boolean {
     AuditModule,
     NotificationsModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  // L'ORDRE COMPTE : débit → authentification → permission + portée → 2FA récente. Refus par défaut.
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PermissionGuard },
+    { provide: APP_GUARD, useClass: StepUpGuard },
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+  ],
 })
 export class AppModule {}
