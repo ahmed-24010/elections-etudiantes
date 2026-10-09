@@ -17,5 +17,46 @@
   "layout": {
     "student": "Espace étudiant (vide pour l'instant)",
     "admin": "Espace administration (vide pour l'instant)"
+  },
+  "common": { "loading": "Chargement…" },
+  "auth": {
+    "identifier": "E-mail ou téléphone",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "password": "Mot de passe",
+    "code": "Code à 6 chiffres",
+    "institution": "Institution",
+    "institutionPlaceholder": "Choisir une institution",
+    "logout": "Déconnexion",
+    "login": {
+      "title": "Connexion",
+      "submit": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "totpHint": "Saisissez le code affiché par votre application d'authentification."
+    },
+    "register": {
+      "title": "Inscription",
+      "submit": "Créer mon compte",
+      "haveAccount": "Déjà inscrit ?",
+      "emailOrPhone": "Indiquez au moins un e-mail ou un téléphone.",
+      "passwordHint": "{{min}} caractères minimum.",
+      "done": "Votre demande d'inscription a été enregistrée. Vous pouvez maintenant vous connecter."
+    },
+    "twoFactor": {
+      "title": "Activer la double authentification",
+      "intro": "Scannez ce QR code avec une application d'authentification (FreeOTP, Google Authenticator…), puis saisissez le code affiché.",
+      "qrAlt": "QR code de la double authentification",
+      "manual": "Ou saisissez cette clé manuellement :",
+      "submit": "Activer et continuer"
+    }
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "network": "Serveur injoignable.",
+    "tooMany": "Trop de tentatives. Patientez une minute.",
+    "invalidCredentials": "Identifiants incorrects.",
+    "invalidCode": "Code incorrect.",
+    "invalidInstitution": "Institution invalide.",
+    "sessionExpired": "Votre session a expiré. Reconnectez-vous."
   }
 }

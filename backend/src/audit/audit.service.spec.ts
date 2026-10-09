@@ -96,6 +96,9 @@ describe('AuditService — chaîne de hachage (02 §9)', () => {
     await Promise.all(Array.from({ length: 25 }, (_, i) => service.record(entry(i))));
     expect(prisma.auditLogs).toHaveLength(25);
     expect(new Set(prisma.auditLogs.map((r) => r.prevHash)).size).toBe(25); // aucune bifurcation
+    // MySQL accepte plusieurs NULL sous un index unique : aucune ligne, même la première, ne doit avoir prevHash NULL.
+    expect(prisma.auditLogs.every((r) => typeof r.prevHash === 'string' && r.prevHash.length === 64)).toBe(true);
+    expect(prisma.auditLogs.filter((r) => r.prevHash === GENESIS_HASH)).toHaveLength(1);
     expect(await service.verifyChain(4)).toEqual({ valid: true, checked: 25 });
   });
 
