@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
@@ -7,8 +8,10 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
+  // Derrière nginx, sans cela le rate limiting verrait l'IP du proxy pour tous les clients.
+  app.set('trust proxy', Number(process.env.TRUST_PROXY ?? 0));
   app.use(helmet());
   app.setGlobalPrefix('api/v1');
   app.enableCors({ origin: process.env.CORS_ORIGIN?.split(',') ?? false, credentials: true });

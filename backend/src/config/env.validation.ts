@@ -30,6 +30,10 @@ export class EnvironmentVariables {
   @IsOptional() @IsString()
   CORS_ORIGIN?: string;
 
+  // Nombre de proxys de confiance devant l'API (1 derrière nginx). 0 = lire l'IP de la connexion.
+  @IsInt()
+  TRUST_PROXY: number = 0;
+
   @IsIn(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
   LOG_LEVEL: string = 'info';
 

@@ -5,7 +5,7 @@
 **Version :** 1.0
 **Date :** 08/10/2026
 **Statut :** Proposition — à valider avant développement
-**Fichier associé :** `schema.prisma` (source de vérité technique)
+**Fichier associé :** `backend/prisma/schema.prisma` (source de vérité technique, unique : pas de copie dans `docs/`)
 **Base :** MySQL 8 (InnoDB, utf8mb4) + Prisma
 
 ---
@@ -359,7 +359,7 @@ Ces droits sont fixés par un script SQL versionné à côté des migrations Pri
 
 ## 11. Index et performance
 
-Les index principaux sont déclarés dans `schema.prisma`. Les plus importants :
+Les index principaux sont déclarés dans `backend/prisma/schema.prisma`. Les plus importants :
 
 | Index | Requête servie |
 |---|---|

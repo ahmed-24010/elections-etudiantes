@@ -28,6 +28,7 @@ Ce fichier liste toutes les décisions de conception validées. En cas de doute 
 | D-14 | 09/10/2026 | OCR | **Pas d'OCR au MVP**, vérification manuelle. POC comparatif en Phase 3 | Ne pas bloquer le MVP sur un composant incertain | 01 §2 |
 | D-15 | 09/10/2026 | Jeton de configuration 2FA | Un compte administratif **sans 2FA active** reçoit à la connexion un jeton de configuration, au lieu d'un jeton d'accès. Ce jeton permet **uniquement** d'activer la 2FA (rien d'autre), dure **10 minutes**, est à **usage unique**. Sa création et son utilisation sont écrites dans `audit_logs`. Implémentation au Sprint 2 | Rend la 2FA obligatoire (D-10) sans compte administrateur bloqué ni accès partiel à l'application | 03 §3, 07 Sprint 2 |
 | D-16 | 09/10/2026 | Bibliothèque UI (décision A-03) | **Bootstrap 5.3**, avec sa feuille RTL officielle pour l'arabe | Fournit le RTL nativement ; le plus simple pour un développeur seul | 01 §2, 07 Sprint 1 |
+| D-17 | 09/10/2026 | Stockage S3 local | **SeaweedFS 4.48** (service `s3` de docker-compose) remplace **MinIO** pour le développement. En production, tout service S3-compatible reste possible | L'image MinIO n'est plus disponible (Docker Hub : accès refusé ; Quay : non autorisé). SeaweedFS expose la même API S3, donc le code applicatif n'change pas | 01 §14, 07 Sprint 1 |
 
 ---
 

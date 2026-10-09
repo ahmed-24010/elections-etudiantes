@@ -1,3 +1,4 @@
 export const environment = {
-  apiUrl: 'http://localhost:3000/api/v1',
+  // URL relative : nginx (Docker) ou proxy.conf.json (ng serve) redirige /api vers le backend.
+  apiUrl: '/api/v1',
 };

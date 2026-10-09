@@ -22,8 +22,8 @@ Elle indique l'état de l'API et de la base.
 | Service | Adresse |
 |---|---|
 | Frontend | http://localhost:4200 |
-| API | http://localhost:3000/api/v1 (santé : `/health`) |
-| Swagger | http://localhost:3000/api/docs (hors production) |
+| API | http://localhost:4200/api/v1 via le frontend (santé : `/health`) ; accès direct : http://localhost:3000/api/v1 |
+| Swagger | http://localhost:4200/api/docs (hors production) |
 | MySQL | `127.0.0.1:3306` |
 | S3 (SeaweedFS) | `127.0.0.1:9000` |
 
@@ -34,7 +34,7 @@ Repartir d'une base vide : `docker compose down -v` puis `docker compose up -d -
 ```bash
 docker compose up -d db s3
 cd backend && npm ci && npx prisma generate && npm run start:dev   # lit DATABASE_URL (voir .env.example)
-cd frontend && npm ci && npm start
+cd frontend && npm ci && npm start   # proxy.conf.json redirige /api vers localhost:3000
 ```
 
 Les migrations sont appliquées par `prisma migrate deploy` avec `MIGRATE_DATABASE_URL` (voir `CLAUDE.md`).
