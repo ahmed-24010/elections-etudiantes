@@ -1,3 +1,14 @@
+// =====================================================================
+// Plateforme de gestion des élections étudiantes
+// schema.prisma — MySQL 8 — v1.0 (accompagne 02-DATABASE.md)
+// =====================================================================
+// Conventions :
+// - Identifiants : UUID v4 aléatoires (CHAR(36)). Jamais d'auto-incrément
+//   sur les tables liées au vote (voir 02-DATABASE.md §6).
+// - Toute ressource institutionnelle porte institutionId.
+// - Noms de tables en snake_case via @@map.
+// =====================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,175 +18,667 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------------------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------------------
+
 enum Role {
   SUPER_ADMIN
   INSTITUTION_ADMIN
-  ELECTION_COMMISSIONER
+  ELECTION_COMMITTEE
+  VERIFICATION_OFFICER
   STUDENT
 }
 
-enum VerificationStatus {
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+enum EnrollmentStatus {
   PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  NEEDS_REVIEW
   APPROVED
   REJECTED
+}
+
+enum FilePurpose {
+  REGISTRATION_DOCUMENT
+  CANDIDATE_PHOTO
+  CANDIDATE_PROGRAM
+  ELECTION_REPORT
 }
 
 enum ElectionStatus {
   DRAFT
   CANDIDACY_OPEN
+  CANDIDACY_CLOSED
   VOTING_OPEN
   VOTING_CLOSED
-  TALLIED
-  PUBLISHED
+  RESULTS_PUBLISHED
+  CANCELLED
 }
 
-enum CandidacyStatus {
-  SUBMITTED
+enum CandidateStatus {
+  PENDING
   APPROVED
   REJECTED
   WITHDRAWN
 }
 
-model Institution {
-  id        String   @id @default(uuid())
-  nameFr    String
-  nameAr    String
-  code      String   @unique
-  createdAt DateTime @default(now())
-
-  users     User[]
-  students  Student[]
-  elections Election[]
+enum AuditResult {
+  SUCCESS
+  FAILURE
+  DENIED
 }
+
+// ---------------------------------------------------------------------
+// 1. IDENTITÉ, AUTHENTIFICATION, RÔLES
+// ---------------------------------------------------------------------
 
 model User {
-  id               String      @id @default(uuid())
-  email            String      @unique
-  passwordHash     String
-  role             Role
-  institutionId    String?
-  locale           String      @default("fr")
-  isActive         Boolean     @default(true)
-  twoFactorSecret  String?     // à chiffrer au repos (voir docs/security.md)
-  twoFactorEnabled Boolean     @default(false)
-  createdAt        DateTime    @default(now())
+  id                 String     @id @default(uuid()) @db.Char(36)
+  email              String?    @unique @db.VarChar(191)
+  phone              String?    @unique @db.VarChar(32)
+  passwordHash       String     @db.VarChar(255)
+  status             UserStatus @default(ACTIVE)
+  twoFactorEnabled   Boolean    @default(false)
+  twoFactorSecretEnc String?    @db.VarChar(512) // chiffré côté application
+  lastLoginAt        DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
-  institution   Institution?    @relation(fields: [institutionId], references: [id])
-  student       Student?
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
+  student             Student?
+  roles               RoleAssignment[]       @relation("RoleUser")
+  grantedRoles        RoleAssignment[]       @relation("RoleGrantedBy")
+  refreshTokens       RefreshToken[]
+  uploadedFiles       StoredFile[]
+  reviewedEnrollments StudentEnrollment[]    @relation("EnrollmentReviewer")
+  reviewedDocuments   RegistrationDocument[] @relation("DocumentReviewer")
+  createdElections    Election[]             @relation("ElectionCreator")
+  reviewedCandidates  Candidate[]            @relation("CandidateReviewer")
+  generatedReports    ElectionReport[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
 
+  @@map("users")
+}
+
+// Un utilisateur peut avoir plusieurs rôles, chacun avec une portée :
+// - SUPER_ADMIN            : institutionId = null, electionId = null
+// - INSTITUTION_ADMIN      : institutionId requis
+// - VERIFICATION_OFFICER   : institutionId requis
+// - ELECTION_COMMITTEE     : institutionId + electionId requis
+// - STUDENT                : institutionId requis
+// Les règles de cohérence sont vérifiées par le service (MySQL ne gère
+// pas bien l'unicité avec des colonnes NULL).
+model RoleAssignment {
+  id            String    @id @default(uuid()) @db.Char(36)
+  userId        String    @db.Char(36)
+  role          Role
+  institutionId String?   @db.Char(36)
+  electionId    String?   @db.Char(36)
+  grantedById   String?   @db.Char(36)
+  createdAt     DateTime  @default(now())
+  revokedAt     DateTime?
+
+  user        User         @relation("RoleUser", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy   User?        @relation("RoleGrantedBy", fields: [grantedById], references: [id])
+  institution Institution? @relation(fields: [institutionId], references: [id])
+  election    Election?    @relation(fields: [electionId], references: [id])
+
+  @@index([userId, revokedAt])
   @@index([institutionId])
+  @@index([electionId])
+  @@map("role_assignments")
 }
 
-model Student {
-  id                 String             @id @default(uuid())
-  userId             String             @unique
-  institutionId      String
-  studentNumber      String
-  firstName          String
-  lastName           String
-  program            String?
-  level              String?
-  verificationStatus VerificationStatus @default(PENDING)
-  documentKey        String?            // clé objet S3 du justificatif
-  createdAt          DateTime           @default(now())
-
-  user        User         @relation(fields: [userId], references: [id])
-  institution Institution  @relation(fields: [institutionId], references: [id])
-  candidacies Candidacy[]
-  voteRecords VoteRecord[]
-
-  @@unique([institutionId, studentNumber])
-}
-
-model Election {
-  id            String         @id @default(uuid())
-  institutionId String
-  titleFr       String
-  titleAr       String
-  status        ElectionStatus @default(DRAFT)
-  eligibility   Json           // critères configurables, ex. {"levels":["L3"],"programs":[...]}
-  startsAt      DateTime
-  endsAt        DateTime
-  createdAt     DateTime       @default(now())
-
-  institution Institution  @relation(fields: [institutionId], references: [id])
-  candidacies Candidacy[]
-  voteRecords VoteRecord[]
-  ballots     Ballot[]
-
-  @@index([institutionId, status])
-}
-
-model Candidacy {
-  id         String          @id @default(uuid())
-  electionId String
-  studentId  String
-  status     CandidacyStatus @default(SUBMITTED)
-  programme  String?         @db.Text
-  createdAt  DateTime        @default(now())
-
-  election Election @relation(fields: [electionId], references: [id])
-  student  Student  @relation(fields: [studentId], references: [id])
-  ballots  Ballot[]
-
-  @@unique([electionId, studentId])
-}
-
-// ---------------------------------------------------------------
-// SECRET DU VOTE : VoteRecord et Ballot sont volontairement SANS
-// relation ni clé commune vers l'étudiant. Voir docs/voting-flow.md.
-// ---------------------------------------------------------------
-
-// Émargement : qui a voté (jamais pour qui). Unicité = pas de double vote.
-model VoteRecord {
-  id         String   @id @default(uuid())
-  electionId String
-  studentId  String
-  votedAt    DateTime @default(now())
-
-  election Election @relation(fields: [electionId], references: [id])
-  student  Student  @relation(fields: [studentId], references: [id])
-
-  @@unique([electionId, studentId])
-}
-
-// Urne : pour qui (jamais par qui). Aucun studentId, aucun horodatage précis.
-model Ballot {
-  id          String  @id @default(uuid())
-  electionId  String
-  candidacyId String? // null = vote blanc
-
-  election  Election   @relation(fields: [electionId], references: [id])
-  candidacy Candidacy? @relation(fields: [candidacyId], references: [id])
-
-  @@index([electionId, candidacyId])
-}
-
+// Seul le hash du refresh token est stocké. familyId permet de révoquer
+// toute la chaîne en cas de réutilisation d'un token déjà consommé.
 model RefreshToken {
-  id        String    @id @default(uuid())
-  userId    String
-  tokenHash String    @unique // sha256 du jeton ; le jeton brut n'est jamais stocké
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
+  id           String    @id @default(uuid()) @db.Char(36)
+  userId       String    @db.Char(36)
+  tokenHash    String    @unique @db.Char(64)
+  familyId     String    @db.Char(36)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @db.Char(36)
+  userAgent    String?   @db.VarChar(255)
+  createdAt    DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
 }
 
-model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  action    String
-  entity    String?
-  entityId  String?
-  metadata  Json?
+// ---------------------------------------------------------------------
+// 2. STRUCTURE ACADÉMIQUE (multi-institution)
+// ---------------------------------------------------------------------
+
+model Institution {
+  id        String   @id @default(uuid()) @db.Char(36)
+  code      String   @unique @db.VarChar(32)
+  name      String   @db.VarChar(255)
+  nameAr    String?  @db.VarChar(255)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user User? @relation(fields: [userId], references: [id])
+  faculties       Faculty[]
+  programs        Program[]
+  levels          Level[]
+  academicYears   AcademicYear[]
+  groups          Group[]
+  students        Student[]
+  enrollments     StudentEnrollment[]
+  elections       Election[]
+  roleAssignments RoleAssignment[]
+  auditLogs       AuditLog[]
 
-  @@index([action, createdAt])
+  @@map("institutions")
+}
+
+model Faculty {
+  id            String  @id @default(uuid()) @db.Char(36)
+  institutionId String  @db.Char(36)
+  code          String  @db.VarChar(32)
+  name          String  @db.VarChar(255)
+  nameAr        String? @db.VarChar(255)
+
+  institution      Institution         @relation(fields: [institutionId], references: [id])
+  programs         Program[]
+  enrollments      StudentEnrollment[]
+  eligibilityRules EligibilityRule[]
+
+  @@unique([institutionId, code])
+  @@map("faculties")
+}
+
+// Filière / spécialité (ex. Droit privé)
+model Program {
+  id            String  @id @default(uuid()) @db.Char(36)
+  institutionId String  @db.Char(36)
+  facultyId     String  @db.Char(36)
+  code          String  @db.VarChar(32)
+  name          String  @db.VarChar(255)
+  nameAr        String? @db.VarChar(255)
+
+  institution      Institution         @relation(fields: [institutionId], references: [id])
+  faculty          Faculty             @relation(fields: [facultyId], references: [id])
+  groups           Group[]
+  enrollments      StudentEnrollment[]
+  eligibilityRules EligibilityRule[]
+
+  @@unique([institutionId, code])
+  @@index([facultyId])
+  @@map("programs")
+}
+
+// Niveau d'études (L1, L2, L3, M1, M2…), propre à chaque institution
+model Level {
+  id            String  @id @default(uuid()) @db.Char(36)
+  institutionId String  @db.Char(36)
+  code          String  @db.VarChar(16)
+  name          String  @db.VarChar(100)
+  nameAr        String? @db.VarChar(100)
+  rank          Int // ordre d'affichage / comparaison
+
+  institution      Institution         @relation(fields: [institutionId], references: [id])
+  groups           Group[]
+  enrollments      StudentEnrollment[]
+  eligibilityRules EligibilityRule[]
+
+  @@unique([institutionId, code])
+  @@map("levels")
+}
+
+model AcademicYear {
+  id            String   @id @default(uuid()) @db.Char(36)
+  institutionId String   @db.Char(36)
+  label         String   @db.VarChar(16) // "2026-2027"
+  startsOn      DateTime @db.Date
+  endsOn        DateTime @db.Date
+  isCurrent     Boolean  @default(false)
+
+  institution Institution         @relation(fields: [institutionId], references: [id])
+  groups      Group[]
+  enrollments StudentEnrollment[]
+  elections   Election[]
+
+  @@unique([institutionId, label])
+  @@map("academic_years")
+}
+
+// Un groupe n'existe que pour une filière + un niveau + une année
+model Group {
+  id             String @id @default(uuid()) @db.Char(36)
+  institutionId  String @db.Char(36)
+  programId      String @db.Char(36)
+  levelId        String @db.Char(36)
+  academicYearId String @db.Char(36)
+  name           String @db.VarChar(32) // "A", "B"…
+
+  institution      Institution         @relation(fields: [institutionId], references: [id])
+  program          Program             @relation(fields: [programId], references: [id])
+  level            Level               @relation(fields: [levelId], references: [id])
+  academicYear     AcademicYear        @relation(fields: [academicYearId], references: [id])
+  enrollments      StudentEnrollment[]
+  eligibilityRules EligibilityRule[]
+
+  @@unique([programId, levelId, academicYearId, name])
+  @@map("study_groups")
+}
+
+// ---------------------------------------------------------------------
+// 3. ÉTUDIANTS ET VÉRIFICATION
+// ---------------------------------------------------------------------
+
+// Identité stable de l'étudiant (ne change pas d'une année à l'autre)
+model Student {
+  id            String   @id @default(uuid()) @db.Char(36)
+  userId        String   @unique @db.Char(36)
+  institutionId String   @db.Char(36)
+  studentNumber String   @db.VarChar(64)
+  firstName     String   @db.VarChar(100)
+  lastName      String   @db.VarChar(100)
+  fullNameAr    String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user             User                @relation(fields: [userId], references: [id])
+  institution      Institution         @relation(fields: [institutionId], references: [id])
+  enrollments      StudentEnrollment[]
+  voterRollEntries VoterRollEntry[]
+  candidacies      Candidate[]
+
+  @@unique([institutionId, studentNumber])
+  @@map("students")
+}
+
+// Inscription pour UNE année universitaire. C'est elle qui est vérifiée
+// et c'est elle que le moteur d'éligibilité utilise.
+model StudentEnrollment {
+  id              String           @id @default(uuid()) @db.Char(36)
+  studentId       String           @db.Char(36)
+  institutionId   String           @db.Char(36)
+  academicYearId  String           @db.Char(36)
+  facultyId       String           @db.Char(36)
+  programId       String           @db.Char(36)
+  levelId         String           @db.Char(36)
+  groupId         String?          @db.Char(36)
+  status          EnrollmentStatus @default(PENDING)
+  reviewedById    String?          @db.Char(36)
+  reviewedAt      DateTime?
+  rejectionReason String?          @db.VarChar(500)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  student      Student      @relation(fields: [studentId], references: [id])
+  institution  Institution  @relation(fields: [institutionId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  faculty      Faculty      @relation(fields: [facultyId], references: [id])
+  program      Program      @relation(fields: [programId], references: [id])
+  level        Level        @relation(fields: [levelId], references: [id])
+  group        Group?       @relation(fields: [groupId], references: [id])
+  reviewedBy   User?        @relation("EnrollmentReviewer", fields: [reviewedById], references: [id])
+
+  documents        RegistrationDocument[]
+  voterRollEntries VoterRollEntry[]
+
+  @@unique([studentId, academicYearId])
+  @@index([institutionId, academicYearId, status])
+  @@index([academicYearId, programId, levelId, groupId, status])
+  @@map("student_enrollments")
+}
+
+// Métadonnées des fichiers. Le contenu est dans le stockage S3 privé.
+model StoredFile {
+  id           String      @id @default(uuid()) @db.Char(36)
+  purpose      FilePurpose
+  storageKey   String      @unique @db.VarChar(512) // généré par le serveur
+  originalName String      @db.VarChar(255)
+  mimeType     String      @db.VarChar(100)
+  sizeBytes    Int
+  sha256       String      @db.Char(64)
+  uploadedById String?     @db.Char(36)
+  createdAt    DateTime    @default(now())
+  deletedAt    DateTime?
+
+  uploadedBy           User?                 @relation(fields: [uploadedById], references: [id])
+  registrationDocument RegistrationDocument?
+  candidatePhotoOf     Candidate?            @relation("CandidatePhoto")
+  candidateProgramOf   Candidate?            @relation("CandidateProgramFile")
+  report               ElectionReport?
+
+  @@map("stored_files")
+}
+
+// Attestation d'inscription déposée. ocrExtracted reste vide au MVP
+// (vérification manuelle) et sera rempli en Phase 2.
+model RegistrationDocument {
+  id            String         @id @default(uuid()) @db.Char(36)
+  enrollmentId  String         @db.Char(36)
+  fileId        String         @unique @db.Char(36)
+  status        DocumentStatus @default(UPLOADED)
+  ocrEngine     String?        @db.VarChar(64)
+  ocrExtracted  Json?
+  ocrConfidence Float?
+  reviewedById  String?        @db.Char(36)
+  reviewedAt    DateTime?
+  reviewNote    String?        @db.VarChar(500)
+  createdAt     DateTime       @default(now())
+
+  enrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  file       StoredFile        @relation(fields: [fileId], references: [id])
+  reviewedBy User?             @relation("DocumentReviewer", fields: [reviewedById], references: [id])
+
+  @@index([enrollmentId])
+  @@index([status])
+  @@map("registration_documents")
+}
+
+// ---------------------------------------------------------------------
+// 4. ÉLECTIONS, ÉLIGIBILITÉ, CANDIDATURES
+// ---------------------------------------------------------------------
+
+model Election {
+  id                String         @id @default(uuid()) @db.Char(36)
+  institutionId     String         @db.Char(36)
+  academicYearId    String         @db.Char(36)
+  title             String         @db.VarChar(255)
+  titleAr           String?        @db.VarChar(255)
+  description       String?        @db.Text
+  status            ElectionStatus @default(DRAFT)
+  candidacyStartsAt DateTime?
+  candidacyEndsAt   DateTime?
+  votingStartsAt    DateTime
+  votingEndsAt      DateTime
+  voterRollFrozenAt DateTime? // renseigné à l'ouverture du vote
+  // Second tour (décision D-01) : nouvelle élection limitée aux ex-aequo
+  parentElectionId  String?        @db.Char(36)
+  round             Int            @default(1)
+  createdById       String         @db.Char(36)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  institution  Institution  @relation(fields: [institutionId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  createdBy    User         @relation("ElectionCreator", fields: [createdById], references: [id])
+  parent       Election?    @relation("ElectionRounds", fields: [parentElectionId], references: [id])
+  nextRounds   Election[]   @relation("ElectionRounds")
+
+  rules          EligibilityRule[]
+  positions       Position[]
+  candidates      Candidate[]
+  voterRoll       VoterRollEntry[]
+  ballots         Ballot[]
+  tally           ElectionTally?
+  results         PositionResult[]
+  reports         ElectionReport[]
+  roleAssignments RoleAssignment[]
+
+  @@index([institutionId, status])
+  @@index([status, votingEndsAt])
+  @@index([parentElectionId])
+  @@map("elections")
+}
+
+// Une règle = ET entre ses critères non nuls.
+// Plusieurs règles pour une même élection = OU.
+// Une règle sans aucun critère = toute l'institution (année de l'élection).
+model EligibilityRule {
+  id         String   @id @default(uuid()) @db.Char(36)
+  electionId String   @db.Char(36)
+  facultyId  String?  @db.Char(36)
+  programId  String?  @db.Char(36)
+  levelId    String?  @db.Char(36)
+  groupId    String?  @db.Char(36)
+  createdAt  DateTime @default(now())
+
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  faculty  Faculty? @relation(fields: [facultyId], references: [id])
+  program  Program? @relation(fields: [programId], references: [id])
+  level    Level?   @relation(fields: [levelId], references: [id])
+  group    Group?   @relation(fields: [groupId], references: [id])
+
+  @@index([electionId])
+  @@map("eligibility_rules")
+}
+
+// Poste à pourvoir (Président, Vice-président…)
+model Position {
+  id           String  @id @default(uuid()) @db.Char(36)
+  electionId   String  @db.Char(36)
+  title        String  @db.VarChar(191)
+  titleAr      String? @db.VarChar(191)
+  seats        Int     @default(1) // nombre d'élus
+  maxChoices   Int     @default(1) // nombre max de choix par bulletin
+  allowBlank   Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  election   Election         @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidates Candidate[]
+  choices    BallotChoice[]
+  results    PositionResult[]
+
+  @@unique([electionId, title])
+  @@map("positions")
+}
+
+model Candidate {
+  id              String          @id @default(uuid()) @db.Char(36)
+  electionId      String          @db.Char(36)
+  positionId      String          @db.Char(36)
+  studentId       String          @db.Char(36)
+  status          CandidateStatus @default(PENDING)
+  statement       String?         @db.Text // programme électoral (texte)
+  photoFileId     String?         @unique @db.Char(36)
+  programFileId   String?         @unique @db.Char(36)
+  reviewedById    String?         @db.Char(36)
+  reviewedAt      DateTime?
+  rejectionReason String?         @db.VarChar(500)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  election    Election    @relation(fields: [electionId], references: [id])
+  position    Position    @relation(fields: [positionId], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id])
+  photoFile   StoredFile? @relation("CandidatePhoto", fields: [photoFileId], references: [id])
+  programFile StoredFile? @relation("CandidateProgramFile", fields: [programFileId], references: [id])
+  reviewedBy  User?       @relation("CandidateReviewer", fields: [reviewedById], references: [id])
+
+  choices BallotChoice[]
+  results PositionResult[]
+
+  // Décision D-05 : un étudiant = un seul poste par élection
+  @@unique([electionId, studentId])
+  @@index([positionId])
+  @@index([electionId, status])
+  @@map("candidates")
+}
+
+// ---------------------------------------------------------------------
+// 5. VOTE — DOMAINE A : IDENTITÉ (qui a le droit / qui a voté)
+// ---------------------------------------------------------------------
+
+// Liste électorale figée à l'ouverture du vote.
+model VoterRollEntry {
+  electionId   String   @db.Char(36)
+  studentId    String   @db.Char(36)
+  enrollmentId String   @db.Char(36)
+  addedAt      DateTime @default(now())
+
+  election      Election             @relation(fields: [electionId], references: [id])
+  student       Student              @relation(fields: [studentId], references: [id])
+  enrollment    StudentEnrollment    @relation(fields: [enrollmentId], references: [id])
+  participation VotingParticipation?
+
+  @@id([electionId, studentId])
+  @@index([studentId])
+  @@map("voter_roll")
+}
+
+// "Cet étudiant a voté". La clé primaire composite garantit le vote
+// unique AU NIVEAU DE LA BASE. La FK vers voter_roll garantit que seul
+// un électeur inscrit peut voter. Ne contient AUCUNE info sur le choix.
+model VotingParticipation {
+  electionId String   @db.Char(36)
+  studentId  String   @db.Char(36)
+  votedAt    DateTime @default(now())
+
+  rollEntry VoterRollEntry @relation(fields: [electionId, studentId], references: [electionId, studentId])
+
+  @@id([electionId, studentId])
+  @@map("voting_participations")
+}
+
+// ---------------------------------------------------------------------
+// 6. VOTE — DOMAINE B : URNE ANONYME
+// ---------------------------------------------------------------------
+// RÈGLES STRICTES (voir 02-DATABASE.md §6) :
+// - aucune colonne studentId / userId / IP / user-agent ;
+// - aucun horodatage ;
+// - identifiants UUID v4 aléatoires (jamais d'auto-incrément) ;
+// - aucune relation, directe ou indirecte, vers voting_participations.
+
+model Ballot {
+  id         String @id @default(uuid()) @db.Char(36)
+  electionId String @db.Char(36)
+
+  election Election       @relation(fields: [electionId], references: [id])
+  choices  BallotChoice[]
+
+  @@index([electionId])
+  @@map("ballots")
+}
+
+// candidateId NULL = vote blanc pour ce poste
+model BallotChoice {
+  id          String  @id @default(uuid()) @db.Char(36)
+  ballotId    String  @db.Char(36)
+  positionId  String  @db.Char(36)
+  candidateId String? @db.Char(36)
+
+  ballot    Ballot     @relation(fields: [ballotId], references: [id])
+  position  Position   @relation(fields: [positionId], references: [id])
+  candidate Candidate? @relation(fields: [candidateId], references: [id])
+
+  @@index([ballotId])
+  @@index([positionId, candidateId])
+  @@map("ballot_choices")
+}
+
+// ---------------------------------------------------------------------
+// 7. RÉSULTATS ET PROCÈS-VERBAUX
+// ---------------------------------------------------------------------
+
+// Calculé une seule fois à la clôture, puis figé.
+model ElectionTally {
+  electionId       String   @id @db.Char(36)
+  eligibleCount    Int // lignes voter_roll
+  participantCount Int // lignes voting_participations
+  ballotCount      Int // lignes ballots
+  integrityOk      Boolean // participantCount == ballotCount
+  ballotsDigest    String   @db.Char(64) // SHA-256 de l'urne triée
+  computedAt       DateTime @default(now())
+
+  election Election @relation(fields: [electionId], references: [id])
+
+  @@map("election_tallies")
+}
+
+// candidateId NULL = ligne "votes blancs" du poste
+model PositionResult {
+  id          String  @id @default(uuid()) @db.Char(36)
+  electionId  String  @db.Char(36)
+  positionId  String  @db.Char(36)
+  candidateId String? @db.Char(36)
+  votes       Int
+  rank        Int?
+  isWinner    Boolean @default(false)
+
+  election  Election   @relation(fields: [electionId], references: [id])
+  position  Position   @relation(fields: [positionId], references: [id])
+  candidate Candidate? @relation(fields: [candidateId], references: [id])
+
+  @@index([electionId])
+  @@index([positionId])
+  @@map("position_results")
+}
+
+model ElectionReport {
+  id               String    @id @default(uuid()) @db.Char(36)
+  electionId       String    @db.Char(36)
+  fileId           String    @unique @db.Char(36)
+  verificationCode String    @unique @db.VarChar(64) // contenu du QR
+  sha256           String    @db.Char(64) // hash du PDF
+  generatedById    String    @db.Char(36)
+  generatedAt      DateTime  @default(now())
+  revokedAt        DateTime?
+
+  election    Election   @relation(fields: [electionId], references: [id])
+  file        StoredFile @relation(fields: [fileId], references: [id])
+  generatedBy User       @relation(fields: [generatedById], references: [id])
+
+  @@index([electionId])
+  @@map("election_reports")
+}
+
+// ---------------------------------------------------------------------
+// 8. AUDIT ET NOTIFICATIONS
+// ---------------------------------------------------------------------
+
+// Journal en ajout seul. Chaque ligne contient le hash de la précédente
+// (chaîne de hachage) : toute modification ou suppression devient
+// détectable. L'utilisateur MySQL de l'application n'a que INSERT/SELECT.
+// Ne JAMAIS y écrire un choix de vote.
+model AuditLog {
+  id            BigInt      @id @default(autoincrement())
+  actorId       String?     @db.Char(36)
+  actorRole     Role?
+  institutionId String?     @db.Char(36)
+  action        String      @db.VarChar(64) // ex. ELECTION_OPENED
+  resourceType  String      @db.VarChar(64)
+  resourceId    String?     @db.VarChar(64)
+  result        AuditResult
+  ipHash        String?     @db.Char(64)
+  requestId     String?     @db.VarChar(64)
+  metadata      Json?
+  prevHash      String?     @db.Char(64)
+  hash          String      @db.Char(64)
+  createdAt     DateTime    @default(now()) @db.DateTime(3)
+
+  actor       User?        @relation(fields: [actorId], references: [id])
+  institution Institution? @relation(fields: [institutionId], references: [id])
+
+  @@index([institutionId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Char(36)
+  userId    String    @db.Char(36)
+  type      String    @db.VarChar(64)
+  title     String    @db.VarChar(255)
+  body      String    @db.Text
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
 }
