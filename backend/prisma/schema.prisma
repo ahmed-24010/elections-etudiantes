@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  INSTITUTION_ADMIN
+  ELECTION_COMMISSIONER
+  STUDENT
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ElectionStatus {
+  DRAFT
+  CANDIDACY_OPEN
+  VOTING_OPEN
+  VOTING_CLOSED
+  TALLIED
+  PUBLISHED
+}
+
+enum CandidacyStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model Institution {
+  id        String   @id @default(uuid())
+  nameFr    String
+  nameAr    String
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  users     User[]
+  students  Student[]
+  elections Election[]
+}
+
+model User {
+  id               String      @id @default(uuid())
+  email            String      @unique
+  passwordHash     String
+  role             Role
+  institutionId    String?
+  locale           String      @default("fr")
+  isActive         Boolean     @default(true)
+  twoFactorSecret  String?     // à chiffrer au repos (voir docs/security.md)
+  twoFactorEnabled Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+
+  institution   Institution?    @relation(fields: [institutionId], references: [id])
+  student       Student?
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([institutionId])
+}
+
+model Student {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  institutionId      String
+  studentNumber      String
+  firstName          String
+  lastName           String
+  program            String?
+  level              String?
+  verificationStatus VerificationStatus @default(PENDING)
+  documentKey        String?            // clé objet S3 du justificatif
+  createdAt          DateTime           @default(now())
+
+  user        User         @relation(fields: [userId], references: [id])
+  institution Institution  @relation(fields: [institutionId], references: [id])
+  candidacies Candidacy[]
+  voteRecords VoteRecord[]
+
+  @@unique([institutionId, studentNumber])
+}
+
+model Election {
+  id            String         @id @default(uuid())
+  institutionId String
+  titleFr       String
+  titleAr       String
+  status        ElectionStatus @default(DRAFT)
+  eligibility   Json           // critères configurables, ex. {"levels":["L3"],"programs":[...]}
+  startsAt      DateTime
+  endsAt        DateTime
+  createdAt     DateTime       @default(now())
+
+  institution Institution  @relation(fields: [institutionId], references: [id])
+  candidacies Candidacy[]
+  voteRecords VoteRecord[]
+  ballots     Ballot[]
+
+  @@index([institutionId, status])
+}
+
+model Candidacy {
+  id         String          @id @default(uuid())
+  electionId String
+  studentId  String
+  status     CandidacyStatus @default(SUBMITTED)
+  programme  String?         @db.Text
+  createdAt  DateTime        @default(now())
+
+  election Election @relation(fields: [electionId], references: [id])
+  student  Student  @relation(fields: [studentId], references: [id])
+  ballots  Ballot[]
+
+  @@unique([electionId, studentId])
+}
+
+// ---------------------------------------------------------------
+// SECRET DU VOTE : VoteRecord et Ballot sont volontairement SANS
+// relation ni clé commune vers l'étudiant. Voir docs/voting-flow.md.
+// ---------------------------------------------------------------
+
+// Émargement : qui a voté (jamais pour qui). Unicité = pas de double vote.
+model VoteRecord {
+  id         String   @id @default(uuid())
+  electionId String
+  studentId  String
+  votedAt    DateTime @default(now())
+
+  election Election @relation(fields: [electionId], references: [id])
+  student  Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([electionId, studentId])
+}
+
+// Urne : pour qui (jamais par qui). Aucun studentId, aucun horodatage précis.
+model Ballot {
+  id          String  @id @default(uuid())
+  electionId  String
+  candidacyId String? // null = vote blanc
+
+  election  Election   @relation(fields: [electionId], references: [id])
+  candidacy Candidacy? @relation(fields: [candidacyId], references: [id])
+
+  @@index([electionId, candidacyId])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique // sha256 du jeton ; le jeton brut n'est jamais stocké
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([action, createdAt])
+}

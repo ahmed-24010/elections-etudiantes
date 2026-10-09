@@ -1,0 +1,13 @@
+<header>
+  <a routerLink="/">{{ i18n.t('app.title') }}</a>
+  <nav>
+    <button type="button" (click)="i18n.set('fr')" [attr.aria-pressed]="i18n.locale() === 'fr'">FR</button>
+    <button type="button" (click)="i18n.set('ar')" [attr.aria-pressed]="i18n.locale() === 'ar'">العربية</button>
+    @if (auth.isAuthenticated()) {
+      <button type="button" (click)="auth.logout()">{{ i18n.t('nav.logout') }}</button>
+    } @else {
+      <a routerLink="/login">{{ i18n.t('nav.login') }}</a>
+    }
+  </nav>
+</header>
+<main><router-outlet /></main>

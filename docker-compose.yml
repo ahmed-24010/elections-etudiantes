@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes: [db_data:/var/lib/mysql]
+    ports: ["127.0.0.1:3306:3306"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes: [minio_data:/data]
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      S3_ENDPOINT: http://minio:9000
+    depends_on:
+      db: { condition: service_healthy }
+    ports: ["3000:3000"]
+
+  frontend:
+    build: ./frontend
+    depends_on: [backend]
+    ports: ["4200:80"]
+
+volumes:
+  db_data:
+  minio_data:
