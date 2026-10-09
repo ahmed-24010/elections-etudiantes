@@ -72,7 +72,12 @@ erDiagram
 |---|---|---|
 | `users` | Compte de connexion (étudiant ou admin) | `email` unique, `phone` unique, mot de passe hashé |
 | `role_assignments` | Rôle + portée (institution, élection) | Plusieurs rôles par utilisateur, révocables (`revokedAt`) |
-| `refresh_tokens` | Sessions | Seul le **hash** du token est stocké ; `familyId` pour révoquer une chaîne compromise |
+| `refresh_tokens` | Sessions | Seul le **hash** du token est stocké ; `familyId` pour révoquer une chaîne compromise ; `twoFactorVerifiedAt` = dernière 2FA de la session (step-up < 10 min, D-18) |
+
+Champs d'authentification ajoutés au Sprint 2 (D-15, D-18) :
+
+- `users.setupTokenJti` : identifiant (`jti`) du seul jeton de configuration 2FA valide pour ce compte. Posé à la connexion d'un administrateur sans 2FA, effacé à l'activation de la 2FA : le jeton est donc à usage unique, et un nouveau jeton invalide le précédent ;
+- `refresh_tokens.twoFactorVerifiedAt` : date de la dernière vérification TOTP de la session ; recopiée à chaque rotation du refresh token ; lue par le `StepUpGuard`.
 
 Portée des rôles :
 
@@ -328,6 +333,7 @@ Protections :
 
 - **ajout seul** : l'utilisateur MySQL de l'application n'a que `INSERT` et `SELECT` sur cette table ;
 - **chaîne de hachage** : chaque ligne contient `hash = SHA-256(prevHash + contenu)`. Supprimer ou modifier une ligne casse la chaîne ;
+- **pas de bifurcation** : `prevHash` est unique (D-19). La première ligne a pour `prevHash` 64 zéros (jamais NULL). Deux écritures concurrentes ne peuvent pas prendre la même place : la perdante relit le dernier hash et réessaie. Aucun verrou ni droit `UPDATE` n'est nécessaire ;
 - **jamais** de choix de vote, même sous forme de métadonnée. Le vote lui-même n'est **pas** audité nominativement : seule la participation existe, dans `voting_participations`.
 
 Ici l'auto-incrément est volontaire : l'ordre des événements administratifs doit être visible.
