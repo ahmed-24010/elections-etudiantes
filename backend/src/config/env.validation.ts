@@ -30,6 +30,9 @@ export class EnvironmentVariables {
   @IsOptional() @IsString()
   CORS_ORIGIN?: string;
 
+  @IsIn(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+  LOG_LEVEL: string = 'info';
+
   @IsOptional() @IsString() S3_ENDPOINT?: string;
   @IsOptional() @IsString() S3_REGION?: string;
   @IsOptional() @IsString() S3_BUCKET?: string;
