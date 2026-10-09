@@ -1,0 +1,21 @@
+{
+  "app": { "title": "Élections étudiantes" },
+  "nav": { "home": "Accueil", "student": "Espace étudiant", "admin": "Administration", "language": "Langue" },
+  "home": {
+    "title": "Plateforme des élections étudiantes",
+    "subtitle": "Squelette du projet : aucune fonctionnalité métier pour l'instant."
+  },
+  "health": {
+    "title": "État du système",
+    "api": "API",
+    "database": "Base de données",
+    "ok": "OK",
+    "down": "Indisponible",
+    "checking": "Vérification en cours…",
+    "unreachable": "Serveur injoignable"
+  },
+  "layout": {
+    "student": "Espace étudiant (vide pour l'instant)",
+    "admin": "Espace administration (vide pour l'instant)"
+  }
+}

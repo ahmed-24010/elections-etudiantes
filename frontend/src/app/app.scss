@@ -1,5 +1,0 @@
-// Propriétés logiques (inline/block) partout : le même CSS fonctionne en LTR et en RTL.
-header { display: flex; justify-content: space-between; align-items: center; padding-inline: 1rem; padding-block: .75rem; border-block-end: 1px solid #ddd; }
-nav { display: flex; gap: .5rem; align-items: center; }
-button[aria-pressed='true'] { font-weight: 700; }
-main { padding: 1rem; }

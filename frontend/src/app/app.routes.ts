@@ -1,8 +1,16 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { AdminLayout } from './layout/admin/admin-layout';
+import { PublicLayout } from './layout/public/public-layout';
+import { StudentLayout } from './layout/student/student-layout';
 
+// Les guards d'authentification arrivent au Sprint 2 ; les layouts student/admin sont vides.
 export const routes: Routes = [
-  { path: 'login', loadComponent: () => import('./pages/login').then((m) => m.Login) },
-  { path: '', canActivate: [authGuard()], loadComponent: () => import('./pages/home').then((m) => m.Home) },
+  {
+    path: '',
+    component: PublicLayout,
+    children: [{ path: '', pathMatch: 'full', loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage) }],
+  },
+  { path: 'student', component: StudentLayout },
+  { path: 'admin', component: AdminLayout },
   { path: '**', redirectTo: '' },
 ];

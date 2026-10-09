@@ -15,7 +15,7 @@ La conception complète est dans `docs/`. **Lire le document concerné avant de 
 | `docs/03-ROLES-PERMISSIONS.md` | Matrice des permissions, guards | Tout endpoint |
 | `docs/07-MVP-ROADMAP.md` | Sprints, tâches, définition de terminé | Planifier le travail |
 
-`backend/prisma/schema.prisma` est la source de vérité du modèle de données.
+`backend/prisma/schema.prisma` est la **seule** source de vérité du modèle de données (aucune copie dans `docs/`).
 
 Si une demande contredit ces documents : **s'arrêter et signaler la contradiction**, ne pas choisir seul.
 
@@ -31,12 +31,22 @@ docker-compose.yml
 ## Commandes
 
 ```bash
-docker compose up -d                       # tout lancer
-cd backend && npm run test                 # tests unitaires
-cd backend && npm run test:e2e             # tests e2e (base de test)
-cd backend && npx prisma migrate dev       # nouvelle migration
-cd frontend && npm run test && npm run lint
+cp .env.example .env                       # une fois, puis remplacer les valeurs "change-me" et les secrets JWT
+docker compose up -d --build               # tout lancer (db, s3, backend, frontend)
+docker compose down -v                     # tout arrêter ET effacer les volumes (base vide au prochain up)
+cd backend && npm run lint && npm run test # lint + tests unitaires
+cd backend && npm run test:e2e             # tests e2e (Prisma simulé tant qu'aucun test ne cible la vraie base)
+cd backend && npm run build
+cd backend && npx prisma validate          # avec DATABASE_URL défini
+cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
+cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
+cd frontend && npm run build
 ```
+
+- Adresses : frontend http://localhost:4200 ; l'API passe par le frontend (nginx puis `proxy.conf.json` pour `ng serve`) : http://localhost:4200/api/v1, Swagger http://localhost:4200/api/docs, santé `GET /api/v1/health`. Le frontend n'appelle jamais une URL absolue.
+- Les migrations Docker sont appliquées au démarrage du backend avec le compte `app_migrate` ; l'application tourne avec `app_runtime` (droits réduits, 02 §10).
+- `prisma migrate dev` a besoin de créer une base « shadow » : le compte `app_migrate` n'en a pas le droit. Utiliser une base locale avec un compte root, ou écrire la migration à la main puis `prisma migrate deploy`.
+- Stockage S3 local : SeaweedFS (le service s'appelle `s3`), car MinIO n'est plus distribué en image prête à l'emploi.
 
 Mettre cette section à jour si les commandes changent.
 

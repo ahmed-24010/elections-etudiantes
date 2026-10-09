@@ -46,7 +46,7 @@
 ### Backend
 - [ ] Projet NestJS dans `backend/`, structure de dossiers de 01 §6
 - [ ] Configuration par variables d'environnement (`@nestjs/config`), validation au démarrage
-- [ ] Prisma + `schema.prisma` de 02, première migration `init`
+- [ ] Prisma + `backend/prisma/schema.prisma` (modèle de 02), première migration `init`
 - [ ] Script SQL des comptes MySQL (`app_migrate`, `app_runtime`, `app_readonly`) — 02 §10
 - [ ] Endpoint `GET /api/v1/health` (API + base)
 - [ ] Swagger sur `/api/docs` (désactivé en production)

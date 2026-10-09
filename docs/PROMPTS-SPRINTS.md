@@ -11,7 +11,7 @@ Après chaque session : vérifiez la démo vous-même, relisez le résumé de l'
 2. Y déposer :
    - `CLAUDE.md` à la racine ;
    - `docs/00-DECISIONS.md`, `01-ARCHITECTURE.md`, `02-DATABASE.md`, `03-ROLES-PERMISSIONS.md`, `07-MVP-ROADMAP.md` ;
-   - `schema.prisma` dans `docs/` (l'agent le déplacera dans `backend/prisma/`).
+   - `schema.prisma` dans `docs/` (déplacé dans `backend/prisma/` au Sprint 1 : c'est désormais la seule copie).
 3. Ouvrir une session de l'agent sur ce dépôt.
 
 ---
@@ -24,7 +24,7 @@ Lis CLAUDE.md, puis docs/01-ARCHITECTURE.md, docs/00-DECISIONS.md et la section
 
 Réalise le Sprint 1 entièrement, sans aucune fonctionnalité métier :
 - backend NestJS dans backend/ avec la structure de dossiers de 01 §6
-  (modules vides), config validée au démarrage, Prisma avec docs/schema.prisma
+  (modules vides), config validée au démarrage, Prisma avec le schema.prisma
   déplacé dans backend/prisma/, migration "init", GET /api/v1/health
   (API + base), Swagger sur /api/docs hors production, nestjs-pino avec
   request ID, filtre d'erreurs global, ValidationPipe global, Helmet, CORS,
