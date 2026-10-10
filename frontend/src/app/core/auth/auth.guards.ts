@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { Role } from './auth.models';
 import { AuthService } from './auth.service';
 
 // Les guards ne sont qu'un confort d'affichage : la vraie protection est dans le backend (CLAUDE.md).
@@ -21,6 +22,24 @@ export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   if (!auth.isAuthenticated()) return inject(Router).createUrlTree(['/login']);
   return auth.isAdmin() || inject(Router).createUrlTree([auth.homeUrl()]);
+};
+
+/** Écran réservé à un rôle précis (ex. la file du vérificateur) ; un autre administrateur revient à l'accueil de l'administration. */
+export const roleGuard =
+  (role: Role): CanActivateFn =>
+  () => {
+    const auth = inject(AuthService);
+    if (!auth.isAuthenticated()) return inject(Router).createUrlTree(['/login']);
+    return auth.hasRole(role) || inject(Router).createUrlTree(['/admin']);
+  };
+
+/** Accueil de l'administration : renvoie vers l'écran du rôle (vérificateur, puis administrateur d'institution). */
+export const adminHomeGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (auth.hasRole('VERIFICATION_OFFICER')) return router.createUrlTree(['/admin/verification']);
+  if (auth.hasRole('INSTITUTION_ADMIN')) return router.createUrlTree(['/admin/academic']);
+  return true;
 };
 
 /** Espace étudiant : rôle STUDENT. */

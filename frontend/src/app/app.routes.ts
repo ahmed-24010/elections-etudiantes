@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, guestGuard, studentGuard, twoFactorSetupGuard } from './core/auth/auth.guards';
+import { adminGuard, adminHomeGuard, guestGuard, roleGuard, studentGuard, twoFactorSetupGuard } from './core/auth/auth.guards';
 import { AdminLayout } from './layout/admin/admin-layout';
 import { PublicLayout } from './layout/public/public-layout';
 import { StudentLayout } from './layout/student/student-layout';
@@ -20,7 +20,34 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: 'student', component: StudentLayout, canActivate: [studentGuard] },
-  { path: 'admin', component: AdminLayout, canActivate: [adminGuard] },
+  {
+    path: 'student',
+    component: StudentLayout,
+    canActivate: [studentGuard],
+    children: [{ path: '', pathMatch: 'full', loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome) }],
+  },
+  {
+    path: 'admin',
+    component: AdminLayout,
+    canActivate: [adminGuard],
+    children: [
+      { path: '', pathMatch: 'full', canActivate: [adminHomeGuard], loadComponent: () => import('./features/admin/admin-home').then((m) => m.AdminHome) },
+      {
+        path: 'academic',
+        canActivate: [roleGuard('INSTITUTION_ADMIN')],
+        loadComponent: () => import('./features/admin/academic-page').then((m) => m.AcademicPage),
+      },
+      {
+        path: 'verification',
+        canActivate: [roleGuard('VERIFICATION_OFFICER')],
+        loadComponent: () => import('./features/verification/queue-page').then((m) => m.QueuePage),
+      },
+      {
+        path: 'verification/:id',
+        canActivate: [roleGuard('VERIFICATION_OFFICER')],
+        loadComponent: () => import('./features/verification/review-page').then((m) => m.ReviewPage),
+      },
+    ],
+  },
   { path: '**', redirectTo: '' },
 ];

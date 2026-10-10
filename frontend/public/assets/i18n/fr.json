@@ -6,7 +6,9 @@
     "home": "Accueil",
     "student": "Espace étudiant",
     "admin": "Administration",
-    "language": "Langue"
+    "language": "Langue",
+    "academic": "Structure académique",
+    "verification": "Vérification des inscriptions"
   },
   "home": {
     "title": "Élections étudiantes",
@@ -26,7 +28,9 @@
     "admin": "Espace administration (vide pour l'instant)"
   },
   "common": {
-    "loading": "Chargement…"
+    "loading": "Chargement…",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
   },
   "auth": {
     "identifier": "E-mail ou téléphone",
@@ -59,6 +63,11 @@
       "submit": "Activer et continuer"
     }
   },
+  "stepUp": {
+    "title": "Confirmer avec votre code",
+    "intro": "Cette action est sensible. Saisissez le code actuel de votre application d'authentification pour continuer.",
+    "confirm": "Confirmer"
+  },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",
     "network": "Serveur injoignable.",
@@ -66,7 +75,25 @@
     "invalidCredentials": "Identifiants incorrects.",
     "invalidCode": "Code incorrect.",
     "invalidInstitution": "Institution invalide.",
-    "sessionExpired": "Votre session a expiré. Reconnectez-vous."
+    "sessionExpired": "Votre session a expiré. Reconnectez-vous.",
+    "stepUpRequired": "Une confirmation par code est nécessaire.",
+    "forbidden": "Vous n'avez pas le droit d'effectuer cette action.",
+    "notFound": "Élément introuvable.",
+    "fileTooLarge": "Fichier trop volumineux (5 Mo maximum).",
+    "fileType": "Type de fichier refusé. Envoyez un PDF, une image JPEG ou PNG.",
+    "fileEmpty": "Le fichier est vide.",
+    "numberUnavailable": "Ce numéro étudiant n'est pas disponible. Vérifiez-le ou contactez votre faculté.",
+    "enrollmentLocked": "Votre inscription est vérifiée : elle ne peut plus être modifiée.",
+    "enrollmentUnderReview": "Votre attestation est en cours d'examen : l'inscription ne peut pas être modifiée pour le moment.",
+    "documentNotAllowed": "Le dépôt d'une attestation n'est pas possible dans l'état actuel de votre inscription.",
+    "enrollmentRequired": "Déclarez d'abord votre inscription.",
+    "noCurrentYear": "Aucune année universitaire courante n'est définie pour votre institution.",
+    "invalidAcademicChoice": "Ce choix de faculté, filière, niveau ou groupe n'est pas cohérent.",
+    "notReviewable": "Cette inscription n'est plus à examiner (déjà traitée).",
+    "ownEnrollment": "Vous ne pouvez pas décider de votre propre inscription.",
+    "inUse": "Suppression impossible : cet élément est utilisé.",
+    "alreadyExists": "Cet élément existe déjà.",
+    "invalidDates": "La date de début doit précéder la date de fin."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -77,7 +104,119 @@
   "student": {
     "welcome": {
       "title": "Bienvenue",
-      "text": "Les prochaines étapes (dépôt de l'attestation, vos élections) arriveront bientôt."
+      "text": "Complétez votre inscription pour accéder aux élections de votre faculté."
+    },
+    "year": "Année universitaire",
+    "status": {
+      "title": "État de votre inscription",
+      "NO_YEAR": "Indisponible",
+      "NOT_DECLARED": "À compléter",
+      "NEEDS_DOCUMENT": "Attestation à déposer",
+      "UNDER_REVIEW": "En cours d'examen",
+      "VERIFIED": "Compte vérifié",
+      "REJECTED": "Inscription rejetée",
+      "help": {
+        "NO_YEAR": "Aucune année universitaire courante n'est ouverte pour votre institution. Revenez plus tard.",
+        "NOT_DECLARED": "Renseignez votre identité et votre parcours, puis déposez votre attestation d'inscription.",
+        "NEEDS_DOCUMENT": "Votre inscription est enregistrée. Déposez votre attestation d'inscription pour qu'elle soit vérifiée.",
+        "UNDER_REVIEW": "Votre attestation a été reçue. Un vérificateur de votre faculté va l'examiner.",
+        "VERIFIED": "Votre inscription est vérifiée. Vous pourrez participer aux élections de votre faculté.",
+        "REJECTED": "Votre inscription a été rejetée. Corrigez les informations ci-dessous puis déposez une nouvelle attestation."
+      }
+    },
+    "enrollment": {
+      "title": "Mon inscription",
+      "summary": "Mon inscription vérifiée ou en cours d'examen",
+      "save": "Enregistrer mon inscription"
+    },
+    "fields": {
+      "name": "Nom",
+      "studentNumber": "Numéro étudiant",
+      "studentNumberHint": "Tel qu'il figure sur votre attestation. Un numéro erroné fera rejeter votre demande.",
+      "firstName": "Prénom",
+      "lastName": "Nom de famille",
+      "fullNameAr": "Nom complet en arabe (facultatif)",
+      "faculty": "Faculté",
+      "program": "Filière",
+      "level": "Niveau",
+      "group": "Groupe",
+      "choose": "Choisir…",
+      "noGroup": "Aucun groupe"
+    },
+    "document": {
+      "title": "Attestation d'inscription",
+      "help": "PDF, JPEG ou PNG, 5 Mo maximum. Seul le vérificateur de votre faculté pourra la consulter.",
+      "choose": "Choisir le fichier",
+      "send": "Envoyer l'attestation"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "empty": "Aucune notification.",
+    "types": {
+      "ENROLLMENT_VERIFIED": "Votre inscription a été vérifiée. Votre compte est maintenant vérifié.",
+      "ENROLLMENT_REJECTED": "Votre inscription a été rejetée."
+    }
+  },
+  "verification": {
+    "codes": {
+      "WRONG_STUDENT_NUMBER": "Numéro étudiant incorrect",
+      "DOCUMENT_UNREADABLE": "Attestation illisible",
+      "DATA_MISMATCH": "Données différentes de l'attestation",
+      "OTHER": "Autre motif"
+    },
+    "queue": {
+      "title": "Inscriptions à vérifier",
+      "empty": "Aucune inscription en attente.",
+      "submitted": "Déposée le",
+      "review": "Examiner"
+    },
+    "review": {
+      "back": "Retour à la liste",
+      "title": "Examen d'une inscription",
+      "document": "Attestation",
+      "show": "Afficher l'attestation",
+      "signedHint": "L'attestation est chargée par un lien temporaire valable 5 minutes.",
+      "decision": "Décision",
+      "ownRequest": "Vous ne pouvez pas décider de votre propre inscription ni d'un fichier que vous avez déposé. Un autre vérificateur doit le faire.",
+      "approve": "Valider l'inscription",
+      "reject": "Rejeter…",
+      "code": "Motif du rejet",
+      "wrongNumberHint": "Le numéro étudiant sera libéré pour que son vrai titulaire puisse s'inscrire.",
+      "reason": "Explication pour l'étudiant",
+      "reasonHint": "3 à 500 caractères. L'étudiant verra ce texte.",
+      "confirmReject": "Confirmer le rejet",
+      "done": {
+        "approved": "Inscription validée. L'étudiant en est informé.",
+        "rejected": "Inscription rejetée. L'étudiant en est informé."
+      }
+    }
+  },
+  "academic": {
+    "title": "Structure académique",
+    "years": "Années universitaires",
+    "faculties": "Facultés",
+    "programs": "Filières",
+    "levels": "Niveaux",
+    "groups": "Groupes",
+    "current": "Année courante",
+    "makeCurrent": "Définir comme courante",
+    "none": "Aucun élément.",
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression",
+    "fields": {
+      "yearLabel": "Libellé (AAAA-AAAA)",
+      "startsOn": "Début",
+      "endsOn": "Fin",
+      "code": "Code",
+      "name": "Nom",
+      "nameAr": "Nom en arabe",
+      "rank": "Ordre",
+      "year": "Année",
+      "groupName": "Nom du groupe"
     }
   }
 }
