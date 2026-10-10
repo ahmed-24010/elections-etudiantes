@@ -21,6 +21,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.service';
 import { ReportsModule } from './reports/reports.module';
 import { ResultsModule } from './results/results.module';
+import { StorageModule } from './storage/storage.module';
 import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
 import { VerificationModule } from './verification/verification.module';
@@ -52,7 +53,8 @@ function hasModule(name: string): boolean {
           // Ni jeton, ni cookie, ni corps de requête dans les logs (CLAUDE.md : jamais de choix de vote).
           redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
           serializers: {
-            req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+            // La query est retirée : l'URL signée d'une attestation (?uid&exp&sig) ne doit jamais se retrouver dans les logs.
+            req: (req) => ({ id: req.id, method: req.method, url: String(req.url).split('?')[0] }),
             res: (res) => ({ statusCode: res.statusCode }),
           },
           // Lecture humaine en développement local ; pino-pretty est une devDependency, absente de l'image Docker.
@@ -63,6 +65,7 @@ function hasModule(name: string): boolean {
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthzModule,
+    StorageModule,
     HealthModule,
     AuthModule,
     UsersModule,

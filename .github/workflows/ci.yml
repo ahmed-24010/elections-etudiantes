@@ -11,6 +11,25 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Vraie base MySQL (même version que docker-compose.yml) pour les tests « test:db » : droits GRANT, index uniques,
+    # chaîne d'audit sous concurrence, rotation des refresh tokens. Mots de passe jetables, propres à la CI.
+    services:
+      mysql:
+        image: mysql:8.4.11
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root
+          MYSQL_DATABASE: elections
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_ROOT_PASSWORD: ci-root
+      MYSQL_DATABASE: elections
+      APP_MIGRATE_PASSWORD: ci-migrate
+      APP_RUNTIME_PASSWORD: ci-runtime
+      APP_READONLY_PASSWORD: ci-readonly
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +48,22 @@ jobs:
       - run: npm test
       - run: npm run test:e2e
       - run: npm run build
+      # Comptes MySQL de 02 §10 (même script que Docker), puis migrations avec app_migrate, puis tests sur la vraie base
+      # avec app_runtime : les droits réduits sont donc exercés comme en production.
+      - name: Comptes MySQL (02 §10)
+        run: bash ../docker/mysql/init/01-users.sh
+      - name: Migrations (app_migrate)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
+      - name: Le schéma Prisma correspond aux migrations (aucune dérive)
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+        env:
+          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
+      - name: Tests sur la vraie base MySQL (app_runtime)
+        run: npm run test:db
+        env:
+          DATABASE_URL: mysql://app_runtime:ci-runtime@127.0.0.1:3306/elections
 
   frontend:
     runs-on: ubuntu-latest

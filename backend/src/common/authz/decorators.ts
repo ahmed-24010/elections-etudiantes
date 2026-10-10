@@ -13,7 +13,7 @@ export const Public = () => SetMetadata(IS_PUBLIC, true);
 /** Une ou plusieurs permissions (au moins une suffit). Refus par défaut sans ce décorateur. */
 export const RequirePermission = (...permissions: Permission[]) => SetMetadata(PERMISSIONS_KEY, permissions);
 
-export type ScopeKind = 'institution' | 'election' | 'user';
+export type ScopeKind = 'institution' | 'election' | 'user' | 'enrollment';
 export interface ScopeSpec {
   kind: ScopeKind;
   param: string;

@@ -3,7 +3,7 @@ import { Injectable, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ADMIN_ROLES, CurrentUser, InstitutionOption, LoginOutcome, TwoFactorSetup } from './auth.models';
+import { ADMIN_ROLES, CurrentUser, InstitutionOption, LoginOutcome, Role, TwoFactorSetup } from './auth.models';
 import { RefreshCoordinator, TabMessage, TabSync } from './refresh-coordinator';
 
 /** En-tête exigé par le backend sur /auth/refresh et /auth/logout (défense CSRF supplémentaire). */
@@ -166,6 +166,16 @@ export class AuthService implements OnDestroy {
   /** Step-up : prouve la 2FA pour les actions sensibles (valable 10 minutes côté serveur). */
   async stepUp(code: string): Promise<void> {
     await firstValueFrom(this.http.post<void>(`${this.api}/auth/step-up`, { code }));
+  }
+
+  /** Rôle détenu par l'utilisateur (affichage seulement : le serveur relit les rôles en base). */
+  hasRole(role: Role): boolean {
+    return this.user()?.roles.some((r) => r.role === role) ?? false;
+  }
+
+  /** Institution rattachée à un rôle, pour construire les URL `/institutions/:id/...` (le serveur revérifie la portée). */
+  institutionIdFor(role: Role): string | null {
+    return this.user()?.roles.find((r) => r.role === role && r.institutionId)?.institutionId ?? null;
   }
 
   /** Page d'accueil selon les rôles. */
