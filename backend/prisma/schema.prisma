@@ -93,6 +93,7 @@ model User {
   status             UserStatus @default(ACTIVE)
   twoFactorEnabled   Boolean    @default(false)
   twoFactorSecretEnc String?    @db.VarChar(512) // chiffré côté application
+  setupTokenJti      String?    @db.Char(36) // jeton de configuration 2FA en cours (D-15) ; effacé à l'activation
   lastLoginAt        DateTime?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
@@ -153,6 +154,8 @@ model RefreshToken {
   revokedAt    DateTime?
   replacedById String?   @db.Char(36)
   userAgent    String?   @db.VarChar(255)
+  // Dernière vérification TOTP de la session (StepUpGuard : < 10 min). Recopiée à chaque rotation.
+  twoFactorVerifiedAt DateTime?
   createdAt    DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -655,7 +658,7 @@ model AuditLog {
   ipHash        String?     @db.Char(64)
   requestId     String?     @db.VarChar(64)
   metadata      Json?
-  prevHash      String?     @db.Char(64)
+  prevHash      String?     @unique @db.Char(64) // unique : deux écritures concurrentes ne peuvent pas bifurquer la chaîne
   hash          String      @db.Char(64)
   createdAt     DateTime    @default(now()) @db.DateTime(3)
 

@@ -44,6 +44,8 @@ services:
       MIGRATE_DATABASE_URL: mysql://app_migrate:${APP_MIGRATE_PASSWORD}@db:3306/${MYSQL_DATABASE}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      TWO_FACTOR_ENCRYPTION_KEY: ${TWO_FACTOR_ENCRYPTION_KEY}
+      AUDIT_IP_SALT: ${AUDIT_IP_SALT}
       S3_ENDPOINT: http://s3:9000
       S3_REGION: ${S3_REGION}
       S3_BUCKET: ${S3_BUCKET}
@@ -51,7 +53,10 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
     depends_on:
       db: { condition: service_healthy }
-    ports: ["3000:3000"]
+    # Loopback seulement : avec TRUST_PROXY=1 l'API fait confiance à X-Forwarded-For, donc elle ne doit être joignable
+    # que par nginx (réseau Docker interne, http://backend:3000). Un accès direct depuis le réseau permettrait de
+    # forger cet en-tête et d'échapper au rate limiting. Ne jamais publier ce port sur 0.0.0.0.
+    ports: ["127.0.0.1:3000:3000"]
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
@@ -63,7 +68,7 @@ services:
     build: ./frontend
     depends_on:
       backend: { condition: service_healthy }
-    ports: ["4200:80"]
+    ports: ["127.0.0.1:4200:80"] # D-20 : jamais 0.0.0.0 (test backend/test/compose-ports.e2e-spec.ts)
 
 volumes:
   db_data:

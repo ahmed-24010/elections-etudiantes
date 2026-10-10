@@ -1,5 +1,12 @@
 import { Module } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { LoginAttemptLimiter } from './login-attempt.limiter';
+import { TwoFactorService } from './two-factor.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Module({
+  controllers: [AuthController],
+  providers: [AuthService, TwoFactorService, LoginAttemptLimiter],
+  exports: [AuthService],
+})
 export class AuthModule {}
