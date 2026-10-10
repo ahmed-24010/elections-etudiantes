@@ -12,7 +12,8 @@ import { AuthService } from '../../core/auth/auth.service';
   template: `
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-6">
-        <h1 class="h3 mb-3">{{ 'auth.twoFactor.title' | transloco }}</h1>
+        <div class="app-card p-4">
+        <h1 class="h3 app-page-title mb-3">{{ 'auth.twoFactor.title' | transloco }}</h1>
         <p>{{ 'auth.twoFactor.intro' | transloco }}</p>
 
         @if (setup(); as s) {
@@ -48,6 +49,7 @@ import { AuthService } from '../../core/auth/auth.service';
         } @else {
           <p>{{ 'common.loading' | transloco }}</p>
         }
+        </div>
       </div>
     </div>
   `,

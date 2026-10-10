@@ -1,9 +1,17 @@
 {
-  "app": { "title": "Élections étudiantes" },
-  "nav": { "home": "Accueil", "student": "Espace étudiant", "admin": "Administration", "language": "Langue" },
+  "app": {
+    "title": "Élections étudiantes"
+  },
+  "nav": {
+    "home": "Accueil",
+    "student": "Espace étudiant",
+    "admin": "Administration",
+    "language": "Langue"
+  },
   "home": {
-    "title": "Plateforme des élections étudiantes",
-    "subtitle": "Squelette du projet : aucune fonctionnalité métier pour l'instant."
+    "title": "Élections étudiantes",
+    "subtitle": "Créez votre compte pour suivre les élections de votre faculté.",
+    "mySpace": "Accéder à mon espace"
   },
   "health": {
     "title": "État du système",
@@ -18,7 +26,9 @@
     "student": "Espace étudiant (vide pour l'instant)",
     "admin": "Espace administration (vide pour l'instant)"
   },
-  "common": { "loading": "Chargement…" },
+  "common": {
+    "loading": "Chargement…"
+  },
   "auth": {
     "identifier": "E-mail ou téléphone",
     "email": "E-mail",
@@ -58,5 +68,11 @@
     "invalidCode": "Code incorrect.",
     "invalidInstitution": "Institution invalide.",
     "sessionExpired": "Votre session a expiré. Reconnectez-vous."
+  },
+  "institution": {
+    "university": "Université de Nouakchott",
+    "faculty": "Faculté des Sciences Juridiques et Politiques",
+    "universityLogo": "Logo de l’Université de Nouakchott",
+    "facultyLogo": "Logo de la Faculté des Sciences Juridiques et Politiques (FSJP)"
   }
 }

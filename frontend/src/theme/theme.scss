@@ -1,0 +1,116 @@
+// =====================================================================
+// THÈME — le SEUL fichier qui contient des couleurs (valeurs hexadécimales).
+// Tout le reste de l'interface utilise var(--app-…) ou les classes Bootstrap.
+// Palette tirée des logos de la FSJP et de l'Université de Nouakchott.
+//
+// Multi-institution (plus tard) : une autre institution = un autre bloc
+//   :root[data-theme='autre-institution'] { --app-primary: …; }
+// posé sur <html>, sans toucher au reste du code.
+// =====================================================================
+
+:root {
+  // ---- Palette de marque -------------------------------------------
+  --app-primary: #1e5fbf; // bleu principal : boutons, liens, accents
+  --app-primary-hover: #194f9f;
+  --app-primary-active: #154286;
+  --app-primary-subtle: #e8f0fb;
+  --app-navy: #0f2d5c; // bleu nuit : barre du haut
+  --app-gold: #c9a227; // or : DÉCORATION seulement (filets, ornements), jamais du texte
+  --app-success: #2e9b47; // vert : succès (accents, bordures, icônes)
+  --app-success-strong: #1f7a35; // vert foncé : fond de badge avec texte blanc (contraste AA)
+  --app-success-subtle: #e6f4ea;
+
+  // ---- Neutres et danger -------------------------------------------
+  --app-surface: #f4f7fc; // fond de page
+  --app-card: #ffffff;
+  --app-text: #1b2a41;
+  --app-text-muted: #55657d;
+  --app-border: #d6dfec;
+  --app-on-dark: #ffffff;
+  --app-danger: #b3261e;
+  --app-danger-subtle: #fdeceb;
+  --app-shadow: rgb(15 45 92 / 12%);
+
+  // ---- Correspondance avec Bootstrap 5.3 ----------------------------
+  --bs-primary: var(--app-primary);
+  --bs-primary-rgb: 30, 95, 191;
+  --bs-success: var(--app-success-strong);
+  --bs-success-rgb: 31, 122, 53;
+  --bs-success-bg-subtle: var(--app-success-subtle);
+  --bs-success-border-subtle: var(--app-success);
+  --bs-success-text-emphasis: var(--app-success-strong);
+  --bs-danger: var(--app-danger);
+  --bs-danger-rgb: 179, 38, 30;
+  --bs-danger-bg-subtle: var(--app-danger-subtle);
+  --bs-danger-text-emphasis: var(--app-danger);
+  --bs-body-bg: var(--app-surface);
+  --bs-body-color: var(--app-text);
+  --bs-secondary-color: var(--app-text-muted);
+  --bs-border-color: var(--app-border);
+  --bs-link-color: var(--app-primary);
+  --bs-link-color-rgb: 30, 95, 191;
+  --bs-link-hover-color: var(--app-primary-active);
+  --bs-link-hover-color-rgb: 21, 66, 134;
+  --bs-body-font-family: 'Cairo Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bs-focus-ring-color: rgb(30 95 191 / 30%);
+}
+
+// Bootstrap compile ses boutons avec des couleurs littérales : on les redéfinit variable par variable.
+.btn-primary {
+  --bs-btn-color: var(--app-on-dark);
+  --bs-btn-bg: var(--app-primary);
+  --bs-btn-border-color: var(--app-primary);
+  --bs-btn-hover-color: var(--app-on-dark);
+  --bs-btn-hover-bg: var(--app-primary-hover);
+  --bs-btn-hover-border-color: var(--app-primary-hover);
+  --bs-btn-focus-shadow-rgb: 30, 95, 191;
+  --bs-btn-active-color: var(--app-on-dark);
+  --bs-btn-active-bg: var(--app-primary-active);
+  --bs-btn-active-border-color: var(--app-primary-active);
+  --bs-btn-disabled-color: var(--app-on-dark);
+  --bs-btn-disabled-bg: var(--app-primary);
+  --bs-btn-disabled-border-color: var(--app-primary);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--app-primary);
+  --bs-btn-border-color: var(--app-primary);
+  --bs-btn-hover-color: var(--app-on-dark);
+  --bs-btn-hover-bg: var(--app-primary);
+  --bs-btn-hover-border-color: var(--app-primary);
+  --bs-btn-focus-shadow-rgb: 30, 95, 191;
+  --bs-btn-active-color: var(--app-on-dark);
+  --bs-btn-active-bg: var(--app-primary-active);
+  --bs-btn-active-border-color: var(--app-primary-active);
+  --bs-btn-disabled-color: var(--app-primary);
+  --bs-btn-disabled-border-color: var(--app-primary);
+}
+
+.btn-success {
+  --bs-btn-color: var(--app-on-dark);
+  --bs-btn-bg: var(--app-success-strong);
+  --bs-btn-border-color: var(--app-success-strong);
+  --bs-btn-hover-bg: var(--app-success-strong);
+  --bs-btn-hover-border-color: var(--app-success-strong);
+}
+
+.text-bg-success {
+  color: var(--app-on-dark) !important;
+  background-color: var(--app-success-strong) !important;
+}
+
+.text-bg-danger {
+  color: var(--app-on-dark) !important;
+  background-color: var(--app-danger) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+.form-check-input:checked {
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+}
