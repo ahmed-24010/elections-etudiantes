@@ -56,6 +56,10 @@ jobs:
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
+      - name: Le schéma Prisma correspond aux migrations (aucune dérive)
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+        env:
+          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
       - name: Tests sur la vraie base MySQL (app_runtime)
         run: npm run test:db
         env:

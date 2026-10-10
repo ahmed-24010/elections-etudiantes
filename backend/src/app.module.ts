@@ -21,6 +21,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.service';
 import { ReportsModule } from './reports/reports.module';
 import { ResultsModule } from './results/results.module';
+import { StorageModule } from './storage/storage.module';
 import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
 import { VerificationModule } from './verification/verification.module';
@@ -63,6 +64,7 @@ function hasModule(name: string): boolean {
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthzModule,
+    StorageModule,
     HealthModule,
     AuthModule,
     UsersModule,
