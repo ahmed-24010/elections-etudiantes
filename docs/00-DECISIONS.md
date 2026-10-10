@@ -4,7 +4,7 @@
 
 Ce fichier liste toutes les décisions de conception validées. En cas de doute pendant le développement, **ce journal fait foi**. Pour changer une décision : ajouter une nouvelle ligne qui la remplace (ne jamais effacer l'ancienne), puis mettre à jour les documents concernés.
 
-**Dernière mise à jour :** 09/10/2026
+**Dernière mise à jour :** 10/10/2026
 
 ---
 
@@ -31,6 +31,7 @@ Ce fichier liste toutes les décisions de conception validées. En cas de doute 
 | D-17 | 09/10/2026 | Stockage S3 local | **SeaweedFS 4.48** (service `s3` de docker-compose) remplace **MinIO** pour le développement. En production, tout service S3-compatible reste possible | L'image MinIO n'est plus disponible (Docker Hub : accès refusé ; Quay : non autorisé). SeaweedFS expose la même API S3, donc le code applicatif n'change pas | 01 §14, 07 Sprint 1 |
 | D-18 | 09/10/2026 | Session, jeton de configuration et step-up | Le JWT d'accès ne porte que `sub` et `sid` (= `familyId` de la session) ; une session est valide tant qu'un refresh token non révoqué existe dans sa famille. La date de dernière 2FA est dans `refresh_tokens.twoFactorVerifiedAt` (step-up < 10 min). Le jeton de configuration D-15 est un JWT à `jti` unique, mémorisé dans `users.setupTokenJti` et effacé à l'activation de la 2FA | Révocation de rôle ou de session effective à la requête suivante (03 §7.4) ; usage unique du jeton sans table supplémentaire | 02 §4.1, 03 §7.4 |
 | D-19 | 09/10/2026 | Chaîne de hachage de l'audit | `audit_logs.prevHash` est **unique** et la première ligne utilise 64 zéros. Les écritures concurrentes sont sérialisées par cette contrainte (nouvel essai en cas de collision), pas par un verrou | Un verrou `GET_LOCK` relâché avant le commit avait fait bifurquer la chaîne sous charge (constaté sur MySQL). `SELECT … FOR UPDATE` exigerait `UPDATE`, refusé à `app_runtime` | 02 §9 |
+| D-20 | 10/10/2026 | Ports publiés en développement | **Aucun port n'est publié hors `127.0.0.1`** dans `docker-compose.yml` (frontend, backend, MySQL, S3 : `127.0.0.1:hôte:conteneur`). Un test e2e (`compose-ports.e2e-spec.ts`) fait échouer la CI sinon. `TRUST_PROXY=1` suppose que seul nginx atteint l'API ; **sa valeur est à revoir avec A-02** selon le nombre réel de proxys en production | Un port du backend joignable depuis le réseau permettait de forger `X-Forwarded-For` et d'échapper au rate limiting (constaté : 14 tentatives de login sans 429). MySQL et S3 exposés au réseau local seraient aussi attaquables | 01, CLAUDE.md |
 
 ---
 
@@ -39,5 +40,5 @@ Ce fichier liste toutes les décisions de conception validées. En cas de doute 
 | Réf. | Sujet | À décider avant |
 |---|---|---|
 | A-01 | Institution pilote et ses règlements électoraux | Sprint 4 |
-| A-02 | Hébergement de production (VPS, cloud, serveur de l'université) | Sprint 6 |
+| A-02 | Hébergement de production (VPS, cloud, serveur de l'université). À décider avec : exposition des ports et valeur de `TRUST_PROXY` (D-20) | Sprint 6 |
 | ~~A-03~~ | ~~Bibliothèque UI : Bootstrap ou Angular Material~~ — **Décidée le 09/10/2026 : Bootstrap 5.3 (voir D-16)** | ~~Sprint 1~~ |
