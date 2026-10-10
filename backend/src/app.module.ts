@@ -53,7 +53,8 @@ function hasModule(name: string): boolean {
           // Ni jeton, ni cookie, ni corps de requête dans les logs (CLAUDE.md : jamais de choix de vote).
           redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
           serializers: {
-            req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+            // La query est retirée : l'URL signée d'une attestation (?uid&exp&sig) ne doit jamais se retrouver dans les logs.
+            req: (req) => ({ id: req.id, method: req.method, url: String(req.url).split('?')[0] }),
             res: (res) => ({ statusCode: res.statusCode }),
           },
           // Lecture humaine en développement local ; pino-pretty est une devDependency, absente de l'image Docker.

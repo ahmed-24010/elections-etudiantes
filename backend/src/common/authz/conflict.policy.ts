@@ -13,6 +13,11 @@ export class ConflictPolicy {
     if (actorId === grantUserId && otherActiveAdmins === 0) throw new ConflictException('last_institution_admin');
   }
 
+  /** Un vérificateur ne valide pas sa propre inscription, ni un fichier qu'il a lui-même déposé (03 §6). */
+  assertNotOwnRequest(actorId: string, studentUserId: string, uploaderId: string | null): void {
+    if (actorId === studentUserId || actorId === uploaderId) throw new ForbiddenException('cannot_review_own_enrollment');
+  }
+
   assertNotSelfSuspension(actorId: string, targetId: string): void {
     if (actorId === targetId) throw new ConflictException('cannot_suspend_self');
   }

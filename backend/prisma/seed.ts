@@ -1,4 +1,4 @@
-// npm run seed — SEED_ADMIN_PASSWORD requis, refusé en production (voir src/seed/seed.ts).
+// npm run seed — données de DÉVELOPPEMENT : SEED_ADMIN_PASSWORD requis, refusé en production (voir src/seed/seed.ts).
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
