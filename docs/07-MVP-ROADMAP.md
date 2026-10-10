@@ -44,30 +44,30 @@
 **Objectif :** toute la chaîne fonctionne de bout en bout, sans fonctionnalité métier.
 
 ### Backend
-- [ ] Projet NestJS dans `backend/`, structure de dossiers de 01 §6
-- [ ] Configuration par variables d'environnement (`@nestjs/config`), validation au démarrage
-- [ ] Prisma + `backend/prisma/schema.prisma` (modèle de 02), première migration `init`
-- [ ] Script SQL des comptes MySQL (`app_migrate`, `app_runtime`, `app_readonly`) — 02 §10
-- [ ] Endpoint `GET /api/v1/health` (API + base)
-- [ ] Swagger sur `/api/docs` (désactivé en production)
-- [ ] Logs structurés avec request ID (`nestjs-pino`)
-- [ ] Filtre d'erreurs global, `ValidationPipe` global (`whitelist`, `forbidNonWhitelisted`)
-- [ ] Helmet, CORS, rate limiting global (`@nestjs/throttler`)
+- [x] Projet NestJS dans `backend/`, structure de dossiers de 01 §6
+- [x] Configuration par variables d'environnement (`@nestjs/config`), validation au démarrage
+- [x] Prisma + `backend/prisma/schema.prisma` (modèle de 02), première migration `init`
+- [x] Script SQL des comptes MySQL (`app_migrate`, `app_runtime`, `app_readonly`) — 02 §10
+- [x] Endpoint `GET /api/v1/health` (API + base)
+- [x] Swagger sur `/api/docs` (désactivé en production)
+- [x] Logs structurés avec request ID (`nestjs-pino`)
+- [x] Filtre d'erreurs global, `ValidationPipe` global (`whitelist`, `forbidNonWhitelisted`)
+- [x] Helmet, CORS, rate limiting global (`@nestjs/throttler`)
 
 ### Frontend
-- [ ] Projet Angular dans `frontend/`, structure de 01 §5
-- [ ] Bootstrap 5 + RTL
-- [ ] i18n à l'exécution avec **Transloco** : fichiers `ar.json` et `fr.json`, sélecteur de langue
-- [ ] Changement de `dir="rtl"` / `dir="ltr"` sur `<html>` selon la langue
-- [ ] CSS en propriétés logiques (`margin-inline-start` plutôt que `margin-left`)
-- [ ] Trois layouts vides : public, étudiant, admin
-- [ ] Page d'accueil qui affiche l'état de `/health`
+- [x] Projet Angular dans `frontend/`, structure de 01 §5
+- [x] Bootstrap 5 + RTL
+- [x] i18n à l'exécution avec **Transloco** : fichiers `ar.json` et `fr.json`, sélecteur de langue
+- [x] Changement de `dir="rtl"` / `dir="ltr"` sur `<html>` selon la langue
+- [x] CSS en propriétés logiques (`margin-inline-start` plutôt que `margin-left`)
+- [x] Trois layouts vides : public, étudiant, admin
+- [x] Page d'accueil qui affiche l'état de `/health`
 
 ### Infrastructure
-- [ ] `docker-compose.yml` : `mysql`, `backend`, `frontend`, `minio` (stockage S3 local)
-- [ ] `.env.example` documenté, `.env` dans `.gitignore`
-- [ ] CI (GitHub Actions) : lint + tests + build backend et frontend à chaque push
-- [ ] `README.md` : comment lancer le projet en 3 commandes
+- [x] `docker-compose.yml` : `mysql`, `backend`, `frontend`, `s3` (stockage S3 local : SeaweedFS à la place de MinIO, D-17)
+- [x] `.env.example` documenté, `.env` dans `.gitignore`
+- [x] CI (GitHub Actions) : lint + tests + build backend et frontend à chaque push
+- [x] `README.md` : comment lancer le projet en 3 commandes
 
 **Démo de fin de sprint :** `docker compose up`, la page s'affiche en arabe puis en français, et indique « API OK, base OK ».
 
@@ -77,18 +77,18 @@
 
 **Objectif :** chaque utilisateur se connecte et le backend sait exactement ce qu'il a le droit de faire.
 
-- [ ] Module `auth` : inscription étudiant, connexion, déconnexion
-- [ ] Hash Argon2id des mots de passe
-- [ ] Access token JWT court (15 min) + refresh token en cookie `HttpOnly`, rotation, détection de réutilisation (`familyId`)
-- [ ] Rate limiting renforcé sur `/auth/*`
-- [ ] Module `users` : profil, changement de mot de passe
-- [ ] `role_assignments` : attribution et révocation (03 §5.2)
-- [ ] `permissions.ts`, `JwtAuthGuard`, `PermissionGuard`, décorateurs `@RequirePermission`, `@ScopeFrom`, `@Public` (03 §7)
-- [ ] 2FA TOTP pour les rôles administratifs + `StepUpGuard` (D-10)
-- [ ] Module `audit` : écriture avec chaîne de hachage (02 §9)
-- [ ] Seed : un SUPER_ADMIN, une institution de test
-- [ ] Angular : pages connexion / inscription, interceptor JWT, refresh automatique, guards de route
-- [ ] **Tests :** les 10 tests d'autorisation de 03 §8 (ceux qui concernent ce sprint), test « route sans décorateur = CI rouge »
+- [x] Module `auth` : inscription étudiant, connexion, déconnexion
+- [x] Hash Argon2id des mots de passe
+- [x] Access token JWT court (15 min) + refresh token en cookie `HttpOnly`, rotation, détection de réutilisation (`familyId`)
+- [x] Rate limiting renforcé sur `/auth/*`
+- [x] Module `users` : profil, changement de mot de passe
+- [x] `role_assignments` : attribution et révocation (03 §5.2)
+- [x] `permissions.ts`, `JwtAuthGuard`, `PermissionGuard`, décorateurs `@RequirePermission`, `@ScopeFrom`, `@Public` (03 §7)
+- [x] 2FA TOTP pour les rôles administratifs + `StepUpGuard` (D-10)
+- [x] Module `audit` : écriture avec chaîne de hachage (02 §9)
+- [x] Seed : un SUPER_ADMIN, une institution de test
+- [x] Angular : pages connexion / inscription, interceptor JWT, refresh automatique, guards de route
+- [x] **Tests :** les 10 tests d'autorisation de 03 §8 (ceux qui concernent ce sprint), test « route sans décorateur = CI rouge »
 
 **Démo :** un SUPER_ADMIN crée un INSTITUTION_ADMIN, qui active sa 2FA et se connecte.
 
