@@ -6,6 +6,7 @@ import { AcademicApi, AcademicKind, AcademicOverview, localName } from '../../co
 import { apiErrorKey } from '../../core/auth/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/services/language.service';
+import { ltr } from '../../core/ui/ltr';
 
 interface Target {
   kind: AcademicKind;
@@ -13,6 +14,8 @@ interface Target {
 }
 const same = (a: Target | null, kind: AcademicKind, id: string) => a?.kind === kind && a.id === id;
 const CODE = /^[A-Za-z0-9_-]+$/;
+/** Date saisie en AAAA-MM-JJ : le champ date du navigateur suivrait la langue du navigateur, pas celle de l'application. */
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Structure académique de l'institution (INSTITUTION_ADMIN) : années, facultés, filières, niveaux, groupes.
@@ -33,8 +36,8 @@ const CODE = /^[A-Za-z0-9_-]+$/;
         <ul class="list-group list-group-flush mb-3">
           @for (y of o.years; track y.id) {
             <li class="list-group-item px-0 d-flex flex-wrap align-items-center gap-2">
-              <span class="fw-bold" dir="ltr">{{ y.label }}</span>
-              <span class="text-body-secondary small" dir="ltr">{{ y.startsOn.slice(0, 10) }} → {{ y.endsOn.slice(0, 10) }}</span>
+              <bdi class="fw-bold" dir="ltr">{{ y.label }}</bdi>
+              <span class="text-body-secondary small"><bdi dir="ltr">{{ y.startsOn.slice(0, 10) }}</bdi> {{ arrow() }} <bdi dir="ltr">{{ y.endsOn.slice(0, 10) }}</bdi></span>
               @if (y.isCurrent) {
                 <span class="badge text-bg-success">{{ 'academic.current' | transloco }}</span>
               } @else {
@@ -50,9 +53,9 @@ const CODE = /^[A-Za-z0-9_-]+$/;
           <div><label class="form-label" for="yLabel">{{ 'academic.fields.yearLabel' | transloco }}</label>
             <input id="yLabel" class="form-control" formControlName="label" placeholder="2026-2027" dir="ltr" /></div>
           <div><label class="form-label" for="yStart">{{ 'academic.fields.startsOn' | transloco }}</label>
-            <input id="yStart" type="date" class="form-control" formControlName="startsOn" /></div>
+            <input id="yStart" class="form-control" formControlName="startsOn" [placeholder]="'academic.fields.datePlaceholder' | transloco" dir="ltr" inputmode="numeric" autocomplete="off" /></div>
           <div><label class="form-label" for="yEnd">{{ 'academic.fields.endsOn' | transloco }}</label>
-            <input id="yEnd" type="date" class="form-control" formControlName="endsOn" /></div>
+            <input id="yEnd" class="form-control" formControlName="endsOn" [placeholder]="'academic.fields.datePlaceholder' | transloco" dir="ltr" inputmode="numeric" autocomplete="off" /></div>
           <button type="submit" class="btn btn-primary" [disabled]="busy() || yearForm.invalid">{{ 'academic.add' | transloco }}</button>
         </form>
       </section>
@@ -159,7 +162,7 @@ const CODE = /^[A-Za-z0-9_-]+$/;
           <div><label class="form-label" for="gYear">{{ 'academic.fields.year' | transloco }}</label>
             <select id="gYear" class="form-select" formControlName="academicYearId">
               <option value="">{{ 'student.fields.choose' | transloco }}</option>
-              @for (y of o.years; track y.id) { <option [value]="y.id">{{ y.label }}</option> }
+              @for (y of o.years; track y.id) { <option [value]="y.id">{{ isolate(y.label) }}</option> }
             </select></div>
           <div><label class="form-label" for="gName">{{ 'academic.fields.groupName' | transloco }}</label>
             <input id="gName" class="form-control" formControlName="name" /></div>
@@ -186,7 +189,7 @@ const CODE = /^[A-Za-z0-9_-]+$/;
       } @else {
         <div class="d-flex flex-wrap align-items-center gap-2">
           <span class="fw-bold">{{ label }}</span>
-          <span class="text-body-secondary small" dir="ltr">{{ code }}</span>
+          <bdi class="text-body-secondary small" dir="ltr">{{ code }}</bdi>
           <span class="ms-auto d-flex gap-2">
             <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()" (click)="startEdit(kind, item)">{{ 'academic.edit' | transloco }}</button>
             <ng-container *ngTemplateOutlet="deleteBtn; context: { kind: kind, id: item.id }" />
@@ -222,8 +225,8 @@ export class AcademicPage implements OnInit {
 
   protected readonly yearForm = this.fb.group({
     label: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{4}$/)]],
-    startsOn: ['', [Validators.required]],
-    endsOn: ['', [Validators.required]],
+    startsOn: ['', [Validators.required, Validators.pattern(DATE)]],
+    endsOn: ['', [Validators.required, Validators.pattern(DATE)]],
   });
   protected readonly facultyForm = this.fb.group({
     code: ['', [Validators.required, Validators.maxLength(32), Validators.pattern(CODE)]],
@@ -258,6 +261,15 @@ export class AcademicPage implements OnInit {
       return;
     }
     await this.reload();
+  }
+
+  /** Flèche entre deux dates : elle suit le sens de lecture (→ en français, ← en arabe). */
+  protected arrow(): string {
+    return this.lang.dir() === 'rtl' ? '←' : '→';
+  }
+
+  protected isolate(text: string): string {
+    return ltr(text);
   }
 
   protected label(item: { name: string; nameAr?: string | null }): string {

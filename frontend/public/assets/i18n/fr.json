@@ -210,6 +210,7 @@
     "fields": {
       "yearLabel": "Libellé (AAAA-AAAA)",
       "startsOn": "Début",
+      "datePlaceholder": "AAAA-MM-JJ",
       "endsOn": "Fin",
       "code": "Code",
       "name": "Nom",

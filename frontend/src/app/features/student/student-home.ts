@@ -39,7 +39,7 @@ export function studentState(me: StudentMe | null): StudentState {
         </div>
         <p class="mb-0">{{ 'student.status.help.' + state() | transloco }}</p>
         @if (me()?.currentYear; as year) {
-          <p class="text-body-secondary small mb-0 mt-2">{{ 'student.year' | transloco }} : {{ year.label }}</p>
+          <p class="text-body-secondary small mb-0 mt-2">{{ 'student.year' | transloco }} : <bdi dir="ltr">{{ year.label }}</bdi></p>
         }
         @if (state() === 'REJECTED' && me()?.enrollment; as e) {
           <div class="alert alert-danger mt-3 mb-0" role="alert">
@@ -179,7 +179,7 @@ export function studentState(me: StudentMe | null): StudentState {
                 @if (n.body) {
                   <div class="small text-body-secondary fw-normal">{{ n.body }}</div>
                 }
-                <div class="small text-body-secondary fw-normal" dir="ltr">{{ n.createdAt | date: 'yyyy-MM-dd HH:mm' }}</div>
+                <div class="small text-body-secondary fw-normal"><bdi dir="ltr">{{ n.createdAt | date: 'yyyy-MM-dd HH:mm' }}</bdi></div>
               </li>
             }
           </ul>

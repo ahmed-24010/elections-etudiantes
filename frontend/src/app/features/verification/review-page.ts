@@ -50,7 +50,7 @@ type Outcome = 'approved' | 'rejected';
             <dd class="col-sm-8">{{ d.group.name }}</dd>
           }
           <dt class="col-sm-4">{{ 'student.year' | transloco }}</dt>
-          <dd class="col-sm-8">{{ d.academicYear.label }}</dd>
+          <dd class="col-sm-8"><bdi dir="ltr">{{ d.academicYear.label }}</bdi></dd>
           <dt class="col-sm-4">{{ 'verification.queue.submitted' | transloco }}</dt>
           <dd class="col-sm-8"><bdi dir="ltr">{{ d.submittedAt | date: 'yyyy-MM-dd HH:mm' }}</bdi></dd>
         </dl>
