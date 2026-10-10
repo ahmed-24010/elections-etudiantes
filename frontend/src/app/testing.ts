@@ -3,6 +3,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 
 // Clés d'authentification utilisées par les tests (en français pour les deux langues : seul le texte des tests compte).
 const AUTH_FR = {
+  'student.welcome.title': 'Bienvenue', 'student.welcome.text': 'Les prochaines étapes arriveront bientôt.',
   'institution.university': 'Université de Nouakchott', 'institution.faculty': 'Faculté des Sciences Juridiques et Politiques',
   'institution.universityLogo': 'Logo université', 'institution.facultyLogo': 'Logo faculté', 'home.mySpace': 'Mon espace',
   'auth.logout': 'Déconnexion', 'auth.login.title': 'Connexion', 'auth.login.submit': 'Se connecter',
@@ -22,14 +23,14 @@ export const TEST_LANGS = {
     'app.title': 'Élections étudiantes', 'health.ok': 'OK', 'health.down': 'Indisponible',
     'health.unreachable': 'Serveur injoignable', 'health.checking': 'Vérification en cours…',
     'health.title': 't', 'health.api': 'API', 'health.database': 'Base', 'home.title': 'h', 'home.subtitle': 's',
-    'nav.language': 'Langue', 'layout.student': 'Espace étudiant', 'layout.admin': 'Administration',
+    'nav.language': 'Langue', 'layout.admin': 'Administration',
     ...AUTH_FR,
   },
   ar: {
     'app.title': 'الانتخابات الطلابية', 'health.ok': 'تعمل', 'health.down': 'غير متاحة',
     'health.unreachable': 'تعذّر الاتصال', 'health.checking': 'جارٍ التحقق',
     'health.title': 't', 'health.api': 'API', 'health.database': 'DB', 'home.title': 'h', 'home.subtitle': 's',
-    'nav.language': 'اللغة', 'layout.student': 'فضاء الطالب', 'layout.admin': 'الإدارة',
+    'nav.language': 'اللغة', 'layout.admin': 'الإدارة',
     ...AUTH_FR,
   },
 };

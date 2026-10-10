@@ -8,7 +8,12 @@ import { AppHeader } from '../../shared/components/app-header/app-header';
   imports: [TranslocoPipe, AppHeader, AppFooter],
   template: `
     <app-header />
-    <main class="container py-4"><p class="lead">{{ 'layout.student' | transloco }}</p></main>
+    <main class="container py-4">
+      <section class="app-card p-4">
+        <h1 class="h3 app-page-title">{{ 'student.welcome.title' | transloco }}</h1>
+        <p class="lead mb-0">{{ 'student.welcome.text' | transloco }}</p>
+      </section>
+    </main>
     <app-footer />
   `,
 })

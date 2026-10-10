@@ -23,7 +23,6 @@
     "unreachable": "Serveur injoignable"
   },
   "layout": {
-    "student": "Espace étudiant (vide pour l'instant)",
     "admin": "Espace administration (vide pour l'instant)"
   },
   "common": {
@@ -74,5 +73,11 @@
     "faculty": "Faculté des Sciences Juridiques et Politiques",
     "universityLogo": "Logo de l’Université de Nouakchott",
     "facultyLogo": "Logo de la Faculté des Sciences Juridiques et Politiques (FSJP)"
+  },
+  "student": {
+    "welcome": {
+      "title": "Bienvenue",
+      "text": "Les prochaines étapes (dépôt de l'attestation, vos élections) arriveront bientôt."
+    }
   }
 }
