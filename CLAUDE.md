@@ -40,7 +40,7 @@ cd backend && npm run test:db              # tests sur la VRAIE base MySQL (DATA
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
-cd backend && npm run seed                  # SUPER_ADMIN + institution DEMO (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production)
+cd backend && npm run seed                  # SUPER_ADMIN + structure de démo FSJP + comptes de test vérificateur et admin d'institution (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production ; lit le .env de la racine)
 cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
 cd frontend && npm run build
 ```

@@ -86,7 +86,7 @@ export class FilesController {
         'Content-Disposition': `inline; filename="${file.filename}"`,
         'X-Content-Type-Options': 'nosniff',
         'Content-Security-Policy': "default-src 'none'; sandbox",
-        'Cache-Control': 'private, no-store',
+        'Cache-Control': 'no-store',
         'Referrer-Policy': 'no-referrer',
       })
       .end(file.body);

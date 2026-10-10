@@ -98,14 +98,14 @@
 
 **Objectif :** un étudiant passe de « compte créé » à « inscription vérifiée ».
 
-- [ ] Module `institutions` : CRUD facultés, filières, niveaux, années, groupes (INSTITUTION_ADMIN)
-- [ ] Module `students` : profil, déclaration de l'inscription de l'année
-- [ ] Module `storage` : upload vers MinIO/S3, contrôle MIME réel (pas seulement l'extension), taille max 5 Mo, nom généré par le serveur, URL signée de 5 minutes
-- [ ] Module `verification` : file d'attente du vérificateur, consultation de l'attestation, validation / rejet avec motif
-- [ ] Conflit d'intérêts : un vérificateur ne valide pas sa propre inscription (03 §6)
-- [ ] Notifications simples dans l'application (validation, rejet)
-- [ ] Angular : écrans admin (structure), écran étudiant (dépôt), écran vérificateur (file + document + décision)
-- [ ] **Tests :** isolation entre institutions (404), upload d'un fichier malveillant renommé en `.pdf` refusé
+- [x] Module `institutions` : CRUD facultés, filières, niveaux, années, groupes (INSTITUTION_ADMIN)
+- [x] Module `students` : profil, déclaration de l'inscription de l'année
+- [x] Module `storage` : upload vers MinIO/S3, contrôle MIME réel (pas seulement l'extension), taille max 5 Mo, nom généré par le serveur, URL signée de 5 minutes
+- [x] Module `verification` : file d'attente du vérificateur, consultation de l'attestation, validation / rejet avec motif
+- [x] Conflit d'intérêts : un vérificateur ne valide pas sa propre inscription (03 §6)
+- [x] Notifications simples dans l'application (validation, rejet)
+- [x] Angular : écrans admin (structure), écran étudiant (dépôt), écran vérificateur (file + document + décision)
+- [x] **Tests :** isolation entre institutions (404), upload d'un fichier malveillant renommé en `.pdf` refusé
 
 **Démo :** un étudiant dépose son attestation, le vérificateur la valide, l'étudiant voit « Compte vérifié ».
 
@@ -178,6 +178,17 @@
 - [ ] Questionnaire court après le vote
 - [ ] Liste des corrections, classées : bloquant / important / confort
 - [ ] Décision : prêt pour une institution pilote (A-01), ou un sprint de correction en plus
+
+---
+
+## 9 bis. À faire avant la mise en production
+
+Points connus, volontairement reportés ; aucun ne doit rester ouvert au premier déploiement réel.
+
+- [ ] **Purge des attestations (D-07)** : tâche planifiée qui supprime les fichiers 12 mois après la fin de l'année universitaire (objet S3 + `stored_files.deletedAt`) et efface les données OCR dès la décision. Non implémentée au Sprint 3.
+- [ ] **Antivirus sur les dépôts (D-23)** : aucun scan aujourd'hui ; seul le type réel est vérifié.
+- [ ] `TRUST_PROXY` : vérifier la valeur contre la vraie chaîne de proxys (A-02).
+- [ ] Mots de passe et secrets de développement (`.env`, comptes du seed) : ne jamais les réutiliser ; le seed refuse `NODE_ENV=production`.
 
 ---
 

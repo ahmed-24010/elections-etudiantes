@@ -241,7 +241,8 @@ describe('Étudiants, attestations et vérification (Sprint 3)', () => {
         expect(file.headers['content-type']).toBe('application/pdf');
         expect(file.headers['x-content-type-options']).toBe('nosniff');
         expect(file.headers['content-security-policy']).toContain('sandbox');
-        expect(file.headers['cache-control']).toContain('no-store');
+        expect(file.headers['cache-control']).toBe('no-store');
+        expect(file.headers['referrer-policy']).toBe('no-referrer');
         expect(file.headers['content-disposition']).toBe('inline; filename="attestation.pdf"');
         expect(Buffer.from(file.body).subarray(0, 5).toString()).toBe('%PDF-');
       }
