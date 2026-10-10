@@ -29,6 +29,13 @@ describe('Menu utilisateur dans les layouts', () => {
     return TestBed.createComponent(PublicLayout);
   };
 
+  it('la barre du haut ne contient que le logo de l’Université', () => {
+    const fixture = create();
+    fixture.detectChanges();
+    const logos = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('nav img')).map((i) => i.getAttribute('src'));
+    expect(logos).toEqual(['branding/logo-un.jpg']);
+  });
+
   it('visiteur : liens connexion et inscription, pas de déconnexion', () => {
     const fixture = create();
     fixture.detectChanges();

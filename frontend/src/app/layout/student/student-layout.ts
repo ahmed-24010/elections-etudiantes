@@ -1,23 +1,20 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { LanguageSwitcher } from '../../shared/components/language-switcher/language-switcher';
-import { UserMenu } from '../../shared/components/user-menu/user-menu';
+import { AppFooter } from '../../shared/components/app-footer/app-footer';
+import { AppHeader } from '../../shared/components/app-header/app-header';
 
 @Component({
   selector: 'app-student-layout',
-  imports: [RouterLink, TranslocoPipe, LanguageSwitcher, UserMenu],
+  imports: [TranslocoPipe, AppHeader, AppFooter],
   template: `
-    <nav class="navbar navbar-dark bg-dark">
-      <div class="container">
-        <a class="navbar-brand" routerLink="/">{{ 'app.title' | transloco }}</a>
-        <div class="d-flex align-items-center gap-3">
-          <app-language-switcher />
-          <app-user-menu />
-        </div>
-      </div>
-    </nav>
-    <main class="container py-4"><p class="lead">{{ 'layout.student' | transloco }}</p></main>
+    <app-header />
+    <main class="container py-4">
+      <section class="app-card p-4">
+        <h1 class="h3 app-page-title">{{ 'student.welcome.title' | transloco }}</h1>
+        <p class="lead mb-0">{{ 'student.welcome.text' | transloco }}</p>
+      </section>
+    </main>
+    <app-footer />
   `,
 })
 export class StudentLayout {}

@@ -1,2 +1,9 @@
 // Bootstrap est chargé via <link id="bootstrap-css"> (version RTL ou LTR) : voir index.html.
 // Règle du projet : propriétés CSS logiques uniquement (margin-inline-start, padding-inline-end…).
+
+// Police Cairo, auto-hébergée (paquet npm, fichiers woff2 copiés dans le build : aucune requête vers Google).
+@use '@fontsource-variable/cairo/wght.css';
+
+// Les couleurs sont uniquement dans theme.scss.
+@use './theme/theme';
+@use './theme/layout';

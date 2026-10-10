@@ -18,7 +18,8 @@ const emailOrPhone = (group: AbstractControl): ValidationErrors | null =>
   template: `
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-5">
-        <h1 class="h3 mb-3">{{ 'auth.register.title' | transloco }}</h1>
+        <div class="app-card p-4">
+        <h1 class="h3 app-page-title mb-3">{{ 'auth.register.title' | transloco }}</h1>
 
         @if (done()) {
           <div class="alert alert-success" role="status">{{ 'auth.register.done' | transloco }}</div>
@@ -67,6 +68,7 @@ const emailOrPhone = (group: AbstractControl): ValidationErrors | null =>
             <a routerLink="/login">{{ 'auth.login.title' | transloco }}</a>
           </p>
         }
+        </div>
       </div>
     </div>
   `,

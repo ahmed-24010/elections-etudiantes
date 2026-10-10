@@ -11,7 +11,8 @@ import { AuthService } from '../../core/auth/auth.service';
   template: `
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-5">
-        <h1 class="h3 mb-3">{{ 'auth.login.title' | transloco }}</h1>
+        <div class="app-card p-4">
+        <h1 class="h3 app-page-title mb-3">{{ 'auth.login.title' | transloco }}</h1>
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           @if (!needsTotp()) {
             <div class="mb-3">
@@ -47,6 +48,7 @@ import { AuthService } from '../../core/auth/auth.service';
           {{ 'auth.login.noAccount' | transloco }}
           <a routerLink="/register">{{ 'auth.register.title' | transloco }}</a>
         </p>
+        </div>
       </div>
     </div>
   `,

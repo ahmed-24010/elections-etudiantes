@@ -1,0 +1,164 @@
+// Mise en forme de l'interface. AUCUNE couleur littérale ici : uniquement var(--app-…) (voir theme.scss).
+// Propriétés CSS logiques uniquement (RTL/LTR), jamais left/right fixes.
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--bs-body-font-family);
+}
+
+app-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// Chaque layout remplit la hauteur : le pied de page reste en bas même sur une page courte.
+app-public-layout,
+app-student-layout,
+app-admin-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  > main {
+    flex: 1;
+  }
+}
+
+// ---- Barre du haut -------------------------------------------------
+.app-navbar {
+  background: var(--app-navy);
+  color: var(--app-on-dark);
+  border-block-end: 3px solid var(--app-gold); // filet doré décoratif
+  padding-block: 0.5rem;
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--app-on-dark);
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.app-logos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+// Les logos ont un fond blanc : on les pose sur un médaillon blanc pour qu'ils se détachent du bleu nuit.
+.app-logo {
+  block-size: 44px;
+  inline-size: 44px;
+  object-fit: contain;
+  background: var(--app-card);
+  border-radius: 50%;
+  padding: 2px;
+  box-shadow: 0 0 0 2px var(--app-gold);
+}
+
+.app-brand-text {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+// ---- Page d'accueil ------------------------------------------------
+.app-hero {
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+  padding: 2rem 1.25rem;
+  text-align: center;
+  border-block-start: 4px solid var(--app-primary);
+}
+
+.app-hero-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-block-end: 1rem;
+}
+
+.app-hero-logo {
+  object-fit: contain;
+  max-inline-size: 100%;
+  height: auto;
+
+  &.is-faculty {
+    inline-size: 190px;
+  }
+  &.is-university {
+    inline-size: 120px;
+  }
+}
+
+.app-hero h1 {
+  color: var(--app-navy);
+  font-weight: 800;
+}
+
+.app-institution {
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+// Ornement doré (décoration seulement)
+.app-ornament {
+  inline-size: 96px;
+  block-size: 4px;
+  margin: 1rem auto;
+  border-radius: 2px;
+  background: var(--app-gold);
+}
+
+// ---- Cartes de formulaire -----------------------------------------
+.app-card {
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-block-start: 4px solid var(--app-primary);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+}
+
+.app-page-title {
+  color: var(--app-navy);
+  font-weight: 700;
+}
+
+// ---- Carte d'état du système --------------------------------------
+.app-status .card-header {
+  background: var(--app-primary-subtle);
+  color: var(--app-navy);
+  font-weight: 700;
+}
+
+// ---- Pied de page --------------------------------------------------
+.app-footer {
+  margin-block-start: auto;
+  background: var(--app-navy);
+  color: var(--app-on-dark);
+  border-block-start: 3px solid var(--app-gold);
+  padding-block: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 575.98px) {
+  .app-logo {
+    block-size: 38px;
+    inline-size: 38px;
+  }
+  .app-hero-logo.is-faculty {
+    inline-size: 150px;
+  }
+  .app-hero-logo.is-university {
+    inline-size: 96px;
+  }
+}
