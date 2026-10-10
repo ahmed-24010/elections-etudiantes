@@ -35,7 +35,8 @@ cp .env.example .env                       # une fois, puis remplacer les valeur
 docker compose up -d --build               # tout lancer (db, s3, backend, frontend)
 docker compose down -v                     # tout arrêter ET effacer les volumes (base vide au prochain up)
 cd backend && npm run lint && npm run test # lint + tests unitaires
-cd backend && npm run test:e2e             # tests e2e (Prisma simulé tant qu'aucun test ne cible la vraie base)
+cd backend && npm run test:e2e             # tests e2e (Prisma simulé : chaîne HTTP, guards, services)
+cd backend && npm run test:db              # tests sur la VRAIE base MySQL (DATABASE_URL = compte app_runtime d'une base migrée ; la CI les lance)
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
