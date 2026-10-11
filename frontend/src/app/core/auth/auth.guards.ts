@@ -38,7 +38,7 @@ export const adminHomeGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.hasRole('VERIFICATION_OFFICER')) return router.createUrlTree(['/admin/verification']);
-  if (auth.hasRole('INSTITUTION_ADMIN')) return router.createUrlTree(['/admin/academic']);
+  if (auth.hasRole('INSTITUTION_ADMIN')) return router.createUrlTree(['/admin/academic/years']);
   return true;
 };
 

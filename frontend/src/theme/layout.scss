@@ -132,25 +132,189 @@ app-admin-layout {
   font-weight: 700;
 }
 
-// ---- Sous-menu de l'administration ----------------------------------
-.app-subnav {
+// ---- Administration : menu latéral repliable + contenu ------------------
+// Le menu est du côté du début de lecture : à gauche en français, à droite en arabe (flex suit `dir`).
+.app-burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--app-on-dark);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-navy-soft);
+    border-color: var(--app-gold);
+  }
+}
+
+.app-admin {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.app-sidebar {
+  flex: none;
+  inline-size: 260px;
+  background: var(--app-card);
+  border-inline-end: 1px solid var(--app-border);
+  padding-block: 1rem;
+  overflow-y: auto;
+
+  &.is-collapsed {
+    display: none;
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.app-sidebar-title {
+  margin: 1rem 0 0.4rem;
+  padding-inline: 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-navy);
+
+  &:first-child {
+    margin-block-start: 0;
+  }
+}
+
+.app-sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 
   a {
-    padding: 0.4rem 1rem;
-    border-radius: 2rem;
-    border: 1px solid var(--app-border);
-    background: var(--app-card);
-    color: var(--app-navy);
+    display: block;
+    padding: 0.6rem 1.25rem;
+    border-inline-start: 3px solid transparent;
+    color: var(--app-text);
     font-weight: 600;
     text-decoration: none;
 
+    &:hover {
+      background: var(--app-primary-subtle);
+    }
+
     &.active {
-      background: var(--app-primary);
-      border-color: var(--app-primary);
-      color: var(--app-on-dark);
+      background: var(--app-primary-subtle);
+      border-inline-start-color: var(--app-primary);
+      color: var(--app-primary);
+    }
+  }
+}
+
+.app-admin-main {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 1.5rem;
+}
+
+.app-sidebar-backdrop {
+  display: none;
+  border: 0;
+  padding: 0;
+}
+
+// Mobile : le menu est replié derrière ☰ et s'ouvre par-dessus la page.
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 1030;
+    box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+  }
+  .app-sidebar-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1020;
+    background: var(--app-backdrop);
+  }
+  .app-admin-main {
+    padding: 1rem;
+  }
+}
+
+// ---- Page de liste (titre, recherche, filtres, tableau) --------------------
+.app-page-head {
+  margin-block-end: 1.25rem;
+
+  h1 {
+    margin: 0;
+    color: var(--app-navy);
+    font-weight: 800;
+    font-size: 1.6rem;
+  }
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--app-text-muted);
+  }
+}
+
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+
+  .app-search {
+    flex: 1 1 260px;
+    min-inline-size: 0;
+  }
+  .app-filter {
+    flex: 0 1 200px;
+    min-inline-size: 0;
+  }
+  .app-count {
+    margin-inline-start: auto;
+    color: var(--app-text-muted);
+    white-space: nowrap;
+  }
+}
+
+.app-table {
+  th {
+    color: var(--app-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: var(--app-surface);
+  }
+  .app-sort {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--app-primary);
+      outline-offset: 2px;
+    }
+  }
+  td.app-actions {
+    white-space: nowrap;
+    text-align: end;
+
+    > * + * {
+      margin-inline-start: 0.4rem;
     }
   }
 }
