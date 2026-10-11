@@ -15,7 +15,7 @@ describe('Layouts vides', () => {
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector('.navbar-brand')?.textContent).toContain('Élections étudiantes');
-      expect(el.querySelectorAll('app-language-switcher button').length).toBe(2);
+      expect(el.querySelectorAll('app-language-switcher button').length).toBe(1); // 🌐 : les langues sont dans un menu fermé
     });
   }
 });
@@ -51,42 +51,8 @@ describe('Menu utilisateur dans les layouts', () => {
     TestBed.inject(AuthService).user.set({ id: 'u', email: 'alice@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i', electionId: null }] });
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('alice@example.test');
-    expect(el.textContent).toContain('Déconnexion');
+    expect(el.querySelector('app-user-menu button')).toBeTruthy(); // 👤 ; e-mail et déconnexion sont dans le menu
     expect(el.querySelector('a[href="/login"]')).toBeNull();
   });
 });
 
-describe('Menu compte sur mobile', () => {
-  it('👤 ouvre un petit menu avec l’e-mail et « Déconnexion » ; un nouveau clic le ferme', async () => {
-    const { AuthService } = await import('../core/auth/auth.service');
-    TestBed.configureTestingModule({ imports: [PublicLayout, translocoTesting()], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
-    TestBed.inject(AuthService).user.set({ id: 'u', email: 'alice@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i', electionId: null }] });
-    const fixture = TestBed.createComponent(PublicLayout);
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.app-account-panel')).toBeNull();
-    const toggle = el.querySelector<HTMLButtonElement>('.app-account button')!;
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    toggle.click();
-    fixture.detectChanges();
-    const panel = el.querySelector('.app-account-panel')!;
-    expect(panel.textContent).toContain('alice@example.test');
-    expect(panel.textContent).toContain('Déconnexion');
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    toggle.click();
-    fixture.detectChanges();
-    expect(el.querySelector('.app-account-panel')).toBeNull();
-  });
-
-  it('la version bureau (e-mail + déconnexion) est masquée sur mobile, le menu 👤 sur bureau', async () => {
-    TestBed.configureTestingModule({ imports: [PublicLayout, translocoTesting()], providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
-    const { AuthService } = await import('../core/auth/auth.service');
-    TestBed.inject(AuthService).user.set({ id: 'u', email: 'a@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i', electionId: null }] });
-    const fixture = TestBed.createComponent(PublicLayout);
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('app-user-menu > .d-none.d-md-flex')).toBeTruthy();
-    expect(el.querySelector('app-user-menu > .d-md-none.app-account')).toBeTruthy();
-  });
-});

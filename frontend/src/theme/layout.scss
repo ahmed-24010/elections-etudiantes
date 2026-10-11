@@ -134,7 +134,8 @@ app-admin-layout {
 
 // ---- Administration : menu latéral repliable + contenu ------------------
 // Le menu est du côté du début de lecture : à gauche en français, à droite en arabe (flex suit `dir`).
-.app-burger {
+.app-burger,
+.app-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -199,19 +200,25 @@ app-admin-layout {
   a {
     display: block;
     padding: 0.6rem 1.25rem;
-    border-inline-start: 3px solid transparent;
+    border-inline-start: 4px solid transparent;
     color: var(--app-text);
     font-weight: 600;
     text-decoration: none;
 
-    &:hover {
+    // Survol / focus : simple teinte claire.
+    &:hover,
+    &:focus-visible {
       background: var(--app-primary-subtle);
+      color: var(--app-navy);
     }
 
-    &.active {
-      background: var(--app-primary-subtle);
-      border-inline-start-color: var(--app-primary);
-      color: var(--app-primary);
+    // Page actuelle : fond plein, texte blanc, filet doré — nettement plus marqué que le survol.
+    &.active,
+    &.active:hover {
+      background: var(--app-primary);
+      border-inline-start-color: var(--app-gold);
+      color: var(--app-on-dark);
+      font-weight: 800;
     }
   }
 }
@@ -228,20 +235,47 @@ app-admin-layout {
   padding: 0;
 }
 
-// Mobile : le menu est replié derrière ☰ et s'ouvre par-dessus la page.
+// Mobile : le menu est replié derrière ☰ ; ouvert, c'est un tiroir fixe PAR-DESSUS la page (rien n'est poussé ni coupé),
+// avec un voile sombre derrière. Il couvre toute la hauteur de l'écran, barre du haut comprise.
+.app-sidebar-close {
+  display: none;
+}
+
 @media (max-width: 991.98px) {
   .app-sidebar {
-    position: absolute;
+    position: fixed;
     inset-block: 0;
     inset-inline-start: 0;
-    z-index: 1030;
-    box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+    z-index: 1050;
+    inline-size: min(300px, 85vw);
+    padding-block-start: 0.5rem;
+    box-shadow: 0 0 2rem var(--app-shadow);
+  }
+  .app-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    margin-inline-start: auto;
+    margin-inline-end: 0.5rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--app-navy);
+    font-size: 1.4rem;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--app-primary-subtle);
+    }
   }
   .app-sidebar-backdrop {
     display: block;
-    position: absolute;
+    position: fixed;
     inset: 0;
-    z-index: 1020;
+    z-index: 1040;
     background: var(--app-backdrop);
   }
   .app-admin-main {
@@ -365,31 +399,65 @@ app-admin-layout {
   }
 }
 
-// ---- Menu compte (mobile) : 👤 → e-mail + déconnexion ----------------------
-.app-account {
+// ---- Menus de la barre du haut (compte, langue) --------------------------
+.app-menu {
   position: relative;
 }
 
-.app-account-panel {
+.app-menu-panel {
   position: absolute;
   inset-block-start: calc(100% + 0.5rem);
   inset-inline-end: 0;
-  z-index: 1040;
-  min-inline-size: 220px;
-  max-inline-size: 80vw;
-  padding: 0.75rem;
+  z-index: 1060;
+  min-inline-size: 200px;
+  max-inline-size: 85vw;
+  padding: 0.4rem;
   background: var(--app-card);
   border: 1px solid var(--app-border);
   border-radius: 0.5rem;
   box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.15rem;
+  color: var(--app-text);
+}
 
-  .app-account-email {
-    color: var(--app-text);
-    font-weight: 600;
-    text-decoration: none;
-    overflow-wrap: anywhere;
+.app-menu-email {
+  padding: 0.5rem 0.75rem;
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  border-block-end: 1px solid var(--app-border);
+  margin-block-end: 0.25rem;
+}
+
+.app-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--app-text);
+  font-weight: 600;
+  text-align: start;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-primary-subtle);
+    color: var(--app-navy);
+  }
+
+  &[aria-current='true'] {
+    color: var(--app-primary);
+  }
+
+  .app-menu-check {
+    inline-size: 1rem;
+    color: var(--app-primary);
+    font-weight: 800;
   }
 }

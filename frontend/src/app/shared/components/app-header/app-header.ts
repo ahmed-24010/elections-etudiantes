@@ -23,7 +23,7 @@ import { UserMenu } from '../user-menu/user-menu';
             <span class="app-brand-text d-none d-sm-inline">{{ 'app.title' | transloco }}</span>
           </a>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-2">
           <app-language-switcher />
           <app-user-menu />
         </div>

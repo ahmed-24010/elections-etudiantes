@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -65,12 +65,13 @@ const MOBILE = '(max-width: 991.98px)';
     <div class="app-admin">
       @if (sections().length) {
         <aside id="admin-sidebar" class="app-sidebar" [class.is-collapsed]="!open()">
+          <button type="button" class="app-sidebar-close" [attr.aria-label]="'common.close' | transloco" (click)="open.set(false)">×</button>
           <nav [attr.aria-label]="'nav.admin' | transloco">
             @for (s of sections(); track s.title) {
               <h2 class="app-sidebar-title">{{ s.title | transloco }}</h2>
               <ul class="app-sidebar-list">
                 @for (i of s.items; track i.path) {
-                  <li><a [routerLink]="i.path" routerLinkActive="active">{{ i.label | transloco }}</a></li>
+                  <li><a [routerLink]="i.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ i.label | transloco }}</a></li>
                 }
               </ul>
             }
@@ -94,6 +95,12 @@ export class AdminLayout {
   /** Ouvert d'office sur grand écran, replié sur mobile. */
   protected readonly open = signal(!this.mobile());
   protected readonly sections = computed(() => ADMIN_MENU.filter((s) => this.auth.hasRole(s.role)));
+
+  /** Échap referme le tiroir sur mobile. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (this.mobile()) this.open.set(false);
+  }
 
   constructor() {
     const onChange = (e: MediaQueryListEvent) => {
