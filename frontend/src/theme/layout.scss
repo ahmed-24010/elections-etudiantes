@@ -132,25 +132,223 @@ app-admin-layout {
   font-weight: 700;
 }
 
-// ---- Sous-menu de l'administration ----------------------------------
-.app-subnav {
+// ---- Administration : menu latéral repliable + contenu ------------------
+// Le menu est du côté du début de lecture : à gauche en français, à droite en arabe (flex suit `dir`).
+.app-burger,
+.app-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--app-on-dark);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-navy-soft);
+    border-color: var(--app-gold);
+  }
+}
+
+.app-admin {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.app-sidebar {
+  flex: none;
+  inline-size: 260px;
+  background: var(--app-card);
+  border-inline-end: 1px solid var(--app-border);
+  padding-block: 1rem;
+  overflow-y: auto;
+
+  &.is-collapsed {
+    display: none;
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.app-sidebar-title {
+  margin: 1rem 0 0.4rem;
+  padding-inline: 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-navy);
+
+  &:first-child {
+    margin-block-start: 0;
+  }
+}
+
+.app-sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 
   a {
-    padding: 0.4rem 1rem;
-    border-radius: 2rem;
-    border: 1px solid var(--app-border);
-    background: var(--app-card);
-    color: var(--app-navy);
+    display: block;
+    padding: 0.6rem 1.25rem;
+    border-inline-start: 4px solid transparent;
+    color: var(--app-text);
     font-weight: 600;
     text-decoration: none;
 
-    &.active {
+    // Survol / focus : simple teinte claire.
+    &:hover,
+    &:focus-visible {
+      background: var(--app-primary-subtle);
+      color: var(--app-navy);
+    }
+
+    // Page actuelle : fond plein, texte blanc, filet doré — nettement plus marqué que le survol.
+    &.active,
+    &.active:hover {
       background: var(--app-primary);
-      border-color: var(--app-primary);
+      border-inline-start-color: var(--app-gold);
       color: var(--app-on-dark);
+      font-weight: 800;
+    }
+  }
+}
+
+.app-admin-main {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 1.5rem;
+}
+
+.app-sidebar-backdrop {
+  display: none;
+  border: 0;
+  padding: 0;
+}
+
+// Mobile : le menu est replié derrière ☰ ; ouvert, c'est un tiroir fixe PAR-DESSUS la page (rien n'est poussé ni coupé),
+// avec un voile sombre derrière. Il couvre toute la hauteur de l'écran, barre du haut comprise.
+.app-sidebar-close {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 1050;
+    inline-size: min(300px, 85vw);
+    padding-block-start: 0.5rem;
+    box-shadow: 0 0 2rem var(--app-shadow);
+  }
+  .app-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    margin-inline-start: auto;
+    margin-inline-end: 0.5rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--app-navy);
+    font-size: 1.4rem;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--app-primary-subtle);
+    }
+  }
+  .app-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: var(--app-backdrop);
+  }
+  .app-admin-main {
+    padding: 1rem;
+  }
+}
+
+// ---- Page de liste (titre, recherche, filtres, tableau) --------------------
+.app-page-head {
+  margin-block-end: 1.25rem;
+
+  h1 {
+    margin: 0;
+    color: var(--app-navy);
+    font-weight: 800;
+    font-size: 1.6rem;
+  }
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--app-text-muted);
+  }
+}
+
+.app-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block-end: 1rem;
+
+  .app-search {
+    flex: 1 1 260px;
+    min-inline-size: 0;
+  }
+  .app-filter {
+    flex: 0 1 200px;
+    min-inline-size: 0;
+  }
+  .app-count {
+    margin-inline-start: auto;
+    color: var(--app-text-muted);
+    white-space: nowrap;
+  }
+}
+
+.app-table {
+  th {
+    color: var(--app-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: var(--app-surface);
+  }
+  .app-sort {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--app-primary);
+      outline-offset: 2px;
+    }
+  }
+  td.app-actions {
+    white-space: nowrap;
+    text-align: end;
+
+    > * + * {
+      margin-inline-start: 0.4rem;
     }
   }
 }
@@ -199,4 +397,215 @@ app-admin-layout {
   .app-hero-logo.is-university {
     inline-size: 96px;
   }
+}
+
+// ---- Menus de la barre du haut (compte, langue) --------------------------
+.app-menu {
+  position: relative;
+}
+
+.app-menu-panel {
+  position: absolute;
+  inset-block-start: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 1060;
+  min-inline-size: 200px;
+  max-inline-size: 85vw;
+  padding: 0.4rem;
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: var(--app-text);
+}
+
+.app-menu-email {
+  padding: 0.5rem 0.75rem;
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  border-block-end: 1px solid var(--app-border);
+  margin-block-end: 0.25rem;
+}
+
+.app-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--app-text);
+  font-weight: 600;
+  text-align: start;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-primary-subtle);
+    color: var(--app-navy);
+  }
+
+  &[aria-current='true'] {
+    color: var(--app-primary);
+  }
+
+  .app-menu-check {
+    inline-size: 1rem;
+    color: var(--app-primary);
+    font-weight: 800;
+  }
+}
+
+// ---- Listes compactes et boutons-icônes ---------------------------------
+.app-table {
+  td,
+  th {
+    padding-block: 0.3rem;
+  }
+}
+
+.app-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.4rem;
+  background: var(--app-card);
+  color: var(--app-primary);
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--app-primary-subtle);
+    border-color: var(--app-primary);
+  }
+  &.is-danger {
+    color: var(--app-danger);
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--app-danger-subtle);
+      border-color: var(--app-danger);
+    }
+  }
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+// ---- Grille des groupes (niveaux × filières) -------------------------------
+.app-grid {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    border-block-end: 1px solid var(--app-border);
+    vertical-align: middle;
+  }
+  thead th {
+    background: var(--app-surface);
+    color: var(--app-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: start;
+  }
+  tbody th {
+    inline-size: 1%;
+    white-space: nowrap;
+    color: var(--app-navy);
+    font-weight: 700;
+  }
+  abbr {
+    text-decoration: none;
+    cursor: help;
+  }
+}
+
+.app-group-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.app-group-badge {
+  min-inline-size: 2.2rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--app-primary);
+  border-radius: 1rem;
+  background: var(--app-primary-subtle);
+  color: var(--app-primary);
+  font-weight: 700;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-primary);
+    color: var(--app-on-dark);
+  }
+}
+
+.app-group-add {
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+  border: 1px dashed var(--app-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--app-text-muted);
+  line-height: 1;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    border-color: var(--app-primary);
+    color: var(--app-primary);
+  }
+}
+
+.app-group-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.app-group-card {
+  padding: 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+
+  h2 {
+    color: var(--app-navy);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.35rem;
+    border-block-start: 1px solid var(--app-border);
+  }
+  abbr {
+    text-decoration: none;
+  }
+}
+
+.app-group-level {
+  inline-size: 2.5rem;
+  flex: none;
+  color: var(--app-navy);
+  font-weight: 700;
 }

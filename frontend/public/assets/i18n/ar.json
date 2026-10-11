@@ -8,7 +8,14 @@
     "admin": "الإدارة",
     "language": "اللغة",
     "academic": "الهيكل الأكاديمي",
-    "verification": "التحقق من التسجيلات"
+    "verification": "التحقق",
+    "enrollments": "التسجيلات",
+    "years": "السنوات",
+    "faculties": "الكليات",
+    "programs": "الشعب",
+    "levels": "المستويات",
+    "groups": "الأفواج",
+    "toggleMenu": "إظهار القائمة أو إخفاؤها"
   },
   "home": {
     "title": "الانتخابات الطلابية",
@@ -30,7 +37,20 @@
   "common": {
     "loading": "جارٍ التحميل…",
     "cancel": "إلغاء",
-    "save": "حفظ"
+    "save": "حفظ",
+    "close": "إغلاق",
+    "search": "بحث",
+    "searchPlaceholder": "بحث…",
+    "results": "{{count}} نتيجة",
+    "noResults": "لا توجد نتائج.",
+    "refresh": "تحديث",
+    "actions": "إجراءات",
+    "add": "إضافة",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "choose": "اختر…",
+    "editItem": "تعديل «{{name}}»",
+    "deleteItem": "حذف «{{name}}»"
   },
   "auth": {
     "identifier": "البريد الإلكتروني أو الهاتف",
@@ -61,7 +81,8 @@
       "qrAlt": "رمز QR للمصادقة الثنائية",
       "manual": "أو أدخل هذا المفتاح يدويًا:",
       "submit": "تفعيل ومتابعة"
-    }
+    },
+    "account": "حسابي"
   },
   "stepUp": {
     "title": "التأكيد برمز المصادقة",
@@ -170,7 +191,9 @@
       "title": "التسجيلات المطلوب التحقق منها",
       "empty": "لا توجد تسجيلات في الانتظار.",
       "submitted": "تاريخ الإيداع",
-      "review": "مراجعة"
+      "review": "مراجعة",
+      "subtitle": "مراجعة شهادات القيد التي أودعها طلبة كليتك.",
+      "searchPlaceholder": "بحث بالاسم أو برقم الطالب…"
     },
     "review": {
       "back": "العودة إلى القائمة",
@@ -194,30 +217,65 @@
     }
   },
   "academic": {
-    "title": "الهيكل الأكاديمي",
-    "years": "السنوات الجامعية",
-    "faculties": "الكليات",
-    "programs": "الشعب",
-    "levels": "المستويات",
-    "groups": "الأفواج",
-    "current": "السنة الجارية",
-    "makeCurrent": "تعيينها سنة جارية",
-    "none": "لا توجد عناصر.",
-    "add": "إضافة",
-    "edit": "تعديل",
-    "delete": "حذف",
-    "confirmDelete": "تأكيد الحذف",
-    "fields": {
-      "yearLabel": "التسمية (AAAA-AAAA)",
-      "startsOn": "البداية",
-      "datePlaceholder": "YYYY-MM-DD",
-      "endsOn": "النهاية",
+    "pages": {
+      "years": {
+        "title": "السنوات الجامعية",
+        "subtitle": "تحديد السنوات الجامعية واختيار السنة الجارية.",
+        "add": "إضافة سنة",
+        "edit": "تعديل السنة"
+      },
+      "faculties": {
+        "title": "الكليات",
+        "subtitle": "إدارة كليات المؤسسة.",
+        "add": "إضافة كلية",
+        "edit": "تعديل الكلية"
+      },
+      "programs": {
+        "title": "الشعب",
+        "subtitle": "إدارة الشعب المرتبطة بكلية.",
+        "add": "إضافة شعبة",
+        "edit": "تعديل الشعبة"
+      },
+      "levels": {
+        "title": "المستويات",
+        "subtitle": "إدارة المستويات الدراسية (السنة الأولى ليسانس، ماستر 1…).",
+        "add": "إضافة مستوى",
+        "edit": "تعديل المستوى"
+      },
+      "groups": {
+        "title": "الأفواج",
+        "subtitle": "إدارة الأفواج حسب الشعبة والمستوى والسنة الجامعية.",
+        "add": "إضافة فوج",
+        "edit": "تعديل الفوج"
+      }
+    },
+    "cols": {
       "code": "الرمز",
       "name": "الاسم",
       "nameAr": "الاسم بالعربية",
       "rank": "الترتيب",
+      "faculty": "الكلية",
+      "program": "الشعبة",
+      "level": "المستوى",
       "year": "السنة",
-      "groupName": "اسم الفوج"
-    }
+      "group": "الفوج",
+      "label": "التسمية (YYYY-YYYY)",
+      "startsOn": "البداية",
+      "endsOn": "النهاية",
+      "status": "الحالة"
+    },
+    "filters": {
+      "allFaculties": "كل الكليات",
+      "allPrograms": "كل الشعب",
+      "allLevels": "كل المستويات",
+      "allYears": "كل السنوات"
+    },
+    "current": "الجارية",
+    "makeCurrent": "تعيينها سنة جارية",
+    "deleteConfirm": "هل تريد حذف «{{name}}»؟ هذا الإجراء نهائي.",
+    "datePlaceholder": "YYYY-MM-DD",
+    "noYear": "لا توجد سنة جامعية: أنشئ سنة أولًا.",
+    "groupBadge": "الفوج {{name}} — {{program}}، {{level}}: إجراءات",
+    "addGroupIn": "إضافة فوج — {{program}}، {{level}}"
   }
 }

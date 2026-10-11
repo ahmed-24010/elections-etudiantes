@@ -5,7 +5,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { TranslocoTestingModule, Translation } from '@jsverse/transloco';
 import { AuthService } from './core/auth/auth.service';
 import { LanguageService } from './core/services/language.service';
-import { AcademicPage } from './features/admin/academic-page';
+import { AcademicListPage } from './features/admin/academic-list-page';
 import { StudentHome } from './features/student/student-home';
 import { QueuePage } from './features/verification/queue-page';
 import { ReviewPage } from './features/verification/review-page';
@@ -32,12 +32,12 @@ export function unisolated(root: HTMLElement): string[] {
 const ar: Translation = { app: { title: 'x' } };
 const label = { id: 'x', name: 'N' };
 
-function setup() {
+function setup(kind = 'years') {
   TestBed.configureTestingModule({
     imports: [TranslocoTestingModule.forRoot({ langs: { ar, fr: ar }, translocoConfig: { availableLangs: ['ar', 'fr'], defaultLang: 'ar' }, preloadLangs: true })],
     providers: [
       provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
-      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'e' }) } } },
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'e' }), data: { kind } } } },
     ],
   });
   TestBed.inject(LanguageService).current.set('ar');
@@ -95,26 +95,27 @@ describe('Arabe (RTL) : nombres et codes isolés', () => {
     expect(unisolated(review.nativeElement)).toEqual([]);
   });
 
-  it('structure académique : années, dates, codes isolés ; la flèche suit le sens de lecture ; dates saisies en AAAA-MM-JJ', async () => {
-    const http = setup();
-    const page = TestBed.createComponent(AcademicPage);
-    page.detectChanges();
-    http.expectOne('/api/v1/institutions/inst-1/academic').flush({
-      years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }],
-      faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP' }], programs: [], levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
-      groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
-    });
-    await settle(page);
-    const el = page.nativeElement as HTMLElement;
-    expect(unisolated(el)).toEqual([]);
-    expect(el.textContent).toContain('←'); // arabe : la flèche pointe vers la gauche
-    expect(el.textContent).not.toContain('→');
-    // plus de champ date du navigateur (son format suivrait la langue du navigateur : « jj/mm/aaaa »)
-    expect(el.querySelector('input[type=date]')).toBeNull();
-    expect(el.querySelector('#yStart')?.getAttribute('dir')).toBe('ltr');
-
-    TestBed.inject(LanguageService).current.set('fr');
-    page.detectChanges();
-    expect(el.textContent).toContain('→');
+  it('structure académique (années, groupes) : années, dates, codes isolés ; dates saisies en AAAA-MM-JJ', async () => {
+    for (const kind of ['years', 'groups']) {
+      TestBed.resetTestingModule();
+      const http = setup(kind);
+      const page = TestBed.createComponent(AcademicListPage);
+      page.detectChanges();
+      http.expectOne('/api/v1/institutions/inst-1/academic').flush({
+        years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }],
+        faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP' }], programs: [{ id: 'p', code: 'DP', name: 'Droit privé', facultyId: 'f' }], levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
+        groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
+      });
+      await settle(page);
+      const el = page.nativeElement as HTMLElement;
+      expect(el.querySelectorAll('tbody tr').length).withContext(kind).toBe(1);
+      expect(unisolated(el)).withContext(kind).toEqual([]);
+      // fenêtre d'ajout : champs de date en texte AAAA-MM-JJ (le champ date du navigateur suivrait sa langue : « jj/mm/aaaa »)
+      Array.from(el.querySelectorAll('button')).find((x) => /common.add/.test(x.textContent ?? ''))!.click();
+      page.detectChanges();
+      expect(el.querySelector('input[type=date]')).toBeNull();
+      expect(unisolated(el)).withContext(kind + ' (fenêtre)').toEqual([]);
+      if (kind === 'years') expect(el.querySelector('#f-startsOn')?.getAttribute('dir')).toBe('ltr');
+    }
   });
 });

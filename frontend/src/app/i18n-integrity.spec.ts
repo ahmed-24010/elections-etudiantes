@@ -8,7 +8,7 @@ import { settle } from './testing';
 import { REJECTION_CODES } from './core/api/enrollment.api';
 import { apiErrorKey } from './core/auth/api-error';
 import { AuthService } from './core/auth/auth.service';
-import { AcademicPage } from './features/admin/academic-page';
+import { AcademicListPage } from './features/admin/academic-list-page';
 import { QueuePage } from './features/verification/queue-page';
 import { ReviewPage } from './features/verification/review-page';
 import { StudentHome } from './features/student/student-home';
@@ -105,7 +105,7 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     ['configuration 2FA', TwoFactorSetupPage],
     ['pied de page', AppFooter],
     ['tableau de bord étudiant', StudentHome],
-    ['structure académique', AcademicPage],
+    ['structure académique (années)', AcademicListPage],
     ['file du vérificateur', QueuePage],
     ['examen d’une inscription', ReviewPage],
     ['fenêtre de code 2FA', StepUpDialog],
@@ -250,6 +250,68 @@ describe('Traductions : aucune clé brute à l’écran', () => {
         expect(el.querySelector('#rejectCode')).toBeTruthy();
         expect(rawKeys(el)).toEqual([]);
       });
+    }
+  });
+
+  describe('pages de structure académique : aucune clé brute (liste, fenêtres d’ajout, de modification et de suppression)', () => {
+    const data = {
+      years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }, { id: 'y2', label: '2027-2028', startsOn: '2027-09-01T00:00:00Z', endsOn: '2028-07-15T00:00:00Z', isCurrent: false }],
+      faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP', nameAr: 'ك' }],
+      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', nameAr: 'خ', facultyId: 'f' }],
+      levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
+      groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
+    };
+    for (const lang of LANGS) {
+      for (const kind of ['years', 'faculties', 'programs', 'levels', 'groups']) {
+        it(`${kind} en ${lang}`, async () => {
+          configure(json, lang);
+          TestBed.configureTestingModule({ providers: [{ provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}), data: { kind } } } }] });
+          TestBed.inject(AuthService).user.set({ id: 'u', email: 'a@example.test', phone: null, twoFactorEnabled: true, roles: [{ role: 'INSTITUTION_ADMIN', institutionId: 'i', electionId: null }] });
+          const http = TestBed.inject(HttpTestingController);
+          const fixture = TestBed.createComponent(AcademicListPage);
+          fixture.detectChanges();
+          http.expectOne('/api/v1/institutions/i/academic').flush(data);
+          await settle(fixture);
+          const el = fixture.nativeElement as HTMLElement;
+          expect(rawKeys(el)).withContext('liste').toEqual([]);
+          const click = (text: string) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!.click();
+          const action = (selector: string) => el.querySelector<HTMLButtonElement>(selector)!.click();
+          const t = json[lang] as Record<string, Record<string, string>>;
+          click('+');
+          const rowAction = (danger: boolean) => {
+            if (kind === 'groups') {
+              el.querySelector<HTMLButtonElement>('.app-group-badge')!.click();
+              fixture.detectChanges();
+              click(t['common'][danger ? 'delete' : 'edit']);
+            } else action(danger ? '.app-icon-action.is-danger' : '.app-icon-action:not(.is-danger)');
+          };
+          fixture.detectChanges();
+          expect(rawKeys(el)).withContext('fenêtre d’ajout').toEqual([]);
+          el.querySelector<HTMLButtonElement>('.modal-footer .btn-outline-primary')!.click();
+          fixture.detectChanges();
+          rowAction(false);
+          fixture.detectChanges();
+          expect(rawKeys(el)).withContext('fenêtre de modification').toEqual([]);
+          el.querySelector<HTMLButtonElement>('.modal-footer .btn-outline-primary')!.click();
+          fixture.detectChanges();
+          rowAction(true);
+          fixture.detectChanges();
+          expect(el.querySelector('.modal-body')?.textContent).toContain('«');
+          expect(rawKeys(el)).withContext('confirmation de suppression').toEqual([]);
+        });
+      }
+    }
+  });
+
+  it('les clés construites pour les pages d’administration existent dans les deux langues', () => {
+    const kinds = ['years', 'faculties', 'programs', 'levels', 'groups'];
+    const dynamic = [
+      ...kinds.flatMap((k) => [`academic.pages.${k}.title`, `academic.pages.${k}.subtitle`, `academic.pages.${k}.add`, `academic.pages.${k}.edit`, `nav.${k}`]),
+      ...['code', 'name', 'nameAr', 'rank', 'faculty', 'program', 'level', 'year', 'group', 'label', 'startsOn', 'endsOn', 'status'].map((c) => `academic.cols.${c}`),
+    ];
+    for (const lang of LANGS) {
+      const known = flatKeys(json[lang]);
+      expect(dynamic.filter((k) => !known.includes(k))).withContext(lang).toEqual([]);
     }
   });
 

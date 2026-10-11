@@ -6,7 +6,7 @@ const AUTH_FR = {
   'student.welcome.title': 'Bienvenue', 'student.welcome.text': 'Les prochaines étapes arriveront bientôt.',
   'institution.university': 'Université de Nouakchott', 'institution.faculty': 'Faculté des Sciences Juridiques et Politiques',
   'institution.universityLogo': 'Logo université', 'institution.facultyLogo': 'Logo faculté', 'home.mySpace': 'Mon espace',
-  'auth.logout': 'Déconnexion', 'auth.login.title': 'Connexion', 'auth.login.submit': 'Se connecter',
+  'auth.logout': 'Déconnexion', 'auth.account': 'Mon compte', 'auth.login.title': 'Connexion', 'auth.login.submit': 'Se connecter',
   'auth.login.totpHint': 'Saisissez le code.', 'auth.register.title': 'Inscription', 'auth.register.submit': 'Créer mon compte',
   'auth.register.done': 'Inscription enregistrée', 'auth.register.emailOrPhone': 'Au moins un', 'auth.register.passwordHint': '{{min}} caractères minimum.',
   'auth.identifier': 'Identifiant', 'auth.password': 'Mot de passe', 'auth.code': 'Code', 'auth.email': 'E-mail', 'auth.phone': 'Téléphone',

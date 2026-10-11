@@ -15,7 +15,7 @@ describe('Layouts vides', () => {
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
       expect(el.querySelector('.navbar-brand')?.textContent).toContain('Élections étudiantes');
-      expect(el.querySelectorAll('app-language-switcher button').length).toBe(2);
+      expect(el.querySelectorAll('app-language-switcher button').length).toBe(1); // 🌐 : les langues sont dans un menu fermé
     });
   }
 });
@@ -51,8 +51,8 @@ describe('Menu utilisateur dans les layouts', () => {
     TestBed.inject(AuthService).user.set({ id: 'u', email: 'alice@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i', electionId: null }] });
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('alice@example.test');
-    expect(el.textContent).toContain('Déconnexion');
+    expect(el.querySelector('app-user-menu button')).toBeTruthy(); // 👤 ; e-mail et déconnexion sont dans le menu
     expect(el.querySelector('a[href="/login"]')).toBeNull();
   });
 });
+

@@ -32,11 +32,13 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     children: [
       { path: '', pathMatch: 'full', canActivate: [adminHomeGuard], loadComponent: () => import('./features/admin/admin-home').then((m) => m.AdminHome) },
-      {
-        path: 'academic',
+      { path: 'academic', pathMatch: 'full', redirectTo: 'academic/years' },
+      ...(['years', 'faculties', 'programs', 'levels', 'groups'] as const).map((kind) => ({
+        path: 'academic/' + kind,
         canActivate: [roleGuard('INSTITUTION_ADMIN')],
-        loadComponent: () => import('./features/admin/academic-page').then((m) => m.AcademicPage),
-      },
+        data: { kind },
+        loadComponent: () => import('./features/admin/academic-list-page').then((m) => m.AcademicListPage),
+      })),
       {
         path: 'verification',
         canActivate: [roleGuard('VERIFICATION_OFFICER')],

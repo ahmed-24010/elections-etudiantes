@@ -8,7 +8,14 @@
     "admin": "Administration",
     "language": "Langue",
     "academic": "Structure académique",
-    "verification": "Vérification des inscriptions"
+    "verification": "Vérification",
+    "enrollments": "Inscriptions",
+    "years": "Années",
+    "faculties": "Facultés",
+    "programs": "Filières",
+    "levels": "Niveaux",
+    "groups": "Groupes",
+    "toggleMenu": "Afficher ou masquer le menu"
   },
   "home": {
     "title": "Élections étudiantes",
@@ -30,7 +37,20 @@
   "common": {
     "loading": "Chargement…",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "searchPlaceholder": "Rechercher…",
+    "results": "{{count}} résultat(s)",
+    "noResults": "Aucun résultat.",
+    "refresh": "Actualiser",
+    "actions": "Actions",
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "choose": "Choisir…",
+    "editItem": "Modifier « {{name}} »",
+    "deleteItem": "Supprimer « {{name}} »"
   },
   "auth": {
     "identifier": "E-mail ou téléphone",
@@ -61,7 +81,8 @@
       "qrAlt": "QR code de la double authentification",
       "manual": "Ou saisissez cette clé manuellement :",
       "submit": "Activer et continuer"
-    }
+    },
+    "account": "Mon compte"
   },
   "stepUp": {
     "title": "Confirmer avec votre code",
@@ -170,7 +191,9 @@
       "title": "Inscriptions à vérifier",
       "empty": "Aucune inscription en attente.",
       "submitted": "Déposée le",
-      "review": "Examiner"
+      "review": "Examiner",
+      "subtitle": "Examiner les attestations d’inscription déposées par les étudiants de votre faculté.",
+      "searchPlaceholder": "Rechercher par nom ou numéro étudiant…"
     },
     "review": {
       "back": "Retour à la liste",
@@ -194,30 +217,65 @@
     }
   },
   "academic": {
-    "title": "Structure académique",
-    "years": "Années universitaires",
-    "faculties": "Facultés",
-    "programs": "Filières",
-    "levels": "Niveaux",
-    "groups": "Groupes",
-    "current": "Année courante",
-    "makeCurrent": "Définir comme courante",
-    "none": "Aucun élément.",
-    "add": "Ajouter",
-    "edit": "Modifier",
-    "delete": "Supprimer",
-    "confirmDelete": "Confirmer la suppression",
-    "fields": {
-      "yearLabel": "Libellé (AAAA-AAAA)",
-      "startsOn": "Début",
-      "datePlaceholder": "AAAA-MM-JJ",
-      "endsOn": "Fin",
+    "pages": {
+      "years": {
+        "title": "Années universitaires",
+        "subtitle": "Définir les années universitaires et choisir l’année courante.",
+        "add": "Ajouter une année",
+        "edit": "Modifier l’année"
+      },
+      "faculties": {
+        "title": "Facultés",
+        "subtitle": "Gérer les facultés de l’institution.",
+        "add": "Ajouter une faculté",
+        "edit": "Modifier la faculté"
+      },
+      "programs": {
+        "title": "Filières",
+        "subtitle": "Gérer les filières, rattachées à une faculté.",
+        "add": "Ajouter une filière",
+        "edit": "Modifier la filière"
+      },
+      "levels": {
+        "title": "Niveaux",
+        "subtitle": "Gérer les niveaux d’études (Licence 1, Master 1…).",
+        "add": "Ajouter un niveau",
+        "edit": "Modifier le niveau"
+      },
+      "groups": {
+        "title": "Groupes",
+        "subtitle": "Gérer les groupes par filière, niveau et année universitaire.",
+        "add": "Ajouter un groupe",
+        "edit": "Modifier le groupe"
+      }
+    },
+    "cols": {
       "code": "Code",
       "name": "Nom",
       "nameAr": "Nom en arabe",
       "rank": "Ordre",
+      "faculty": "Faculté",
+      "program": "Filière",
+      "level": "Niveau",
       "year": "Année",
-      "groupName": "Nom du groupe"
-    }
+      "group": "Groupe",
+      "label": "Libellé (AAAA-AAAA)",
+      "startsOn": "Début",
+      "endsOn": "Fin",
+      "status": "Statut"
+    },
+    "filters": {
+      "allFaculties": "Toutes les facultés",
+      "allPrograms": "Toutes les filières",
+      "allLevels": "Tous les niveaux",
+      "allYears": "Toutes les années"
+    },
+    "current": "Courante",
+    "makeCurrent": "Définir comme courante",
+    "deleteConfirm": "Voulez-vous supprimer « {{name}} » ? Cette action est définitive.",
+    "datePlaceholder": "AAAA-MM-JJ",
+    "noYear": "Aucune année universitaire : créez-en une d'abord.",
+    "groupBadge": "Groupe {{name}} — {{program}}, {{level}} : actions",
+    "addGroupIn": "Ajouter un groupe — {{program}}, {{level}}"
   }
 }

@@ -21,7 +21,7 @@ type Outcome = 'approved' | 'rejected';
   selector: 'app-review-page',
   imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, DatePipe],
   template: `
-    <p><a routerLink="/admin/verification">← {{ 'verification.review.back' | transloco }}</a></p>
+    <p><a routerLink="/admin/verification">{{ backArrow() }} {{ 'verification.review.back' | transloco }}</a></p>
     @if (loadError(); as key) {
       <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
     } @else if (!detail()) {
@@ -158,6 +158,11 @@ export class ReviewPage implements OnInit {
     } catch (e) {
       this.loadError.set(apiErrorKey(e));
     }
+  }
+
+  /** Flèche de retour : elle pointe vers le début de lecture (← en français, → en arabe). */
+  protected backArrow(): string {
+    return this.lang.dir() === 'rtl' ? '→' : '←';
   }
 
   protected name(item: { name: string; nameAr?: string | null }): string {
