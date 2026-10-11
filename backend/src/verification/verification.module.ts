@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
+import { VerificationController } from './verification.controller';
+import { VerificationService } from './verification.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Module({ controllers: [VerificationController], providers: [VerificationService] })
 export class VerificationModule {}

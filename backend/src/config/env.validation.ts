@@ -46,11 +46,16 @@ export class EnvironmentVariables {
   @IsIn(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
   LOG_LEVEL: string = 'info';
 
-  @IsOptional() @IsString() S3_ENDPOINT?: string;
-  @IsOptional() @IsString() S3_REGION?: string;
-  @IsOptional() @IsString() S3_BUCKET?: string;
-  @IsOptional() @IsString() S3_ACCESS_KEY?: string;
-  @IsOptional() @IsString() S3_SECRET_KEY?: string;
+  // Stockage S3 privé des attestations (SeaweedFS en local) : obligatoire depuis le Sprint 3.
+  @IsString() @IsNotEmpty() S3_ENDPOINT: string;
+  @IsString() @IsNotEmpty() S3_REGION: string;
+  @IsString() @IsNotEmpty() S3_BUCKET: string;
+  @IsString() @IsNotEmpty() S3_ACCESS_KEY: string;
+  @IsString() @IsNotEmpty() S3_SECRET_KEY: string;
+
+  // Clé de signature des URL d'accès aux attestations (HMAC, 5 min). Distincte des secrets JWT.
+  @IsString() @MinLength(32)
+  FILE_SIGNING_SECRET: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {

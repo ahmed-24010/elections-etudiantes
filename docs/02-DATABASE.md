@@ -117,6 +117,8 @@ Choix :
 
 **Pourquoi séparer `students` et `student_enrollments` ?** Un étudiant change de niveau et de groupe chaque année. L'éligibilité dépend de l'inscription vérifiée **de l'année de l'élection**, pas d'un profil qui serait écrasé.
 
+Numéro étudiant (D-22) : `students.studentNumber` est nullable. Il est libéré (mis à `NULL`) par un rejet de code `WRONG_STUDENT_NUMBER` (`student_enrollments.rejectionCode`) ou par expiration d'une réservation non vérifiée ; `students.numberClaimedAt` date la réservation. Un numéro d'une inscription `VERIFIED` n'est jamais libéré.
+
 Cycle d'une inscription :
 
 ```text

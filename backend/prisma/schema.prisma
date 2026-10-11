@@ -43,6 +43,14 @@ enum EnrollmentStatus {
   EXPIRED
 }
 
+// Code du rejet d'une inscription (le motif libre reste dans rejectionReason). WRONG_STUDENT_NUMBER libère le numéro (D-22).
+enum RejectionCode {
+  WRONG_STUDENT_NUMBER
+  DOCUMENT_UNREADABLE
+  DATA_MISMATCH
+  OTHER
+}
+
 enum DocumentStatus {
   UPLOADED
   PROCESSING
@@ -146,17 +154,17 @@ model RoleAssignment {
 // Seul le hash du refresh token est stocké. familyId permet de révoquer
 // toute la chaîne en cas de réutilisation d'un token déjà consommé.
 model RefreshToken {
-  id           String    @id @default(uuid()) @db.Char(36)
-  userId       String    @db.Char(36)
-  tokenHash    String    @unique @db.Char(64)
-  familyId     String    @db.Char(36)
-  expiresAt    DateTime
-  revokedAt    DateTime?
-  replacedById String?   @db.Char(36)
-  userAgent    String?   @db.VarChar(255)
+  id                  String    @id @default(uuid()) @db.Char(36)
+  userId              String    @db.Char(36)
+  tokenHash           String    @unique @db.Char(64)
+  familyId            String    @db.Char(36)
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedById        String?   @db.Char(36)
+  userAgent           String?   @db.VarChar(255)
   // Dernière vérification TOTP de la session (StepUpGuard : < 10 min). Recopiée à chaque rotation.
   twoFactorVerifiedAt DateTime?
-  createdAt    DateTime  @default(now())
+  createdAt           DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -289,15 +297,17 @@ model Group {
 
 // Identité stable de l'étudiant (ne change pas d'une année à l'autre)
 model Student {
-  id            String   @id @default(uuid()) @db.Char(36)
-  userId        String   @unique @db.Char(36)
-  institutionId String   @db.Char(36)
-  studentNumber String   @db.VarChar(64)
-  firstName     String   @db.VarChar(100)
-  lastName      String   @db.VarChar(100)
-  fullNameAr    String?  @db.VarChar(255)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String    @id @default(uuid()) @db.Char(36)
+  userId          String    @unique @db.Char(36)
+  institutionId   String    @db.Char(36)
+  // NULL = numéro libéré (D-22) : rejet « numéro incorrect » ou réservation non confirmée expirée. Plusieurs NULL sont permis par l'index unique.
+  studentNumber   String?   @db.VarChar(64)
+  numberClaimedAt DateTime?
+  firstName       String    @db.VarChar(100)
+  lastName        String    @db.VarChar(100)
+  fullNameAr      String?   @db.VarChar(255)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   user             User                @relation(fields: [userId], references: [id])
   institution      Institution         @relation(fields: [institutionId], references: [id])
@@ -324,6 +334,7 @@ model StudentEnrollment {
   reviewedById    String?          @db.Char(36)
   reviewedAt      DateTime?
   rejectionReason String?          @db.VarChar(500)
+  rejectionCode   RejectionCode?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -421,7 +432,7 @@ model Election {
   parent       Election?    @relation("ElectionRounds", fields: [parentElectionId], references: [id])
   nextRounds   Election[]   @relation("ElectionRounds")
 
-  rules          EligibilityRule[]
+  rules           EligibilityRule[]
   positions       Position[]
   candidates      Candidate[]
   voterRoll       VoterRollEntry[]

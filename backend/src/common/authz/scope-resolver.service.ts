@@ -20,6 +20,10 @@ export class ScopeResolver {
         const el = await this.prisma.election.findUnique({ where: { id }, select: { id: true, institutionId: true } });
         return el ? { institutionIds: [el.institutionId], electionId: el.id } : null;
       }
+      case 'enrollment': {
+        const en = await this.prisma.studentEnrollment.findUnique({ where: { id }, select: { institutionId: true } });
+        return en ? { institutionIds: [en.institutionId] } : null;
+      }
       case 'user': {
         const user = await this.prisma.user.findUnique({ where: { id }, select: { id: true } });
         if (!user) return null;

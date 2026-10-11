@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { Table } from './fake-tables';
 
 /**
  * Fausse base en mémoire : juste assez de PrismaClient pour les guards, services et contrôleurs du Sprint 2.
@@ -142,7 +143,61 @@ export class FakePrisma {
 
   election = {
     findUnique: async (a: Row) => this.shape(this.elections.find((e) => e.id === a.where.id), a),
+    count: async (a: Row = {}) => this.elections.filter((e) => Object.entries(a.where ?? {}).every(([k, v]) => e[k] === v)).length,
   };
+
+  // ---- Sprint 3 : structure académique, étudiants, fichiers, notifications ------------------------------------
+  faculty: Table = new Table({ name: 'faculties', unique: [['institutionId', 'code']] });
+  level: Table = new Table({ name: 'levels', unique: [['institutionId', 'code']] });
+  academicYear: Table = new Table({ name: 'academic_years', unique: [['institutionId', 'label']], defaults: () => ({ isCurrent: false }) });
+  program: Table = new Table({
+    name: 'programs',
+    unique: [['institutionId', 'code']],
+    relations: { faculty: (r) => this.faculty.rows.find((f) => f.id === r.facultyId) },
+  });
+  group: Table = new Table({
+    name: 'study_groups',
+    unique: [['programId', 'levelId', 'academicYearId', 'name']],
+    relations: {
+      program: (r) => this.program.rows.find((x) => x.id === r.programId),
+      level: (r) => this.level.rows.find((x) => x.id === r.levelId),
+      academicYear: (r) => this.academicYear.rows.find((x) => x.id === r.academicYearId),
+    },
+  });
+  student: Table = new Table({
+    name: 'students',
+    unique: [['userId'], ['institutionId', 'studentNumber']],
+    defaults: () => ({ fullNameAr: null, numberClaimedAt: null }),
+    relations: {
+      user: (r) => this.users.find((u) => u.id === r.userId),
+      enrollments: (r) => this.studentEnrollment.rows.filter((e) => e.studentId === r.id),
+    },
+  });
+  studentEnrollment: Table = new Table({
+    name: 'student_enrollments',
+    unique: [['studentId', 'academicYearId']],
+    defaults: () => ({ status: 'PENDING', groupId: null, reviewedById: null, reviewedAt: null, rejectionReason: null, rejectionCode: null }),
+    relations: {
+      student: (r) => this.student.rows.find((x) => x.id === r.studentId),
+      faculty: (r) => this.faculty.rows.find((x) => x.id === r.facultyId),
+      program: (r) => this.program.rows.find((x) => x.id === r.programId),
+      level: (r) => this.level.rows.find((x) => x.id === r.levelId),
+      group: (r) => this.group.rows.find((x) => x.id === r.groupId),
+      academicYear: (r) => this.academicYear.rows.find((x) => x.id === r.academicYearId),
+      documents: (r) => this.registrationDocument.rows.filter((d) => d.enrollmentId === r.id),
+    },
+  });
+  storedFile: Table = new Table({ name: 'stored_files', unique: [['storageKey']], defaults: () => ({ deletedAt: null, uploadedById: null }) });
+  registrationDocument: Table = new Table({
+    name: 'registration_documents',
+    unique: [['fileId']],
+    defaults: () => ({ status: 'UPLOADED', reviewedById: null, reviewedAt: null, reviewNote: null }),
+    relations: {
+      file: (r) => this.storedFile.rows.find((f) => f.id === r.fileId),
+      enrollment: (r) => this.studentEnrollment.rows.find((e) => e.id === r.enrollmentId),
+    },
+  });
+  notification: Table = new Table({ name: 'notifications', defaults: () => ({ readAt: null }) });
 
   auditLog = {
     findFirst: async (a: Row = {}) => {

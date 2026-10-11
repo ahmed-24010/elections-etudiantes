@@ -96,6 +96,7 @@ describe('Couverture des routes (03 §8 n°10) : chaque route porte @RequirePerm
     try {
       const publics = listRoutes(t.app).filter((r) => r.public).map((r) => r.route).sort();
       expect(publics).toEqual([
+        'GET /files/:fileId', // authentifiée par la SIGNATURE de l'URL (5 min), pas par un en-tête
         'GET /health',
         'GET /institutions/public',
         'POST /auth/login',

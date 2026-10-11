@@ -9,6 +9,8 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { MemoryStorageService } from '../src/storage/memory-storage.service';
+import { StorageService } from '../src/storage/storage.service';
 import { FakePrisma } from './fake-prisma';
 
 export const PASSWORD = 'Correct-horse-battery-1';
@@ -18,9 +20,11 @@ export const hashedPassword = () => (passwordHash ??= argon2.hash(PASSWORD, { ty
 export interface TestContext {
   app: NestExpressApplication;
   prisma: FakePrisma;
+  /** Stockage S3 remplacé par une mémoire : on y inspecte ce qui a été (ou non) écrit. */
+  storage: MemoryStorageService;
   world: World;
   /** Requête supertest depuis une IP distincte à chaque appel (derrière un proxy de confiance). */
-  api: (method: 'get' | 'post' | 'patch', path: string, ip?: string) => request.Test;
+  api: (method: 'get' | 'post' | 'patch' | 'put' | 'delete', path: string, ip?: string) => request.Test;
 }
 
 export async function createTestApp(opts: { trustProxy?: number; controllers?: Type<unknown>[] } = {}): Promise<TestContext> {
@@ -28,6 +32,8 @@ export async function createTestApp(opts: { trustProxy?: number; controllers?: T
   const mod = await Test.createTestingModule({ imports: [AppModule], controllers: opts.controllers ?? [] })
     .overrideProvider(PrismaService)
     .useValue(prisma)
+    .overrideProvider(StorageService)
+    .useClass(MemoryStorageService)
     .compile();
   const app = mod.createNestApplication<NestExpressApplication>();
   configureApp(app, { trustProxy: opts.trustProxy ?? 1 });
@@ -39,7 +45,7 @@ export async function createTestApp(opts: { trustProxy?: number; controllers?: T
       .set('x-forwarded-for', ip ?? `10.${Math.floor(++n / 250)}.${n % 250}.1`)
       .set('x-requested-with', 'XMLHttpRequest');
   };
-  return { app, prisma, api, world: new World(app, prisma) };
+  return { app, prisma, api, storage: app.get(StorageService) as MemoryStorageService, world: new World(app, prisma) };
 }
 
 export interface Grant {

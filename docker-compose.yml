@@ -46,6 +46,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       TWO_FACTOR_ENCRYPTION_KEY: ${TWO_FACTOR_ENCRYPTION_KEY}
       AUDIT_IP_SALT: ${AUDIT_IP_SALT}
+      FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET}
       S3_ENDPOINT: http://s3:9000
       S3_REGION: ${S3_REGION}
       S3_BUCKET: ${S3_BUCKET}
@@ -53,6 +54,7 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
     depends_on:
       db: { condition: service_healthy }
+      s3: { condition: service_started }
     # Loopback seulement : avec TRUST_PROXY=1 l'API fait confiance à X-Forwarded-For, donc elle ne doit être joignable
     # que par nginx (réseau Docker interne, http://backend:3000). Un accès direct depuis le réseau permettrait de
     # forger cet en-tête et d'échapper au rate limiting. Ne jamais publier ce port sur 0.0.0.0.

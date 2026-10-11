@@ -43,6 +43,18 @@ export const translocoTesting = () =>
   });
 
 /**
+ * Laisse se terminer les enchaînements de promesses (flush HTTP → async/await du composant) puis rafraîchit l'affichage.
+ * `whenStable()` seul peut rendre la main avant la fin d'une chaîne de promesses : on passe par un tour de boucle d'événements.
+ */
+export async function settle(...fixtures: { whenStable(): Promise<unknown>; detectChanges(): void }[]): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve));
+  for (const f of fixtures) {
+    await f.whenStable();
+    f.detectChanges();
+  }
+}
+
+/**
  * Attend qu'une requête HTTP soit émise. Le renouvellement du jeton passe par Web Locks (asynchrone) : la requête
  * /auth/refresh n'est pas envoyée au même instant que l'appel.
  */

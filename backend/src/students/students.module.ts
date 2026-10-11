@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { DocumentsService } from './documents.service';
+import { FilesController, StudentsController } from './students.controller';
+import { StudentsService } from './students.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Module({ controllers: [StudentsController, FilesController], providers: [StudentsService, DocumentsService], exports: [DocumentsService] })
 export class StudentsModule {}

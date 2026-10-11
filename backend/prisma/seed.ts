@@ -1,5 +1,13 @@
-// npm run seed — SEED_ADMIN_PASSWORD requis, refusé en production (voir src/seed/seed.ts).
+// npm run seed — données de DÉVELOPPEMENT : SEED_ADMIN_PASSWORD requis, refusé en production (voir src/seed/seed.ts).
 import 'reflect-metadata';
+import { resolve } from 'path';
+
+// Confort de développement : lit le .env de la racine s'il existe, sans écraser les variables déjà définies.
+try {
+  process.loadEnvFile(resolve(__dirname, '../../.env'));
+} catch {
+  /* pas de .env : seules les variables d'environnement comptent */
+}
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { AuditService } from '../src/audit/audit.service';

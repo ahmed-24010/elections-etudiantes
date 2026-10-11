@@ -132,6 +132,44 @@ app-admin-layout {
   font-weight: 700;
 }
 
+// ---- Sous-menu de l'administration ----------------------------------
+.app-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  a {
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    border: 1px solid var(--app-border);
+    background: var(--app-card);
+    color: var(--app-navy);
+    font-weight: 600;
+    text-decoration: none;
+
+    &.active {
+      background: var(--app-primary);
+      border-color: var(--app-primary);
+      color: var(--app-on-dark);
+    }
+  }
+}
+
+// ---- Visionneuse d'attestation ----------------------------------------
+.app-doc-frame {
+  inline-size: 100%;
+  block-size: 70vh;
+  background: var(--app-card);
+}
+
+// ---- Structure académique ---------------------------------------------
+.app-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
 // ---- Carte d'état du système --------------------------------------
 .app-status .card-header {
   background: var(--app-primary-subtle);
