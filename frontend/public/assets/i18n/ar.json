@@ -48,7 +48,9 @@
     "add": "إضافة",
     "edit": "تعديل",
     "delete": "حذف",
-    "choose": "اختر…"
+    "choose": "اختر…",
+    "editItem": "تعديل «{{name}}»",
+    "deleteItem": "حذف «{{name}}»"
   },
   "auth": {
     "identifier": "البريد الإلكتروني أو الهاتف",
@@ -271,6 +273,9 @@
     "current": "الجارية",
     "makeCurrent": "تعيينها سنة جارية",
     "deleteConfirm": "هل تريد حذف «{{name}}»؟ هذا الإجراء نهائي.",
-    "datePlaceholder": "YYYY-MM-DD"
+    "datePlaceholder": "YYYY-MM-DD",
+    "noYear": "لا توجد سنة جامعية: أنشئ سنة أولًا.",
+    "groupBadge": "الفوج {{name}} — {{program}}، {{level}}: إجراءات",
+    "addGroupIn": "إضافة فوج — {{program}}، {{level}}"
   }
 }

@@ -461,3 +461,151 @@ app-admin-layout {
     font-weight: 800;
   }
 }
+
+// ---- Listes compactes et boutons-icônes ---------------------------------
+.app-table {
+  td,
+  th {
+    padding-block: 0.3rem;
+  }
+}
+
+.app-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.4rem;
+  background: var(--app-card);
+  color: var(--app-primary);
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: var(--app-primary-subtle);
+    border-color: var(--app-primary);
+  }
+  &.is-danger {
+    color: var(--app-danger);
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--app-danger-subtle);
+      border-color: var(--app-danger);
+    }
+  }
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+// ---- Grille des groupes (niveaux × filières) -------------------------------
+.app-grid {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    border-block-end: 1px solid var(--app-border);
+    vertical-align: middle;
+  }
+  thead th {
+    background: var(--app-surface);
+    color: var(--app-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: start;
+  }
+  tbody th {
+    inline-size: 1%;
+    white-space: nowrap;
+    color: var(--app-navy);
+    font-weight: 700;
+  }
+  abbr {
+    text-decoration: none;
+    cursor: help;
+  }
+}
+
+.app-group-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.app-group-badge {
+  min-inline-size: 2.2rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--app-primary);
+  border-radius: 1rem;
+  background: var(--app-primary-subtle);
+  color: var(--app-primary);
+  font-weight: 700;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-primary);
+    color: var(--app-on-dark);
+  }
+}
+
+.app-group-add {
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+  border: 1px dashed var(--app-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--app-text-muted);
+  line-height: 1;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    border-color: var(--app-primary);
+    color: var(--app-primary);
+  }
+}
+
+.app-group-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.app-group-card {
+  padding: 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+
+  h2 {
+    color: var(--app-navy);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.35rem;
+    border-block-start: 1px solid var(--app-border);
+  }
+  abbr {
+    text-decoration: none;
+  }
+}
+
+.app-group-level {
+  inline-size: 2.5rem;
+  flex: none;
+  color: var(--app-navy);
+  font-weight: 700;
+}

@@ -1,13 +1,15 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { AcademicApi, AcademicKind, AcademicOverview, localName } from '../../core/api/academic.api';
+import { AcademicApi, AcademicKind, AcademicOverview, Group, Level, Program, localName } from '../../core/api/academic.api';
 import { apiErrorKey } from '../../core/auth/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/services/language.service';
 import { ltr } from '../../core/ui/ltr';
 import { AppModal } from '../../shared/components/app-modal/app-modal';
+import { IconMenu } from '../../shared/components/icon-menu/icon-menu';
 
 type Row = Record<string, string | number | boolean | null | undefined>;
 interface Choice {
@@ -49,6 +51,8 @@ interface Filter {
   options: () => Choice[];
   /** Colonne de la ligne comparée à la valeur du filtre. */
   field: string;
+  /** Pas d'option « tous » : une valeur est toujours choisie (année de la grille des groupes). */
+  required?: boolean;
 }
 
 const CODE = /^[A-Za-z0-9_-]+$/;
@@ -63,7 +67,7 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
  */
 @Component({
   selector: 'app-academic-list-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, AppModal],
+  imports: [ReactiveFormsModule, TranslocoPipe, AppModal, IconMenu, NgTemplateOutlet],
   template: `
     <header class="app-page-head">
       <h1>{{ 'academic.pages.' + kind + '.title' | transloco }}</h1>
@@ -86,24 +90,70 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
         />
         @for (f of filters; track f.key) {
           <select class="form-select app-filter" [attr.aria-label]="f.all | transloco" [value]="filterValue(f.key)" (change)="setFilter(f.key, $any($event.target).value)">
-            <option value="">{{ f.all | transloco }}</option>
+            @if (!f.required) {
+              <option value="">{{ f.all | transloco }}</option>
+            }
             @for (o of f.options(); track o.value) {
               <option [value]="o.value" [selected]="o.value === filterValue(f.key)">{{ o.label }}</option>
             }
           </select>
         }
-        <span class="app-count" role="status">{{ 'common.results' | transloco: { count: visible().length } }}</span>
+        <span class="app-count" role="status">{{ 'common.results' | transloco: { count: kind === 'groups' ? (grid()?.count ?? 0) : visible().length } }}</span>
         <button type="button" class="btn btn-outline-primary" [disabled]="busy()" (click)="reload()" [attr.aria-label]="'common.refresh' | transloco">↻</button>
         <button type="button" class="btn btn-primary" (click)="openCreate()">+ {{ 'common.add' | transloco }}</button>
       </div>
 
       @if (!ov()) {
         <p>{{ 'common.loading' | transloco }}</p>
+      } @else if (kind === 'groups') {
+        @if (grid(); as g) {
+          @if (!g.yearId || g.programs.length === 0 || g.levels.length === 0) {
+            <p class="text-body-secondary mb-0">{{ (g.yearId ? 'common.noResults' : 'academic.noYear') | transloco }}</p>
+          } @else {
+            <!-- Grande largeur : niveaux en lignes, filières en colonnes -->
+            <table class="app-grid d-none d-md-table">
+              <thead>
+                <tr>
+                  <th scope="col"><span class="visually-hidden">{{ 'academic.cols.level' | transloco }}</span></th>
+                  @for (p of g.programs; track p.id) {
+                    <th scope="col"><abbr [title]="name(p)">{{ p.code }}</abbr></th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (l of g.levels; track l.id) {
+                  <tr>
+                    <th scope="row"><abbr [title]="name(l)">{{ l.code }}</abbr></th>
+                    @for (p of g.programs; track p.id) {
+                      <td><ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" /></td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <!-- Mobile : une carte par filière, niveaux en liste -->
+            <div class="d-md-none app-group-cards">
+              @for (p of g.programs; track p.id) {
+                <section class="app-group-card">
+                  <h2 class="h6"><abbr [title]="name(p)">{{ p.code }}</abbr> · {{ name(p) }}</h2>
+                  <ul>
+                    @for (l of g.levels; track l.id) {
+                      <li>
+                        <abbr class="app-group-level" [title]="name(l)">{{ l.code }}</abbr>
+                        <ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" />
+                      </li>
+                    }
+                  </ul>
+                </section>
+              }
+            </div>
+          }
+        }
       } @else if (visible().length === 0) {
         <p class="text-body-secondary mb-0">{{ 'common.noResults' | transloco }}</p>
       } @else {
         <div class="table-responsive">
-          <table class="table app-table align-middle mb-0">
+          <table class="table table-sm app-table align-middle mb-0">
             <thead>
               <tr>
                 @for (c of columns; track c.key) {
@@ -138,8 +188,12 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
                     @if (kind === 'years' && !r['isCurrent']) {
                       <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()" (click)="makeCurrent(r)">{{ 'academic.makeCurrent' | transloco }}</button>
                     }
-                    <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()" (click)="openEdit(r)">{{ 'common.edit' | transloco }}</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()" (click)="confirmDelete.set(r)">{{ 'common.delete' | transloco }}</button>
+                    <button type="button" class="app-icon-action" [disabled]="busy()" [title]="'common.edit' | transloco" [attr.aria-label]="'common.editItem' | transloco: { name: rowName(r) }" (click)="openEdit(r)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                    </button>
+                    <button type="button" class="app-icon-action is-danger" [disabled]="busy()" [title]="'common.delete' | transloco" [attr.aria-label]="'common.deleteItem' | transloco: { name: rowName(r) }" (click)="confirmDelete.set(r)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+                    </button>
                   </td>
                 </tr>
               }
@@ -186,6 +240,27 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
         </ng-container>
       </app-modal>
     }
+
+    <!-- Case de la grille des groupes : badges [A] [B] (clic : Modifier / Supprimer) et bouton « + » -->
+    <ng-template #cell let-p="p" let-l="l" let-cells="cells">
+      <div class="app-group-cell">
+        @for (g of cells[p.id + '|' + l.id]; track g.id) {
+          <app-icon-menu buttonClass="app-group-badge" [label]="'academic.groupBadge' | transloco: { name: g.name, program: name(p), level: name(l) }">
+            <span icon>{{ g.name }}</span>
+            <button type="button" class="app-menu-item" [disabled]="busy()" (click)="editGroup(g)">{{ 'common.edit' | transloco }}</button>
+            <button type="button" class="app-menu-item" [disabled]="busy()" (click)="deleteGroup(g)">{{ 'common.delete' | transloco }}</button>
+          </app-icon-menu>
+        }
+        <button
+          type="button"
+          class="app-group-add"
+          [disabled]="busy()"
+          [title]="'common.add' | transloco"
+          [attr.aria-label]="'academic.addGroupIn' | transloco: { program: name(p), level: name(l) }"
+          (click)="openCreateGroup(p, l)"
+        >+</button>
+      </div>
+    </ng-template>
 
     @if (confirmDelete(); as row) {
       <app-modal [title]="'common.delete' | transloco" (closed)="confirmDelete.set(null)">
@@ -240,6 +315,27 @@ export class AcademicListPage implements OnInit {
     return rows;
   });
 
+  /** Grille des groupes : niveaux (par ordre) en lignes, filières en colonnes, groupes de l'année choisie dans chaque case. */
+  protected readonly grid = computed(() => {
+    const o = this.ov();
+    if (!o || this.kind !== 'groups') return null;
+    const f = this.filterValues();
+    const yearId = f['academicYearId'] || o.years.find((y) => y.isCurrent)?.id || o.years[0]?.id || '';
+    const needle = this.search().trim().toLowerCase();
+    const programs = o.programs.filter((p) => !f['programId'] || p.id === f['programId']).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+    const levels = o.levels.filter((l) => !f['levelId'] || l.id === f['levelId']).sort((a, b) => a.rank - b.rank);
+    const cells: Record<string, Group[]> = {};
+    let count = 0;
+    for (const g of o.groups) {
+      if (g.academicYearId !== yearId || (needle && !g.name.toLowerCase().includes(needle))) continue;
+      if (!programs.some((p) => p.id === g.programId) || !levels.some((l) => l.id === g.levelId)) continue;
+      (cells[g.programId + '|' + g.levelId] ??= []).push(g);
+      count++;
+    }
+    for (const list of Object.values(cells)) list.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    return { yearId, programs, levels, cells, count };
+  });
+
   async ngOnInit(): Promise<void> {
     this.institutionId = this.auth.institutionIdFor('INSTITUTION_ADMIN') ?? '';
     if (!this.institutionId) {
@@ -261,6 +357,9 @@ export class AcademicListPage implements OnInit {
 
   private n(item: { name: string; nameAr?: string | null }): string {
     return localName(item, this.lang.current());
+  }
+  protected name(item: { name: string; nameAr?: string | null }): string {
+    return this.n(item);
   }
   private byId<T extends { id: string }>(list: T[] | undefined, id: unknown): T | undefined {
     return list?.find((x) => x.id === id);
@@ -306,13 +405,14 @@ export class AcademicListPage implements OnInit {
       return [
         { key: 'programId', all: 'academic.filters.allPrograms', options: programs, field: 'programId' },
         { key: 'levelId', all: 'academic.filters.allLevels', options: levels, field: 'levelId' },
-        { key: 'academicYearId', all: 'academic.filters.allYears', options: years, field: 'academicYearId' },
+        { key: 'academicYearId', all: 'academic.filters.allYears', options: years, field: 'academicYearId', required: true },
       ];
     }
     return [];
   }
 
   protected filterValue(key: string): string {
+    if (this.kind === 'groups' && key === 'academicYearId') return this.grid()?.yearId ?? '';
     return this.filterValues()[key] ?? '';
   }
   protected setFilter(key: string, value: string): void {
@@ -380,14 +480,26 @@ export class AcademicListPage implements OnInit {
   protected openCreate(): void {
     this.startForm(null);
   }
+
+  /** « + » d'une case de la grille : filière, niveau et année déjà remplis. */
+  protected openCreateGroup(p: Program, l: Level): void {
+    this.startForm(null, { programId: p.id, levelId: l.id, academicYearId: this.grid()?.yearId ?? '' });
+  }
+  protected editGroup(g: Group): void {
+    this.openEdit(g as unknown as Row);
+  }
+  protected deleteGroup(g: Group): void {
+    this.confirmDelete.set(g as unknown as Row);
+  }
   protected openEdit(row: Row): void {
     this.startForm(row);
   }
 
-  private startForm(row: Row | null): void {
+  private startForm(row: Row | null, preset: Record<string, string> = {}): void {
     const controls: Record<string, [string | number, ValidatorFn[]]> = {};
     for (const f of this.fieldsFor(row)) {
       let value: string | number = f.initial ?? '';
+      if (preset[f.key]) value = preset[f.key];
       if (row) value = f.type === 'date' ? this.date(row[f.key]) : (row[f.key] as string | number | null | undefined) ?? '';
       controls[f.key] = [value, f.validators];
     }

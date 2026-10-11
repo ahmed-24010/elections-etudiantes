@@ -48,7 +48,9 @@
     "add": "Ajouter",
     "edit": "Modifier",
     "delete": "Supprimer",
-    "choose": "Choisir…"
+    "choose": "Choisir…",
+    "editItem": "Modifier « {{name}} »",
+    "deleteItem": "Supprimer « {{name}} »"
   },
   "auth": {
     "identifier": "E-mail ou téléphone",
@@ -271,6 +273,9 @@
     "current": "Courante",
     "makeCurrent": "Définir comme courante",
     "deleteConfirm": "Voulez-vous supprimer « {{name}} » ? Cette action est définitive.",
-    "datePlaceholder": "AAAA-MM-JJ"
+    "datePlaceholder": "AAAA-MM-JJ",
+    "noYear": "Aucune année universitaire : créez-en une d'abord.",
+    "groupBadge": "Groupe {{name}} — {{program}}, {{level}} : actions",
+    "addGroupIn": "Ajouter un groupe — {{program}}, {{level}}"
   }
 }

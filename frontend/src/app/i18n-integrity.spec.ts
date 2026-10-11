@@ -275,18 +275,26 @@ describe('Traductions : aucune clé brute à l’écran', () => {
           const el = fixture.nativeElement as HTMLElement;
           expect(rawKeys(el)).withContext('liste').toEqual([]);
           const click = (text: string) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim().startsWith(text))!.click();
+          const action = (selector: string) => el.querySelector<HTMLButtonElement>(selector)!.click();
           const t = json[lang] as Record<string, Record<string, string>>;
           click('+');
+          const rowAction = (danger: boolean) => {
+            if (kind === 'groups') {
+              el.querySelector<HTMLButtonElement>('.app-group-badge')!.click();
+              fixture.detectChanges();
+              click(t['common'][danger ? 'delete' : 'edit']);
+            } else action(danger ? '.app-icon-action.is-danger' : '.app-icon-action:not(.is-danger)');
+          };
           fixture.detectChanges();
           expect(rawKeys(el)).withContext('fenêtre d’ajout').toEqual([]);
           el.querySelector<HTMLButtonElement>('.modal-footer .btn-outline-primary')!.click();
           fixture.detectChanges();
-          click(t['common']['edit']);
+          rowAction(false);
           fixture.detectChanges();
           expect(rawKeys(el)).withContext('fenêtre de modification').toEqual([]);
           el.querySelector<HTMLButtonElement>('.modal-footer .btn-outline-primary')!.click();
           fixture.detectChanges();
-          click(t['common']['delete']);
+          rowAction(true);
           fixture.detectChanges();
           expect(el.querySelector('.modal-body')?.textContent).toContain('«');
           expect(rawKeys(el)).withContext('confirmation de suppression').toEqual([]);

@@ -12,7 +12,7 @@ import { Component, ElementRef, HostListener, inject, input, signal, viewChild }
       <button
         #toggle
         type="button"
-        class="app-icon-btn"
+        [class]="buttonClass()"
         aria-haspopup="true"
         [attr.aria-expanded]="open()"
         [attr.aria-label]="label()"
@@ -32,6 +32,8 @@ import { Component, ElementRef, HostListener, inject, input, signal, viewChild }
 export class IconMenu {
   /** Nom accessible du bouton (déjà traduit). */
   readonly label = input.required<string>();
+  /** Classe du bouton : icône de la barre du haut par défaut, badge ailleurs. */
+  readonly buttonClass = input('app-icon-btn');
   protected readonly open = signal(false);
   private readonly toggle = viewChild.required<ElementRef<HTMLButtonElement>>('toggle');
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);

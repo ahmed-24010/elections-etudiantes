@@ -83,30 +83,128 @@ describe('Pages de structure académique', () => {
     expect(rows().length).toBe(2);
   });
 
-  it('groupes : filtres par filière, niveau et année ; l’année courante est présélectionnée', async () => {
-    const { el, rows, type } = await open('groups');
-    expect(el.querySelectorAll('select.app-filter').length).toBe(3);
-    expect(rows().length).toBe(2); // année courante seulement (g3 est en 2025-2026)
-    type('select.app-filter:nth-of-type(3)', '', 'change'); // toutes les années
-    expect(rows().length).toBe(3);
-    type('select.app-filter:nth-of-type(1)', 'p1', 'change');
-    expect(rows().length).toBe(2);
-    type('select.app-filter:nth-of-type(2)', 'l2', 'change');
-    expect(rows().length).toBe(1);
+  it('niveaux : tableau triable (clic sur l’en-tête : croissant, décroissant, sans tri)', async () => {
+    const { el, cells, page } = await open('levels');
+    const header = () => el.querySelector<HTMLButtonElement>('thead th:nth-child(1) button')!;
+    expect(cells(0)).toEqual(['L1', 'L2']);
+    header().click();
+    page.detectChanges();
+    header().click();
+    page.detectChanges();
+    expect(cells(0)).toEqual(['L2', 'L1']);
+    expect(el.querySelector('thead th:nth-child(1)')?.getAttribute('aria-sort')).toBe('descending');
   });
 
-  it('groupes : tableau triable (clic sur l’en-tête : croissant, décroissant, sans tri)', async () => {
-    const { el, cells, page } = await open('groups');
-    const header = () => el.querySelector<HTMLButtonElement>('thead th:nth-child(1) button')!;
-    expect(cells(0)).toEqual(['B', 'A']);
-    header().click();
-    page.detectChanges();
-    expect(cells(0)).toEqual(['A', 'B']);
-    expect(el.querySelector('thead th:nth-child(1)')?.getAttribute('aria-sort')).toBe('ascending');
-    header().click();
-    page.detectChanges();
-    expect(cells(0)).toEqual(['B', 'A']);
-    expect(el.querySelector('thead th:nth-child(1)')?.getAttribute('aria-sort')).toBe('descending');
+  describe('grille des groupes', () => {
+    const badges = (el: HTMLElement, row: number, col: number) =>
+      Array.from(el.querySelectorAll('table.app-grid tbody tr')[row].querySelectorAll('td')[col].querySelectorAll('.app-group-badge')).map((b) => b.textContent!.trim());
+
+    it('niveaux (par ordre) en lignes, filières en colonnes, codes courts avec nom complet en info-bulle, pas de colonne Année', async () => {
+      const { el } = await open('groups');
+      const heads = Array.from(el.querySelectorAll('table.app-grid thead abbr'));
+      expect(heads.map((h) => h.textContent)).toEqual(['DP', 'DPU']);
+      expect(heads.map((h) => h.getAttribute('title'))).toEqual(['Droit privé', 'Droit public']);
+      const rowHeads = Array.from(el.querySelectorAll('table.app-grid tbody th abbr'));
+      expect(rowHeads.map((h) => h.textContent)).toEqual(['L1', 'L2']);
+      expect(rowHeads.map((h) => h.getAttribute('title'))).toEqual(['Licence 1', 'Licence 2']);
+      expect(el.textContent).not.toContain('academic.cols.year');
+      expect(el.querySelector('table.app-grid')?.textContent).not.toContain('2026-2027');
+    });
+
+    it('chaque case : badges des groupes de l’année courante et un bouton +', async () => {
+      const { el } = await open('groups');
+      expect(badges(el, 0, 0)).toEqual(['B']); // L1 × DP
+      expect(badges(el, 0, 1)).toEqual(['A']); // L1 × DPU
+      expect(badges(el, 1, 0)).toEqual([]); // L2 × DP : le groupe A est en 2025-2026
+      expect(el.querySelectorAll('table.app-grid .app-group-add').length).toBe(4); // 2 niveaux × 2 filières
+      expect(el.querySelector('.app-count')?.textContent).toContain('common.results');
+    });
+
+    it('filtres : année (toujours une valeur), filière et niveau', async () => {
+      const { el, type } = await open('groups');
+      expect(el.querySelectorAll('select.app-filter').length).toBe(3);
+      const year = el.querySelector<HTMLSelectElement>('select.app-filter:nth-of-type(3)')!;
+      expect(Array.from(year.options).every((o) => o.value !== '')).toBeTrue(); // pas d’option « toutes les années »
+      expect(year.value).toBe('y1');
+      type('select.app-filter:nth-of-type(3)', 'y2', 'change');
+      expect(badges(el, 1, 0)).toEqual(['A']);
+      type('select.app-filter:nth-of-type(1)', 'p2', 'change');
+      expect(el.querySelectorAll('table.app-grid thead abbr').length).toBe(1);
+      type('select.app-filter:nth-of-type(2)', 'l1', 'change');
+      expect(el.querySelectorAll('table.app-grid tbody tr').length).toBe(1);
+    });
+
+    it('clic sur un badge : petit menu Modifier / Supprimer ; Modifier ouvre la fenêtre (nom seulement)', async () => {
+      const { el, page, button } = await open('groups');
+      el.querySelector<HTMLButtonElement>('table.app-grid .app-group-badge')!.click();
+      page.detectChanges();
+      const panel = el.querySelector('table.app-grid .app-menu-panel')!;
+      expect(Array.from(panel.querySelectorAll('button')).map((b) => b.textContent!.trim())).toEqual(['common.edit', 'common.delete']);
+      button(/common\.edit$/, panel).click();
+      page.detectChanges();
+      expect(el.querySelector('.modal')).toBeTruthy();
+      expect(el.querySelector<HTMLInputElement>('#f-name')!.value).toBe('B');
+      expect(el.querySelector('#f-programId')).toBeNull(); // filière, niveau et année ne changent pas
+    });
+
+    it('clic sur un badge puis Supprimer : confirmation puis DELETE', async () => {
+      const { http, el, page, button } = await open('groups');
+      el.querySelector<HTMLButtonElement>('table.app-grid .app-group-badge')!.click();
+      page.detectChanges();
+      button(/common\.delete$/, el.querySelector('table.app-grid .app-menu-panel')!).click();
+      page.detectChanges();
+      http.expectNone(BASE + '/groups/g1');
+      button(/common\.delete$/, el.querySelector('.modal-footer')!).click();
+      http.expectOne(BASE + '/groups/g1').flush(null, { status: 204, statusText: 'No Content' });
+      await settle(page);
+      http.expectOne(BASE).flush(overview());
+    });
+
+    it('+ : la fenêtre s’ouvre avec filière, niveau et année déjà remplis ; POST avec ces valeurs', async () => {
+      const { http, page, el, type, submitModal } = await open('groups');
+      el.querySelectorAll<HTMLButtonElement>('table.app-grid .app-group-add')[1].click(); // L1 × DPU
+      page.detectChanges();
+      expect(el.querySelector<HTMLSelectElement>('#f-programId')!.value).toBe('p2');
+      expect(el.querySelector<HTMLSelectElement>('#f-levelId')!.value).toBe('l1');
+      expect(el.querySelector<HTMLSelectElement>('#f-academicYearId')!.value).toBe('y1');
+      type('#f-name', 'C');
+      submitModal();
+      const req = http.expectOne(BASE + '/groups');
+      expect(req.request.body).toEqual({ programId: 'p2', levelId: 'l1', academicYearId: 'y1', name: 'C' });
+      req.flush({}, { status: 201, statusText: 'Created' });
+      await settle(page);
+      http.expectOne(BASE).flush(overview());
+    });
+
+    it('mobile : une carte par filière, niveaux en liste', async () => {
+      const { el } = await open('groups');
+      const cards = Array.from(el.querySelectorAll('.app-group-card'));
+      expect(cards.length).toBe(2);
+      expect(cards.map((c) => c.querySelectorAll('li').length)).toEqual([2, 2]);
+      expect(cards[0].querySelector('li .app-group-badge')?.textContent?.trim()).toBe('B');
+      expect(el.querySelector('.app-group-cards')?.classList).toContain('d-md-none');
+      expect(el.querySelector('table.app-grid')?.classList).toContain('d-none'); // la grille est masquée sur mobile
+    });
+
+    it('la recherche filtre les badges par nom', async () => {
+      const { el, type } = await open('groups');
+      type('input[type=search]', 'B');
+      expect(badges(el, 0, 0)).toEqual(['B']);
+      expect(badges(el, 0, 1)).toEqual([]);
+    });
+  });
+
+  it('listes : Modifier et Supprimer sont des icônes avec un nom accessible (nom de la ligne)', async () => {
+    const { el } = await open('faculties');
+    const edit = el.querySelector<HTMLButtonElement>('tbody .app-icon-action:not(.is-danger)')!;
+    const del = el.querySelector<HTMLButtonElement>('tbody .app-icon-action.is-danger')!;
+    expect(edit.querySelector('svg')).toBeTruthy();
+    expect(del.querySelector('svg')).toBeTruthy();
+    expect(edit.textContent!.trim()).toBe('');
+    expect(edit.getAttribute('aria-label')).toContain('common.editItem');
+    expect(del.getAttribute('aria-label')).toContain('common.deleteItem');
+    expect(edit.getAttribute('title')).toBeTruthy();
+    expect(el.querySelector('table.table-sm')).toBeTruthy(); // lignes compactes
   });
 
   it('ajouter : fenêtre, champs obligatoires, POST sans champ facultatif vide, rechargement, fermeture', async () => {
@@ -139,8 +237,8 @@ describe('Pages de structure académique', () => {
   });
 
   it('modifier : champs préremplis, PATCH ; les champs qui définissent la ressource ne sont pas modifiables', async () => {
-    const { http, page, el, button, type, submitModal } = await open('programs');
-    button(/common\.edit$/).click();
+    const { http, page, el, type, submitModal } = await open('programs');
+    el.querySelector<HTMLButtonElement>('tbody .app-icon-action:not(.is-danger)')!.click();
     page.detectChanges();
     expect(el.querySelector('#f-facultyId')).toBeNull(); // la filière ne change pas de faculté
     expect(el.querySelector<HTMLInputElement>('#f-name')!.value).toBe('Droit privé');
@@ -174,7 +272,7 @@ describe('Pages de structure académique', () => {
 
   it('supprimer : confirmation dans une fenêtre ; « utilisé » (409) est expliqué', async () => {
     const { http, page, el, button } = await open('faculties');
-    button(/common\.delete$/).click();
+    el.querySelector<HTMLButtonElement>('tbody .app-icon-action.is-danger')!.click();
     page.detectChanges();
     http.expectNone(`${BASE}/faculties/f1`); // un clic ne supprime rien
     expect(el.querySelector('.modal-body')?.textContent).toContain('academic.deleteConfirm');
