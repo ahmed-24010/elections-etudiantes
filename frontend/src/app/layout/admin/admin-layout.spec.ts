@@ -36,12 +36,12 @@ describe('Layout d’administration : menu latéral', () => {
     TestBed.resetTestingModule();
     const sa = create('SUPER_ADMIN');
     expect(sa.el.querySelector('.app-sidebar')).toBeNull();
-    expect(sa.el.querySelector('.app-burger')).toBeNull();
+    expect(sa.el.querySelector('[aria-controls=admin-sidebar]')).toBeNull();
   });
 
   it('☰ replie et rouvre le menu (aria-expanded suit)', () => {
     const { fixture, el } = create('INSTITUTION_ADMIN');
-    const burger = el.querySelector<HTMLButtonElement>('.app-burger')!;
+    const burger = el.querySelector<HTMLButtonElement>('[aria-controls=admin-sidebar]')!;
     const open = () => !el.querySelector('.app-sidebar')!.classList.contains('is-collapsed');
     const initial = open(); // ouvert sur grand écran, replié sur mobile
     expect(burger.getAttribute('aria-expanded')).toBe(String(initial));

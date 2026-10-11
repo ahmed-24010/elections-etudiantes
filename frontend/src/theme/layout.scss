@@ -364,3 +364,32 @@ app-admin-layout {
     inline-size: 96px;
   }
 }
+
+// ---- Menu compte (mobile) : 👤 → e-mail + déconnexion ----------------------
+.app-account {
+  position: relative;
+}
+
+.app-account-panel {
+  position: absolute;
+  inset-block-start: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 1040;
+  min-inline-size: 220px;
+  max-inline-size: 80vw;
+  padding: 0.75rem;
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.5rem var(--app-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  .app-account-email {
+    color: var(--app-text);
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+}

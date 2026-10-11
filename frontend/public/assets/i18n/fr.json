@@ -79,7 +79,8 @@
       "qrAlt": "QR code de la double authentification",
       "manual": "Ou saisissez cette clé manuellement :",
       "submit": "Activer et continuer"
-    }
+    },
+    "account": "Mon compte"
   },
   "stepUp": {
     "title": "Confirmer avec votre code",
