@@ -29,7 +29,9 @@ export class AcademicService {
       this.prisma.level.findMany({ where: { institutionId }, orderBy: { rank: 'asc' } }),
       this.prisma.group.findMany({ where: { institutionId }, orderBy: { name: 'asc' } }),
     ]);
-    return { years, faculties, programs, levels, groups };
+    const links = await this.prisma.programLevel.findMany({ where: { programId: { in: programs.map((p) => p.id) } } });
+    // levelIds : niveaux où la filière existe (D-24), pour l'écran d'inscription et la grille des groupes.
+    return { years, faculties, programs: programs.map((p) => ({ ...p, levelIds: links.filter((l) => l.programId === p.id).map((l) => l.levelId) })), levels, groups };
   }
 
   // ------------------------------------------------------------------ écriture : utilitaires
@@ -90,15 +92,51 @@ export class AcademicService {
 
   // ------------------------------------------------------------------ filières
 
+  /** Les niveaux demandés doivent tous appartenir à CETTE institution (relus en base). */
+  private async assertLevels(institutionId: string, levelIds: string[]) {
+    if (levelIds.length === 0) return;
+    const found = await this.prisma.level.count({ where: { institutionId, id: { in: levelIds } } });
+    if (found !== levelIds.length) throw new NotFoundException();
+  }
+
   async createProgram(actor: AuthUser, institutionId: string, dto: ProgramDto, info: RequestInfo) {
     // La faculté doit appartenir à CETTE institution (lue en base, pas fiée au client).
     this.notFound(await this.prisma.faculty.findFirst({ where: { id: dto.facultyId, institutionId } }));
-    return this.write(actor, institutionId, 'program', 'CREATED', info, () => this.prisma.program.create({ data: { ...dto, institutionId } }));
+    const { levelIds, ...data } = dto;
+    await this.assertLevels(institutionId, levelIds);
+    const row = await this.write(actor, institutionId, 'program', 'CREATED', info, () =>
+      this.prisma.$transaction(async (tx) => {
+        const program = await tx.program.create({ data: { ...data, institutionId } });
+        await tx.programLevel.createMany({ data: levelIds.map((levelId) => ({ programId: program.id, levelId })) });
+        return program;
+      }),
+    );
+    return { ...row, levelIds };
   }
 
   async updateProgram(actor: AuthUser, institutionId: string, id: string, dto: UpdateProgramDto, info: RequestInfo) {
     this.notFound(await this.prisma.program.findFirst({ where: { id, institutionId } }));
-    return this.write(actor, institutionId, 'program', 'UPDATED', info, () => this.prisma.program.update({ where: { id }, data: dto }));
+    const { levelIds, ...data } = dto;
+    if (levelIds) await this.assertLevels(institutionId, levelIds);
+    const row = await this.write(actor, institutionId, 'program', 'UPDATED', info, async () => {
+      if (!levelIds) return this.prisma.program.update({ where: { id }, data });
+      const current = (await this.prisma.programLevel.findMany({ where: { programId: id } })).map((l) => l.levelId);
+      const removed = current.filter((l) => !levelIds.includes(l));
+      // On ne retire pas un niveau où la filière a déjà des groupes ou des inscriptions.
+      if (removed.length) {
+        this.inUse(
+          await this.prisma.group.count({ where: { programId: id, levelId: { in: removed } } }),
+          await this.prisma.studentEnrollment.count({ where: { programId: id, levelId: { in: removed } } }),
+        );
+      }
+      return this.prisma.$transaction(async (tx) => {
+        if (removed.length) await tx.programLevel.deleteMany({ where: { programId: id, levelId: { in: removed } } });
+        await tx.programLevel.createMany({ data: levelIds.filter((l) => !current.includes(l)).map((levelId) => ({ programId: id, levelId })) });
+        return tx.program.update({ where: { id }, data });
+      });
+    });
+    const links = await this.prisma.programLevel.findMany({ where: { programId: id } });
+    return { ...row, levelIds: links.map((l) => l.levelId) };
   }
 
   async deleteProgram(actor: AuthUser, institutionId: string, id: string, info: RequestInfo) {
@@ -177,6 +215,10 @@ export class AcademicService {
     this.notFound(await this.prisma.program.findFirst({ where: { id: dto.programId, institutionId } }));
     this.notFound(await this.prisma.level.findFirst({ where: { id: dto.levelId, institutionId } }));
     this.notFound(await this.prisma.academicYear.findFirst({ where: { id: dto.academicYearId, institutionId } }));
+    // D-24 : pas de groupe d'une filière dans un niveau où elle n'existe pas (ex. Droit privé en L1).
+    if (!(await this.prisma.programLevel.findUnique({ where: { programId_levelId: { programId: dto.programId, levelId: dto.levelId } } }))) {
+      throw new BadRequestException('level_not_allowed_for_program');
+    }
     return this.write(actor, institutionId, 'group', 'CREATED', info, () => this.prisma.group.create({ data: { ...dto, institutionId } }));
   }
 

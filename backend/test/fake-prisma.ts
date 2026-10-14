@@ -155,6 +155,7 @@ export class FakePrisma {
     unique: [['institutionId', 'code']],
     relations: { faculty: (r) => this.faculty.rows.find((f) => f.id === r.facultyId) },
   });
+  programLevel: Table = new Table({ name: 'program_levels', unique: [['programId', 'levelId']] });
   group: Table = new Table({
     name: 'study_groups',
     unique: [['programId', 'levelId', 'academicYearId', 'name']],

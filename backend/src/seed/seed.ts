@@ -8,9 +8,14 @@ import type { PrismaService } from '../prisma/prisma.service';
  */
 export const SEED_INSTITUTION = { code: 'FSJP', name: 'Faculté des Sciences Juridiques et Politiques', nameAr: 'كلية العلوم القانونية والسياسية' };
 export const SEED_FACULTY = { code: 'FSJP', name: SEED_INSTITUTION.name, nameAr: SEED_INSTITUTION.nameAr };
+/**
+ * D-24 (scolarité FSJP) : L1 et L2 suivent le tronc commun « Droit » ; Droit privé et Droit public n'existent qu'à partir de L3.
+ * Les masters (M1, M2) restent dans les spécialités : la scolarité n'a pas précisé, à confirmer.
+ */
 export const SEED_PROGRAMS = [
-  { code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص' },
-  { code: 'DPU', name: 'Droit public', nameAr: 'القانون العام' },
+  { code: 'DRT', name: 'Droit', nameAr: 'القانون', levels: ['L1', 'L2'] },
+  { code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص', levels: ['L3', 'M1', 'M2'] },
+  { code: 'DPU', name: 'Droit public', nameAr: 'القانون العام', levels: ['L3', 'M1', 'M2'] },
 ];
 export const SEED_LEVELS = [
   { code: 'L1', name: 'Licence 1', nameAr: 'السنة الأولى ليسانس', rank: 1 },
@@ -20,7 +25,8 @@ export const SEED_LEVELS = [
   { code: 'M2', name: 'Master 2', nameAr: 'السنة الثانية ماستر', rank: 5 },
 ];
 export const SEED_YEAR = { label: '2026-2027', startsOn: new Date('2026-09-01'), endsOn: new Date('2027-07-15') };
-export const SEED_GROUPS = ['A', 'B'];
+/** D-25 : groupes numérotés. */
+export const SEED_GROUPS = ['1', '2', '3'];
 export const SEED_PASSWORD_MIN = 10;
 
 export class SeedRefusedError extends Error {}
@@ -91,14 +97,13 @@ export async function runSeed(
     () => prisma.faculty.findFirst({ where: { institutionId, code: SEED_FACULTY.code } }),
     () => prisma.faculty.create({ data: { ...SEED_FACULTY, institutionId } }),
   );
-  const programs = [];
-  for (const p of SEED_PROGRAMS) {
-    programs.push(
-      await ensure(
-        () => prisma.program.findFirst({ where: { institutionId, code: p.code } }),
-        () => prisma.program.create({ data: { ...p, institutionId, facultyId: faculty.id } }),
-      ),
+  const programs: { id: string; levels: string[] }[] = [];
+  for (const { levels: levelCodes, ...p } of SEED_PROGRAMS) {
+    const row = await ensure(
+      () => prisma.program.findFirst({ where: { institutionId, code: p.code } }),
+      () => prisma.program.create({ data: { ...p, institutionId, facultyId: faculty.id } }),
     );
+    programs.push({ id: row.id, levels: levelCodes });
   }
   const levels = [];
   for (const l of SEED_LEVELS) {
@@ -115,7 +120,13 @@ export async function runSeed(
     () => prisma.academicYear.create({ data: { ...SEED_YEAR, institutionId, isCurrent: !hasCurrent } }), // ne retire jamais l'année courante choisie ailleurs
   );
   for (const program of programs) {
-    for (const level of levels) {
+    for (const level of levels.filter((l) => program.levels.includes(l.code))) {
+      // D-24 : la filière existe à ce niveau (ajout seulement : le seed ne retire rien de ce que l'admin a choisi).
+      const link = { programId_levelId: { programId: program.id, levelId: level.id } };
+      if (!(await prisma.programLevel.findUnique({ where: link }))) {
+        await prisma.programLevel.create({ data: { programId: program.id, levelId: level.id } });
+        created++;
+      }
       for (const name of SEED_GROUPS) {
         await ensure(
           () => prisma.group.findFirst({ where: { programId: program.id, levelId: level.id, academicYearId: year.id, name } }),

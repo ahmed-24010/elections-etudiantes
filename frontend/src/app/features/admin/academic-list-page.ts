@@ -32,7 +32,7 @@ interface Column {
 interface Field {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'select';
+  type: 'text' | 'number' | 'date' | 'select' | 'multi';
   validators: ValidatorFn[];
   ltr?: boolean;
   rtl?: boolean;
@@ -125,7 +125,14 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
                   <tr>
                     <th scope="row"><abbr [title]="name(l)">{{ l.code }}</abbr></th>
                     @for (p of g.programs; track p.id) {
-                      <td><ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" /></td>
+                      <td>
+                        @if (p.levelIds.includes(l.id)) {
+                          <ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" />
+                        } @else {
+                          <!-- D-24 : la filière n'existe pas à ce niveau (ex. Droit privé en L1) : aucune case -->
+                          <span class="app-group-na" aria-hidden="true">–</span>
+                        }
+                      </td>
                     }
                   </tr>
                 }
@@ -138,10 +145,12 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
                   <h2 class="h6"><abbr [title]="name(p)">{{ p.code }}</abbr> · {{ name(p) }}</h2>
                   <ul>
                     @for (l of g.levels; track l.id) {
-                      <li>
-                        <abbr class="app-group-level" [title]="name(l)">{{ l.code }}</abbr>
-                        <ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" />
-                      </li>
+                      @if (p.levelIds.includes(l.id)) {
+                        <li>
+                          <abbr class="app-group-level" [title]="name(l)">{{ l.code }}</abbr>
+                          <ng-container *ngTemplateOutlet="cell; context: { p: p, l: l, cells: g.cells }" />
+                        </li>
+                      }
                     }
                   </ul>
                 </section>
@@ -209,7 +218,16 @@ const KINDS: readonly AcademicKind[] = ['years', 'faculties', 'programs', 'level
           @for (f of fieldsFor(m.row); track f.key) {
             <div class="mb-3">
               <label class="form-label" [for]="'f-' + f.key">{{ f.label | transloco }}</label>
-              @if (f.type === 'select') {
+              @if (f.type === 'multi') {
+                <div class="app-checks" role="group" [attr.aria-label]="f.label | transloco">
+                  @for (o of f.options!(); track o.value) {
+                    <label class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" [checked]="multiHas(f.key, o.value)" (change)="multiToggle(f.key, o.value)" />
+                      <span class="form-check-label">{{ o.label }}</span>
+                    </label>
+                  }
+                </div>
+              } @else if (f.type === 'select') {
                 <select class="form-select" [id]="'f-' + f.key" [formControlName]="f.key">
                   <option value="">{{ 'common.choose' | transloco }}</option>
                   @for (o of f.options!(); track o.value) {
@@ -382,7 +400,15 @@ export class AcademicListPage implements OnInit {
       case 'faculties':
         return [code, name, nameAr];
       case 'programs':
-        return [code, name, nameAr, faculty];
+        return [
+          code, name, nameAr, faculty,
+          {
+            key: 'levelIds',
+            label: 'academic.cols.levels',
+            value: (r) => (this.ov()?.levels ?? []).filter((l) => ((r['levelIds'] as unknown as string[]) ?? []).includes(l.id)).sort((a, b) => a.rank - b.rank).map((l) => l.code).join(' · '),
+            ltr: true,
+          },
+        ];
       case 'levels':
         return [code, name, nameAr, { key: 'rank', label: 'academic.cols.rank', value: (r) => String(r['rank']), ltr: true }];
       case 'groups':
@@ -460,7 +486,13 @@ export class AcademicListPage implements OnInit {
       case 'faculties':
         return [codeField(32), text('name', 255), nameAr(255)];
       case 'programs':
-        return [select('facultyId', 'academic.cols.faculty', faculties), codeField(32), text('name', 255), nameAr(255)];
+        return [
+          select('facultyId', 'academic.cols.faculty', faculties),
+          codeField(32),
+          text('name', 255),
+          nameAr(255),
+          { key: 'levelIds', label: 'academic.cols.levels', type: 'multi', validators: [Validators.required], options: levels, initial: [] as unknown as string },
+        ];
       case 'levels':
         return [codeField(16), text('name', 100), nameAr(100), { key: 'rank', label: 'academic.cols.rank', type: 'number', validators: [Validators.required, Validators.min(0), Validators.max(100)], ltr: true, initial: 1 }];
       case 'groups':
@@ -496,16 +528,28 @@ export class AcademicListPage implements OnInit {
   }
 
   private startForm(row: Row | null, preset: Record<string, string> = {}): void {
-    const controls: Record<string, [string | number, ValidatorFn[]]> = {};
+    const controls: Record<string, [unknown, ValidatorFn[]]> = {};
     for (const f of this.fieldsFor(row)) {
-      let value: string | number = f.initial ?? '';
+      let value: unknown = f.initial ?? '';
       if (preset[f.key]) value = preset[f.key];
-      if (row) value = f.type === 'date' ? this.date(row[f.key]) : (row[f.key] as string | number | null | undefined) ?? '';
+      if (row) value = f.type === 'date' ? this.date(row[f.key]) : f.type === 'multi' ? [...((row[f.key] as unknown as string[]) ?? [])] : (row[f.key] as string | number | null | undefined) ?? '';
+      if (f.type === 'multi') value = [...(value as string[])];
       controls[f.key] = [value, f.validators];
     }
     this.form = this.fb.group(controls);
     this.formError.set(null);
     this.modal.set({ row });
+  }
+
+  /** Cases à cocher (niveaux d'une filière) : la valeur du contrôle est la liste des identifiants cochés. */
+  protected multiHas(key: string, value: string): boolean {
+    return ((this.form.get(key)?.value as string[]) ?? []).includes(value);
+  }
+  protected multiToggle(key: string, value: string): void {
+    const ctrl = this.form.get(key)!;
+    const cur = (ctrl.value as string[]) ?? [];
+    ctrl.setValue(cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value]);
+    ctrl.markAsDirty();
   }
 
   protected closeModal(): void {
@@ -514,10 +558,14 @@ export class AcademicListPage implements OnInit {
 
   /** Corps de la requête : champs facultatifs vides omis, nombres convertis. */
   private body(row: Row | null): Record<string, unknown> {
-    const raw = this.form.getRawValue() as Record<string, string | number>;
+    const raw = this.form.getRawValue() as Record<string, string | number | string[]>;
     const out: Record<string, unknown> = {};
     for (const f of this.fieldsFor(row)) {
       const v = raw[f.key];
+      if (f.type === 'multi') {
+        out[f.key] = v;
+        continue;
+      }
       if (f.optional && v === '' && !row) continue;
       out[f.key] = f.type === 'number' ? Number(v) : v;
     }

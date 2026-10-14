@@ -16,8 +16,8 @@ const overview = (over: Partial<AcademicOverview> = {}): AcademicOverview => ({
   ],
   faculties: [{ id: 'f1', code: 'FSJP', name: 'FSJP' }],
   programs: [
-    { id: 'p1', code: 'DP', name: 'Droit privé', facultyId: 'f1' },
-    { id: 'p2', code: 'DPU', name: 'Droit public', facultyId: 'f1' },
+    { id: 'p1', code: 'DP', name: 'Droit privé', facultyId: 'f1', levelIds: ['l1', 'l2'] },
+    { id: 'p2', code: 'DPU', name: 'Droit public', facultyId: 'f1', levelIds: ['l1', 'l2'] },
   ],
   levels: [
     { id: 'l1', code: 'L1', name: 'Licence 1', rank: 1 },
@@ -118,6 +118,16 @@ describe('Pages de structure académique', () => {
       expect(badges(el, 1, 0)).toEqual([]); // L2 × DP : le groupe A est en 2025-2026
       expect(el.querySelectorAll('table.app-grid .app-group-add').length).toBe(4); // 2 niveaux × 2 filières
       expect(el.querySelector('.app-count')?.textContent).toContain('common.results');
+    });
+
+    it('D-24 : pas de case (ni +) pour une filière à un niveau où elle n’existe pas', async () => {
+      const programs = overview().programs.map((p) => (p.id === 'p1' ? { ...p, levelIds: ['l2'] } : p)); // Droit privé : L2 seulement
+      const { el } = await open('groups', 'INSTITUTION_ADMIN', overview({ programs }));
+      expect(badges(el, 0, 0)).toEqual([]); // L1 × DP : aucune case
+      expect(el.querySelectorAll('table.app-grid tbody tr')[0].querySelectorAll('td')[0].querySelector('.app-group-add')).toBeNull();
+      expect(el.querySelectorAll('table.app-grid tbody tr')[0].querySelectorAll('td')[1].querySelector('.app-group-add')).not.toBeNull(); // L1 × DPU
+      expect(el.querySelectorAll('table.app-grid .app-group-add').length).toBe(3);
+      expect(el.querySelectorAll('.app-group-cards .app-group-card')[0].querySelectorAll('li').length).toBe(1); // mobile : un seul niveau pour DP
     });
 
     it('filtres : année (toujours une valeur), filière et niveau', async () => {
@@ -246,7 +256,29 @@ describe('Pages de structure académique', () => {
     submitModal();
     const req = http.expectOne(`${BASE}/programs/p1`);
     expect(req.request.method).toBe('PATCH');
-    expect(req.request.body).toEqual({ code: 'DP', name: 'Droit privé 2', nameAr: '' });
+    expect(req.request.body).toEqual({ code: 'DP', name: 'Droit privé 2', nameAr: '', levelIds: ['l1', 'l2'] });
+    req.flush({});
+    await settle(page);
+    http.expectOne(BASE).flush(overview());
+  });
+
+  it('D-24 : filières — niveaux autorisés choisis par cases à cocher, envoyés en levelIds', async () => {
+    const { http, page, el, button, type, submitModal } = await open('programs');
+    expect(el.querySelector('tbody tr')!.textContent).toContain('L1 · L2'); // colonne Niveaux
+    button(/^\+/).click();
+    page.detectChanges();
+    type('#f-facultyId', 'f1', 'change');
+    type('#f-code', 'DRT');
+    type('#f-name', 'Droit');
+    const boxes = Array.from(el.querySelectorAll<HTMLInputElement>('.app-checks input[type=checkbox]'));
+    expect(boxes.length).toBe(2);
+    expect(el.querySelector<HTMLButtonElement>('.modal-footer button[type=submit]')!.disabled).toBeTrue(); // au moins un niveau
+    boxes[1].click(); // L2
+    page.detectChanges();
+    expect(el.querySelector<HTMLButtonElement>('.modal-footer button[type=submit]')!.disabled).toBeFalse();
+    submitModal();
+    const req = http.expectOne(`${BASE}/programs`);
+    expect(req.request.body).toEqual({ facultyId: 'f1', code: 'DRT', name: 'Droit', levelIds: ['l2'] });
     req.flush({});
     await settle(page);
     http.expectOne(BASE).flush(overview());

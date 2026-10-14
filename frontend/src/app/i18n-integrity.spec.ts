@@ -257,7 +257,7 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     const data = {
       years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }, { id: 'y2', label: '2027-2028', startsOn: '2027-09-01T00:00:00Z', endsOn: '2028-07-15T00:00:00Z', isCurrent: false }],
       faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP', nameAr: 'ك' }],
-      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', nameAr: 'خ', facultyId: 'f' }],
+      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', nameAr: 'خ', facultyId: 'f', levelIds: ['l'] }],
       levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
       groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
     };

@@ -38,17 +38,27 @@ describe('seed (développement)', () => {
     expect(prisma.users).toHaveLength(1);
   });
 
-  it('crée la structure de démonstration FSJP : 2 filières, niveaux L1 à M2, année 2026-2027 courante, groupes A et B', async () => {
+  it('crée la structure de démonstration FSJP : tronc commun Droit en L1-L2, Droit privé / public dès L3, groupes 1 à 3 (D-24, D-25)', async () => {
     const { prisma, deps } = make();
     await runSeed(deps, env);
     const inst = prisma.institutions[0];
     expect(inst).toEqual(expect.objectContaining({ code: 'FSJP', name: 'Faculté des Sciences Juridiques et Politiques' }));
     expect(prisma.faculty.rows).toHaveLength(1);
-    expect(prisma.program.rows.map((p) => p.name).sort()).toEqual(['Droit privé', 'Droit public']);
+    expect(prisma.program.rows.map((p) => p.name).sort()).toEqual(['Droit', 'Droit privé', 'Droit public']);
     expect(prisma.level.rows.map((l) => l.code)).toEqual(['L1', 'L2', 'L3', 'M1', 'M2']);
     expect(prisma.academicYear.rows).toEqual([expect.objectContaining({ label: '2026-2027', isCurrent: true, institutionId: inst.id })]);
-    expect(prisma.group.rows).toHaveLength(2 * 5 * 2);
-    expect([...new Set(prisma.group.rows.map((g) => g.name))].sort()).toEqual(['A', 'B']);
+    const levelsOf = (programName: string) => {
+      const program = prisma.program.rows.find((p) => p.name === programName)!;
+      const code = (levelId: string) => prisma.level.rows.find((l) => l.id === levelId)!.code;
+      return {
+        allowed: prisma.programLevel.rows.filter((l) => l.programId === program.id).map((l) => code(l.levelId)).sort(),
+        grouped: [...new Set(prisma.group.rows.filter((g) => g.programId === program.id).map((g) => code(g.levelId)))].sort(),
+      };
+    };
+    expect(levelsOf('Droit')).toEqual({ allowed: ['L1', 'L2'], grouped: ['L1', 'L2'] });
+    for (const name of ['Droit privé', 'Droit public']) expect(levelsOf(name)).toEqual({ allowed: ['L3', 'M1', 'M2'], grouped: ['L3', 'M1', 'M2'] }); // pas de case DP/DPU en L1-L2
+    expect(prisma.group.rows).toHaveLength(8 * 3);
+    expect([...new Set(prisma.group.rows.map((g) => g.name))].sort()).toEqual(['1', '2', '3']);
     // Tout est rattaché à la même institution, noms arabes compris.
     for (const rows of [prisma.faculty.rows, prisma.program.rows, prisma.level.rows, prisma.group.rows]) expect(rows.every((r) => r.institutionId === inst.id)).toBe(true);
     expect(prisma.program.rows.every((p) => !!p.nameAr)).toBe(true);
@@ -68,7 +78,7 @@ describe('seed (développement)', () => {
   it('est idempotent : relancé, ne crée rien de plus et ne change aucun mot de passe', async () => {
     const { prisma, audit, hashPassword, deps } = make();
     const first = await runSeed(deps, env);
-    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 2 + 5 + 1 + 20, officerCreated: true, institutionAdminCreated: true });
+    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 3 + 5 + 1 + 8 + 24, officerCreated: true, institutionAdminCreated: true });
     const counts = () => [prisma.institutions.length, prisma.users.length, prisma.roleAssignments.length, prisma.faculty.rows.length, prisma.program.rows.length, prisma.level.rows.length, prisma.academicYear.rows.length, prisma.group.rows.length];
     const before = counts();
 

@@ -38,6 +38,7 @@ describe('Étudiants, attestations et vérification (Sprint 3)', () => {
     facA = (await p.faculty.create({ data: { institutionId: w.instA.id, code: 'FSJP', name: 'FSJP' } })).id;
     progA = (await p.program.create({ data: { institutionId: w.instA.id, facultyId: facA, code: 'DP', name: 'Droit privé' } })).id;
     levelA = (await p.level.create({ data: { institutionId: w.instA.id, code: 'L1', name: 'L1', rank: 1 } })).id;
+    await p.programLevel.create({ data: { programId: progA, levelId: levelA } }); // D-24 : la filière existe en L1
     yearA = (await p.academicYear.create({ data: { institutionId: w.instA.id, label: '2026-2027', startsOn: new Date('2026-09-01'), endsOn: new Date('2027-07-01'), isCurrent: true } })).id;
     groupA = (await p.group.create({ data: { institutionId: w.instA.id, programId: progA, levelId: levelA, academicYearId: yearA, name: 'A' } })).id;
     facB = (await p.faculty.create({ data: { institutionId: w.instB.id, code: 'FB', name: 'Faculté B' } })).id;
@@ -73,9 +74,20 @@ describe('Étudiants, attestations et vérification (Sprint 3)', () => {
       const otherFaculty = (await t.prisma.faculty.create({ data: { institutionId: t.world.instA.id, code: 'AUTRE', name: 'Autre faculté' } })).id;
       await bad({ facultyId: otherFaculty }).expect(400); // la filière n'appartient pas à cette faculté
       const otherLevel = (await t.prisma.level.create({ data: { institutionId: t.world.instA.id, code: 'L2', name: 'L2', rank: 2 } })).id;
-      await bad({ levelId: otherLevel }).expect(400); // le groupe n'est pas de ce niveau
+      await bad({ levelId: otherLevel }).expect(400); // la filière n'existe pas à ce niveau (D-24)
+      await t.prisma.programLevel.create({ data: { programId: progA, levelId: otherLevel } });
+      await bad({ levelId: otherLevel }).expect(400); // niveau autorisé, mais le groupe n'est pas de ce niveau
       await bad({ studentNumber: 'x' }).expect(400);
       await bad({ institutionId: t.world.instB.id }).expect(400); // l'institution ne se choisit pas
+    });
+
+    it('D-24 : une filière n’est pas déclarable à un niveau où elle n’existe pas (contrôle serveur, sans groupe)', async () => {
+      const l3 = (await t.prisma.level.create({ data: { institutionId: t.world.instA.id, code: 'L3', name: 'L3', rank: 3 } })).id;
+      const res = await as(users.stud2.token, 'put', '/students/me/enrollment')
+        .send(enrollmentBody({ studentNumber: 'N-3003', levelId: l3, groupId: undefined }))
+        .expect(400);
+      expect(JSON.stringify(res.body)).toContain('program_not_available_for_level');
+      expect(t.prisma.student.rows.some((x) => x.studentNumber === 'N-3003')).toBe(false); // rien n'est réservé
     });
 
     it('un autre rôle ne peut pas déclarer d’inscription ; sans jeton : 401', async () => {
@@ -134,6 +146,7 @@ describe('Étudiants, attestations et vérification (Sprint 3)', () => {
       const w = t.world;
       const progB = (await t.prisma.program.create({ data: { institutionId: w.instB.id, facultyId: facB, code: 'PB', name: 'Filière B' } })).id;
       const levelB = (await t.prisma.level.create({ data: { institutionId: w.instB.id, code: 'L1', name: 'L1 B', rank: 1 } })).id;
+      await t.prisma.programLevel.create({ data: { programId: progB, levelId: levelB } });
       await t.prisma.academicYear.create({ data: { institutionId: w.instB.id, label: '2026-2027', startsOn: new Date('2026-09-01'), endsOn: new Date('2027-07-01'), isCurrent: true } });
       await as(users.studB.token, 'put', '/students/me/enrollment')
         .send({ studentNumber: 'N-1001', firstName: 'B', lastName: 'B', facultyId: facB, programId: progB, levelId: levelB })

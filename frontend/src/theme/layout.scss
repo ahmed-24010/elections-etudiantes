@@ -555,6 +555,16 @@ app-admin-layout {
   }
 }
 
+.app-group-na {
+  color: var(--app-text-muted);
+}
+
+.app-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
 .app-group-add {
   inline-size: 1.8rem;
   block-size: 1.8rem;

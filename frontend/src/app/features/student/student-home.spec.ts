@@ -13,8 +13,11 @@ const YEAR = { id: 'y1', label: '2026-2027' };
 const overview: AcademicOverview = {
   years: [{ id: 'y1', label: '2026-2027', startsOn: '2026-09-01', endsOn: '2027-07-15', isCurrent: true }],
   faculties: [{ id: 'f1', code: 'FSJP', name: 'FSJP' }],
-  programs: [{ id: 'p1', code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص', facultyId: 'f1' }],
-  levels: [{ id: 'l1', code: 'L1', name: 'Licence 1', rank: 1 }],
+  programs: [{ id: 'p1', code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص', facultyId: 'f1', levelIds: ['l1'] }],
+  levels: [
+    { id: 'l1', code: 'L1', name: 'Licence 1', rank: 1 },
+    { id: 'l2', code: 'L2', name: 'Licence 2', rank: 2 }, // la filière p1 n'y existe pas (D-24)
+  ],
   groups: [{ id: 'g1', name: 'A', programId: 'p1', levelId: 'l1', academicYearId: 'y1' }],
 };
 
@@ -76,8 +79,9 @@ describe('Tableau de bord étudiant', () => {
     set('studentNumber', 'C12345');
     set('firstName', 'Aïcha');
     set('lastName', 'Test');
-    set('programId', 'p1', 'change');
     set('levelId', 'l1', 'change');
+    page.detectChanges();
+    set('programId', 'p1', 'change');
     page.detectChanges();
     el.querySelector<HTMLButtonElement>('form button[type=submit]')!.click();
     const req = http.expectOne(`${API}/students/me/enrollment`);
@@ -86,6 +90,24 @@ describe('Tableau de bord étudiant', () => {
     req.flush(me({ student, enrollment: enrollment('PENDING'), canUpload: true }));
     await settle(page);
     expect(el.querySelector('input[type=file]')).toBeTruthy(); // l'étape suivante apparaît
+  });
+
+  it('D-24 : l’étudiant ne voit que les filières valables pour son niveau, et la filière est vidée si le niveau change', async () => {
+    const { page, el } = await load(me({}));
+    const select = (id: string, value: string) => {
+      const s = el.querySelector<HTMLSelectElement>(`#${id}`)!;
+      s.value = value;
+      s.dispatchEvent(new Event('change'));
+      page.detectChanges();
+    };
+    const programOptions = () => Array.from(el.querySelectorAll<HTMLOptionElement>('#programId option')).map((o) => o.value).filter(Boolean);
+    expect(programOptions()).toEqual([]); // niveau non choisi
+    select('levelId', 'l1');
+    expect(programOptions()).toEqual(['p1']);
+    select('programId', 'p1');
+    select('levelId', 'l2');
+    expect(programOptions()).toEqual([]); // le Droit privé n'existe pas en L2
+    expect(el.querySelector<HTMLSelectElement>('#programId')!.value).toBe('');
   });
 
   it('numéro indisponible (409) : message générique, le formulaire reste', async () => {
@@ -98,10 +120,11 @@ describe('Tableau de bord étudiant', () => {
     field('studentNumber', 'C12345');
     field('firstName', 'A');
     field('lastName', 'B');
-    for (const id of ['programId', 'levelId']) {
+    for (const id of ['levelId', 'programId']) {
       const s = el.querySelector<HTMLSelectElement>(`#${id}`)!;
       s.value = id === 'programId' ? 'p1' : 'l1';
       s.dispatchEvent(new Event('change'));
+      page.detectChanges();
     }
     page.detectChanges();
     el.querySelector<HTMLButtonElement>('form button[type=submit]')!.click();

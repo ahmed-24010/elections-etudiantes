@@ -13,6 +13,8 @@ const BY_MESSAGE: Record<string, string> = {
   enrollment_required: 'errors.enrollmentRequired',
   no_current_year: 'errors.noCurrentYear',
   invalid_academic_choice: 'errors.invalidAcademicChoice',
+  program_not_available_for_level: 'errors.programNotAvailableForLevel',
+  level_not_allowed_for_program: 'errors.levelNotAllowedForProgram',
   not_reviewable: 'errors.notReviewable',
   cannot_review_own_enrollment: 'errors.ownEnrollment',
   in_use: 'errors.inUse',
