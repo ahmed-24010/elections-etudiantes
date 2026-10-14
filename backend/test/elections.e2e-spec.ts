@@ -215,6 +215,12 @@ describe('Élections et candidatures (Sprint 4)', () => {
       expect((await open().expect(409)).body.conditions).toEqual(['committee_incomplete']);
     });
 
+    it('e-mail du membre : espaces retirés ; compte inconnu → account_not_found ; e-mail invalide → invalid_email', async () => {
+      expect((await assign(' C1@Example.test ').expect(409)).body.message).toBe('role_already_assigned'); // trouvé malgré les espaces et la casse
+      expect((await assign('inconnu@example.test').expect(404)).body.message).toBe('account_not_found');
+      expect((await assign('pas un e-mail').expect(400)).body.message).toContain('invalid_email');
+    });
+
     it('un membre du comité ne gère que SON élection ; l’IA d’une autre institution : 404', async () => {
       await assign('c3@example.test').expect(201);
       await as('c1', 'get', E()).expect(200);

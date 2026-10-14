@@ -138,6 +138,8 @@
     "candidateNotEligible": "Ce candidat n'est plus éligible à cette élection.",
     "electionNotReviewable": "Les candidatures ne peuvent plus être examinées dans l'état actuel de l'élection.",
     "ownCandidacy": "Vous ne pouvez pas décider de votre propre candidature.",
+    "accountNotFound": "Aucun compte avec cet e-mail dans votre institution.",
+    "invalidEmail": "Adresse e-mail invalide.",
     "roleAlreadyAssigned": "Cette personne fait déjà partie du comité de cette élection.",
     "userNotActive": "Ce compte n'est pas actif.",
     "fileRequired": "Choisissez un fichier.",

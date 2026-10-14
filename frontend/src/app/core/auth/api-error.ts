@@ -38,6 +38,8 @@ const BY_MESSAGE: Record<string, string> = {
   candidate_not_eligible: 'errors.candidateNotEligible',
   election_not_reviewable: 'errors.electionNotReviewable',
   cannot_review_own_candidacy: 'errors.ownCandidacy',
+  account_not_found: 'errors.accountNotFound',
+  invalid_email: 'errors.invalidEmail',
   role_already_assigned: 'errors.roleAlreadyAssigned',
   user_not_active: 'errors.userNotActive',
   file_required: 'errors.fileRequired',

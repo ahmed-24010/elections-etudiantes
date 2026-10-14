@@ -205,7 +205,7 @@ const atLeastOneCriterion = (c: AbstractControl): ValidationErrors | null => {
               <form [formGroup]="member" (ngSubmit)="addMember()" novalidate class="row g-2 align-items-end">
                 <div class="col-12 col-md-8">
                   <label class="form-label" for="memberEmail">{{ 'elections.committee.email' | transloco }}</label>
-                  <input id="memberEmail" class="form-control" type="email" formControlName="email" dir="ltr" autocomplete="off" />
+                  <input id="memberEmail" class="form-control" type="email" formControlName="email" dir="ltr" autocomplete="off" (input)="stripSpaces()" />
                   <div class="form-text">{{ 'elections.committee.emailHelp' | transloco }}</div>
                 </div>
                 <div class="col-12 col-md-4">
@@ -507,9 +507,16 @@ export class ElectionWizardPage implements OnInit {
 
   // ------------------------------------------------------------------ étape 4 : comité 🔐
 
+  /** Un e-mail collé avec des espaces est nettoyé tout de suite plutôt que refusé. */
+  protected stripSpaces(): void {
+    const c = this.member.controls.email;
+    const clean = c.value.replace(/\s+/g, '');
+    if (clean !== c.value) c.setValue(clean);
+  }
+
   protected addMember(): Promise<void> {
     return this.run(async () => {
-      await this.stepUp.run(() => this.api.addCommitteeMember(this.institutionId, this.electionId(), this.member.getRawValue().email.trim().toLowerCase()));
+      await this.stepUp.run(() => this.api.addCommitteeMember(this.institutionId, this.electionId(), this.member.getRawValue().email.replace(/\s+/g, '').toLowerCase()));
       this.member.reset({ email: '' });
       await this.load();
     }).then(() => undefined);

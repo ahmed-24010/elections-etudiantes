@@ -41,6 +41,7 @@ cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
 cd backend && npm run seed                  # SUPER_ADMIN + structure de démo FSJP + comptes de test vérificateur et admin d'institution (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production ; lit le .env de la racine)
+cd backend && npm run seed:demo             # seed de DÉMO complet (étudiants Aïcha/Omar/Sara, comité comite1-3, élection en CANDIDACY_OPEN, 2FA de dev) : SEED_DEMO_PASSWORD et SEED_DEMO_TOTP_SECRET requis, refusé si NODE_ENV=production ; affiche la liste des comptes
 cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
 cd frontend && npm run build
 ```
