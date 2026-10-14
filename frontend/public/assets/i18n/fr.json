@@ -140,7 +140,8 @@
     "ownCandidacy": "Vous ne pouvez pas décider de votre propre candidature.",
     "roleAlreadyAssigned": "Cette personne fait déjà partie du comité de cette élection.",
     "userNotActive": "Ce compte n'est pas actif.",
-    "fileRequired": "Choisissez un fichier."
+    "fileRequired": "Choisissez un fichier.",
+    "conditionsNotMet": "Les candidatures ne peuvent pas encore s'ouvrir. Il manque :"
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -406,7 +407,8 @@
       "rules": "Règles d'éligibilité définies",
       "committee": "Comité d'au moins 3 membres",
       "ok": "Prêt",
-      "missing": "Manquant"
+      "missing": "Manquant",
+      "eligible": "Au moins un étudiant éligible"
     },
     "summary": {
       "eligible": "{{count}} étudiant(s) éligible(s) pour l'instant."
@@ -421,7 +423,8 @@
       "cancelConfirm": "L'annulation est définitive. Les candidatures déposées sont conservées pour l'historique, mais l'élection disparaît pour les étudiants.",
       "notReady": "Pour ouvrir les candidatures : dates, au moins un poste, des règles d'éligibilité et 3 membres de comité.",
       "calendar": "Calendrier",
-      "eligible": "Étudiants éligibles"
+      "eligible": "Étudiants éligibles",
+      "cancelReason": "Motif de l'annulation (obligatoire)"
     },
     "candidate": {
       "status": {

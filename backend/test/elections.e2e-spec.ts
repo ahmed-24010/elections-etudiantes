@@ -181,17 +181,30 @@ describe('Élections et candidatures (Sprint 4)', () => {
     const open = (who = 'ia') => as(who, 'post', `${E()}/candidacy/open`);
     const assign = (email: string, who = 'ia') => fresh(who, 'post', `/institutions/${instA}/roles`).send({ email, role: 'ELECTION_COMMITTEE', electionId });
 
-    it('refus tant que les prérequis manquent : calendrier, postes, règles, comité', async () => {
+    it('refus tant que les prérequis manquent : la réponse liste TOUTES les conditions non remplies (04 §4.1)', async () => {
       const bare = (await as('ia', 'post', `/institutions/${instA}/elections`).send(body({ candidacyStartsAt: undefined, candidacyEndsAt: undefined })).expect(201)).body.id;
-      const code = async (id: string) => (await as('ia', 'post', `/elections/${id}/candidacy/open`).expect(409)).body.message;
-      expect(await code(bare)).toBe('candidacy_dates_required');
+      const refused = async (id: string) => {
+        const res = await as('ia', 'post', `/elections/${id}/candidacy/open`).expect(409);
+        expect(res.body.message).toBe('conditions_not_met');
+        return res.body.conditions as string[];
+      };
+      expect(await refused(bare)).toEqual(['candidacy_dates_required', 'positions_required', 'rules_required', 'committee_incomplete']);
       await as('ia', 'patch', `/elections/${bare}`).send({ candidacyStartsAt: iso(-HOUR), candidacyEndsAt: iso(DAY) }).expect(200);
-      expect(await code(bare)).toBe('positions_required');
+      expect(await refused(bare)).toEqual(['positions_required', 'rules_required', 'committee_incomplete']);
       await as('ia', 'post', `/elections/${bare}/positions`).send({ title: 'Président' }).expect(201);
-      expect(await code(bare)).toBe('rules_required');
+      expect(await refused(bare)).toEqual(['rules_required', 'committee_incomplete']);
       await as('ia', 'put', `/elections/${bare}/rules`).send({ rules: [{ programId: dp }] }).expect(200);
-      expect(await code(bare)).toBe('committee_incomplete');
-      await fresh('ia', 'post', `/elections/${bare}/cancel`).expect(200); // nettoyage
+      expect(await refused(bare)).toEqual(['committee_incomplete']);
+      // une règle qui ne concerne personne (aucun étudiant de Droit privé en L1) : « nombre d'éligibles > 0 »
+      const l1 = (await t.prisma.level.create({ data: { institutionId: instA, code: 'L1', name: 'Licence 1', rank: 1 } })).id;
+      await as('ia', 'put', `/elections/${bare}/rules`).send({ rules: [{ programId: dp, levelId: l1 }] }).expect(200);
+      expect(await refused(bare)).toEqual(['committee_incomplete', 'no_eligible_voters']);
+      // l'annulation exige un motif (04 §4.6)
+      await fresh('ia', 'post', `/elections/${bare}/cancel`).send({}).expect(400);
+      await fresh('ia', 'post', `/elections/${bare}/cancel`).send({ reason: 'x' }).expect(400);
+      await fresh('ia', 'post', `/elections/${bare}/cancel`).send({ reason: 'Créée par erreur' }).expect(200);
+      const audit = t.prisma.auditLogs.find((l) => l.action === 'ELECTION_CANCELLED' && l.resourceId === bare)!;
+      expect(audit.metadata).toEqual(expect.objectContaining({ reason: 'Créée par erreur' }));
     });
 
     it('le comité se constitue par RoleAssignment ELECTION_COMMITTEE (🔐) ; 2 membres ne suffisent pas', async () => {
@@ -199,7 +212,7 @@ describe('Élections et candidatures (Sprint 4)', () => {
       await assign('c2@example.test').expect(201);
       await stale('ia', 'post', `/institutions/${instA}/roles`).send({ email: 'c3@example.test', role: 'ELECTION_COMMITTEE', electionId }).expect(401); // 2FA récente exigée
       expect((await as('ia', 'get', E())).body.committeeCount).toBe(2);
-      expect((await open().expect(409)).body.message).toBe('committee_incomplete');
+      expect((await open().expect(409)).body.conditions).toEqual(['committee_incomplete']);
     });
 
     it('un membre du comité ne gère que SON élection ; l’IA d’une autre institution : 404', async () => {
@@ -207,7 +220,7 @@ describe('Élections et candidatures (Sprint 4)', () => {
       await as('c1', 'get', E()).expect(200);
       await as('c1', 'patch', E()).send({ title: 'Bureau du groupe 1 — modifié par le comité' }).expect(200);
       await as('c1', 'post', `/institutions/${instA}/elections`).send(body()).expect(403);
-      await fresh('c1', 'post', `${E()}/cancel`).expect(403); // le comité n'annule pas sa propre élection
+      await fresh('c1', 'post', `${E()}/cancel`).send({ reason: 'Essai du comité' }).expect(403); // le comité n'annule pas sa propre élection
       expect((await as('c1', 'get', `/institutions/${instA}/elections`)).body.map((e: { id: string }) => e.id)).toEqual([electionId]); // pas la « bare » annulée
       await open('iaB').expect(404);
     });
@@ -470,12 +483,13 @@ describe('Élections et candidatures (Sprint 4)', () => {
     });
 
     it('annulation 🔐 : IA seulement, 2FA récente ; l’élection disparaît pour les étudiants ; jamais VOTING_OPEN', async () => {
-      await fresh('c1', 'post', `${E()}/cancel`).expect(403);
-      await stale('ia', 'post', `${E()}/cancel`).expect(401);
-      expect((await fresh('ia', 'post', `${E()}/cancel`).expect(200)).body.status).toBe('CANCELLED');
+      const why = { reason: 'Décision de l’administration' };
+      await fresh('c1', 'post', `${E()}/cancel`).send(why).expect(403);
+      await stale('ia', 'post', `${E()}/cancel`).send(why).expect(401);
+      expect((await fresh('ia', 'post', `${E()}/cancel`).send(why).expect(200)).body.status).toBe('CANCELLED');
       expect(t.prisma.auditLogs.some((l) => l.action === 'election:cancel' && l.result === 'SUCCESS')).toBe(true);
       expect(t.prisma.auditLogs.some((l) => l.action === 'ELECTION_CANCELLED' && l.resourceId === electionId)).toBe(true);
-      await fresh('ia', 'post', `${E()}/cancel`).expect(409);
+      await fresh('ia', 'post', `${E()}/cancel`).send(why).expect(409);
       await as('s6', 'get', E()).expect(404);
       expect((await as('s6', 'get', '/elections/mine')).body).toEqual([]);
       await as('c1', 'post', `${E()}/candidacy/open`).expect(409);

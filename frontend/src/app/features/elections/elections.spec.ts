@@ -240,9 +240,14 @@ describe('Page d’une élection (administration)', () => {
     expect(el.textContent).toContain('elections.detail.notReady');
     button(/openCandidacy/).click();
     await settle(page);
-    http.expectOne(`${API}/elections/e1/candidacy/open`).flush({ statusCode: 409, message: 'committee_incomplete' }, { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${API}/elections/e1/candidacy/open`)
+      .flush({ statusCode: 409, message: 'conditions_not_met', conditions: ['committee_incomplete', 'no_eligible_voters'] }, { status: 409, statusText: 'Conflict' });
     await settle(page);
-    expect(el.querySelector('.alert-danger')!.textContent).toContain('errors.committeeIncomplete');
+    const alert = el.querySelector('.alert-danger')!.textContent!;
+    expect(alert).toContain('errors.conditionsNotMet');
+    expect(alert).toContain('elections.readiness.committee'); // toutes les conditions manquantes sont listées
+    expect(alert).toContain('elections.readiness.eligible');
   });
 
   it('annuler 🔐 : réservé à l’administrateur, avec confirmation ; le comité n’a pas le bouton', async () => {
@@ -250,9 +255,15 @@ describe('Page d’une élection (administration)', () => {
     admin.button(/elections\.detail\.cancel$/).click();
     admin.page.detectChanges();
     expect(admin.el.querySelector('.modal')).not.toBeNull();
-    admin.button(/elections\.detail\.cancel$/, admin.el.querySelector('.modal-footer')!).click();
+    const confirm = admin.el.querySelector<HTMLButtonElement>('.modal-footer button[type=submit]')!;
+    expect(confirm.disabled).toBeTrue(); // le motif est obligatoire (04 §4.6)
+    admin.type('#cancelReason', 'Décision de l’administration');
+    expect(confirm.disabled).toBeFalse();
+    admin.el.querySelector<HTMLFormElement>('#cancel-form')!.dispatchEvent(new Event('submit'));
     await settle(admin.page);
-    admin.http.expectOne(`${API}/elections/e1/cancel`).flush(detail({ status: 'CANCELLED' }));
+    const cancel = admin.http.expectOne(`${API}/elections/e1/cancel`);
+    expect(cancel.request.body).toEqual({ reason: 'Décision de l’administration' });
+    cancel.flush(detail({ status: 'CANCELLED' }));
     await settle(admin.page);
     expect(admin.el.querySelector('[data-testid=status]')!.textContent).toContain('CANCELLED');
     TestBed.resetTestingModule();

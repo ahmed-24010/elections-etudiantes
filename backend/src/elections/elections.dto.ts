@@ -60,6 +60,12 @@ export class SetRulesDto {
   wholeInstitution?: boolean;
 }
 
+/** 04 §4.6 : l'annulation exige un motif. */
+export class CancelElectionDto {
+  @Transform(trim) @IsString() @MinLength(3) @MaxLength(500)
+  reason: string;
+}
+
 export class PositionDto {
   @Transform(trim) @IsString() @MinLength(1) @MaxLength(191)
   title: string;

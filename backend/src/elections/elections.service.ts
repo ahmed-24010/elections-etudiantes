@@ -307,10 +307,16 @@ export class ElectionsService {
   async openCandidacy(actor: AuthUser, electionId: string, info: RequestInfo) {
     const election = await this.loadForUpdate(electionId);
     if (election.status !== ElectionStatus.DRAFT) throw new ConflictException('invalid_state');
-    if (!election.candidacyStartsAt || !election.candidacyEndsAt) throw new ConflictException('candidacy_dates_required');
-    if ((await this.prisma.position.count({ where: { electionId } })) === 0) throw new ConflictException('positions_required');
-    if ((await this.prisma.eligibilityRule.count({ where: { electionId } })) === 0) throw new ConflictException('rules_required');
-    if ((await this.committeeCount(electionId)) < MIN_COMMITTEE) throw new ConflictException('committee_incomplete');
+    // 04 §4.1 : toutes les conditions sont vérifiées et la réponse les liste TOUTES (pas seulement la première).
+    const missing: string[] = [];
+    if (!election.candidacyStartsAt || !election.candidacyEndsAt) missing.push('candidacy_dates_required');
+    if ((await this.prisma.position.count({ where: { electionId } })) === 0) missing.push('positions_required');
+    const hasRules = (await this.prisma.eligibilityRule.count({ where: { electionId } })) > 0;
+    if (!hasRules) missing.push('rules_required');
+    if ((await this.committeeCount(electionId)) < MIN_COMMITTEE) missing.push('committee_incomplete');
+    // Une élection qui ne concerne personne n'a pas de sens (zéro éligible).
+    if (hasRules && (await this.eligibility.countEligible(election)) === 0) missing.push('no_eligible_voters');
+    if (missing.length > 0) throw new ConflictException({ message: 'conditions_not_met', conditions: missing });
     await this.transition(electionId, [ElectionStatus.DRAFT], ElectionStatus.CANDIDACY_OPEN);
     await this.record(actor, election, 'ELECTION_CANDIDACY_OPENED', info);
     return this.get(actor, electionId);
@@ -325,10 +331,10 @@ export class ElectionsService {
   }
 
   /** 🔐 IA seulement (le comité n'annule pas sa propre élection). Les candidatures en cours sont conservées pour l'historique. */
-  async cancel(actor: AuthUser, electionId: string, info: RequestInfo) {
+  async cancel(actor: AuthUser, electionId: string, reason: string, info: RequestInfo) {
     const election = await this.loadForUpdate(electionId);
     await this.transition(electionId, CANCELLABLE, ElectionStatus.CANCELLED);
-    await this.record(actor, election, 'ELECTION_CANCELLED', info, { from: election.status });
+    await this.record(actor, election, 'ELECTION_CANCELLED', info, { from: election.status, reason }); // motif obligatoire (04 §4.6)
     return this.get(actor, electionId);
   }
 

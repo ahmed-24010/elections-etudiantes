@@ -19,6 +19,7 @@ const BY_MESSAGE: Record<string, string> = {
   cannot_review_own_enrollment: 'errors.ownEnrollment',
   in_use: 'errors.inUse',
   invalid_state: 'errors.invalidState',
+  conditions_not_met: 'errors.conditionsNotMet',
   election_locked: 'errors.electionLocked',
   candidacy_dates_required: 'errors.candidacyDatesRequired',
   positions_required: 'errors.positionsRequired',

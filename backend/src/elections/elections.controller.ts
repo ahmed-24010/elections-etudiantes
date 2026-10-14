@@ -4,7 +4,7 @@ import type { Request } from 'express';
 import type { AuthUser } from '../common/authz/auth-user';
 import { CurrentUser, RequirePermission, ScopeFrom } from '../common/authz/decorators';
 import { requestInfo } from '../common/http/request-info';
-import { CreateElectionDto, PositionDto, SetRulesDto, UpdateElectionDto, UpdatePositionDto } from './elections.dto';
+import { CancelElectionDto, CreateElectionDto, PositionDto, SetRulesDto, UpdateElectionDto, UpdatePositionDto } from './elections.dto';
 import { ElectionsService } from './elections.service';
 
 /**
@@ -102,8 +102,8 @@ export class ElectionsController {
   @HttpCode(200)
   @RequirePermission('election:cancel')
   @ScopeFrom('election', 'id')
-  cancel(@CurrentUser() u: AuthUser, @Param('id') id: string, @Req() req: Request) {
-    return this.elections.cancel(u, id, requestInfo(req));
+  cancel(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: CancelElectionDto, @Req() req: Request) {
+    return this.elections.cancel(u, id, dto.reason, requestInfo(req));
   }
 
   /** Un nombre, jamais une liste nominative (D-02). */

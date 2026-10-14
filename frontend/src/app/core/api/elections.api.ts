@@ -104,9 +104,9 @@ export class ElectionsApi {
   closeCandidacy(id: string): Promise<ElectionDetail> {
     return firstValueFrom(this.http.post<ElectionDetail>(`${this.api}/elections/${id}/candidacy/close`, null));
   }
-  /** 🔐 Administrateur d'institution seulement. */
-  cancel(id: string): Promise<ElectionDetail> {
-    return firstValueFrom(this.http.post<ElectionDetail>(`${this.api}/elections/${id}/cancel`, null));
+  /** 🔐 Administrateur d'institution seulement ; motif obligatoire (04 §4.6). */
+  cancel(id: string, reason: string): Promise<ElectionDetail> {
+    return firstValueFrom(this.http.post<ElectionDetail>(`${this.api}/elections/${id}/cancel`, { reason }));
   }
   /** Un nombre, jamais une liste (D-02). */
   eligibleCount(id: string): Promise<{ count: number }> {

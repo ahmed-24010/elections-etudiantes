@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AcademicApi, AcademicOverview, localName } from '../../core/api/academic.api';
@@ -11,13 +13,22 @@ import { LanguageService } from '../../core/services/language.service';
 import { AppModal } from '../../shared/components/app-modal/app-modal';
 import { electionTitle, statusClass } from './election-ui';
 
+/** Codes du serveur → clés `elections.readiness.*`. */
+const CONDITION_KEYS: Record<string, string> = {
+  candidacy_dates_required: 'dates',
+  positions_required: 'positions',
+  rules_required: 'rules',
+  committee_incomplete: 'committee',
+  no_eligible_voters: 'eligible',
+};
+
 /**
  * Une élection vue par son personnel : état, calendrier, postes, règles, comité, nombre d'éligibles (un chiffre, D-02) et
  * les transitions de ce sprint (ouvrir et fermer les candidatures ; annuler 🔐 pour l'administrateur d'institution).
  */
 @Component({
   selector: 'app-election-detail-page',
-  imports: [TranslocoPipe, RouterLink, DatePipe, AppModal],
+  imports: [TranslocoPipe, RouterLink, DatePipe, AppModal, ReactiveFormsModule],
   template: `
     <p><a routerLink="/admin/elections">{{ backArrow() }} {{ 'elections.detail.back' | transloco }}</a></p>
     @if (loadError(); as key) {
@@ -37,7 +48,16 @@ import { electionTitle, statusClass } from './election-ui';
       </header>
 
       @if (error(); as key) {
-        <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+        <div class="alert alert-danger" role="alert">
+          {{ key | transloco }}
+          @if (conditions().length) {
+            <ul class="mb-0">
+              @for (c of conditions(); track c) {
+                <li>{{ 'elections.readiness.' + c | transloco }}</li>
+              }
+            </ul>
+          }
+        </div>
       }
 
       <section class="app-card p-3 p-md-4 mb-3">
@@ -121,10 +141,14 @@ import { electionTitle, statusClass } from './election-ui';
 
       @if (confirmCancel()) {
         <app-modal [title]="'elections.detail.cancel' | transloco" (closed)="confirmCancel.set(false)">
-          <p class="mb-0">{{ 'elections.detail.cancelConfirm' | transloco }}</p>
+          <form id="cancel-form" [formGroup]="cancelForm" (ngSubmit)="cancel()" novalidate>
+            <p>{{ 'elections.detail.cancelConfirm' | transloco }}</p>
+            <label class="form-label" for="cancelReason">{{ 'elections.detail.cancelReason' | transloco }}</label>
+            <textarea id="cancelReason" class="form-control" rows="3" maxlength="500" formControlName="reason"></textarea>
+          </form>
           <ng-container modal-footer>
             <button type="button" class="btn btn-outline-primary" [disabled]="busy()" (click)="confirmCancel.set(false)">{{ 'common.cancel' | transloco }}</button>
-            <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="cancel()">{{ 'elections.detail.cancel' | transloco }}</button>
+            <button type="submit" form="cancel-form" class="btn btn-danger" [disabled]="busy() || cancelForm.invalid">{{ 'elections.detail.cancel' | transloco }}</button>
           </ng-container>
         </app-modal>
       }
@@ -147,6 +171,9 @@ export class ElectionDetailPage implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly busy = signal(false);
   protected readonly confirmCancel = signal(false);
+  /** Conditions non remplies listées par le serveur à l'ouverture (04 §4). */
+  protected readonly conditions = signal<string[]>([]);
+  protected readonly cancelForm = inject(FormBuilder).nonNullable.group({ reason: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(500)]] });
   protected readonly isAdmin = this.auth.hasRole('INSTITUTION_ADMIN');
 
   protected readonly title = computed(() => (this.e() ? electionTitle(this.e()!, this.lang.current()) : ''));
@@ -154,7 +181,7 @@ export class ElectionDetailPage implements OnInit {
   /** Même contrôle que le serveur à l'ouverture (qui reste juge) : dates, poste, règle, 3 membres. */
   protected readonly ready = computed(() => {
     const d = this.e();
-    return !!d && !!d.candidacyStartsAt && !!d.candidacyEndsAt && d.positions.length > 0 && (!!d.rules?.wholeInstitution || (d.rules?.items.length ?? 0) > 0) && (d.committeeCount ?? 0) >= (d.minCommittee ?? 3);
+    return !!d && !!d.candidacyStartsAt && !!d.candidacyEndsAt && d.positions.length > 0 && (!!d.rules?.wholeInstitution || (d.rules?.items.length ?? 0) > 0) && (d.committeeCount ?? 0) >= (d.minCommittee ?? 3) && (this.eligible() ?? 0) > 0;
   });
   protected readonly canCancel = computed(() => ['DRAFT', 'CANDIDACY_OPEN', 'CANDIDACY_CLOSED'].includes(this.e()?.status ?? ''));
 
@@ -200,10 +227,15 @@ export class ElectionDetailPage implements OnInit {
     if (this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
+    this.conditions.set([]);
     try {
       this.e.set(await action());
     } catch (err) {
-      if (!(err instanceof StepUpCancelled)) this.error.set(apiErrorKey(err));
+      if (!(err instanceof StepUpCancelled)) {
+        this.error.set(apiErrorKey(err));
+        const list = err instanceof HttpErrorResponse ? err.error?.conditions : null;
+        if (Array.isArray(list)) this.conditions.set(list.map((c: string) => CONDITION_KEYS[c] ?? c));
+      }
     } finally {
       this.busy.set(false);
     }
@@ -216,7 +248,10 @@ export class ElectionDetailPage implements OnInit {
     return this.act(() => this.api.closeCandidacy(this.id));
   }
   protected async cancel(): Promise<void> {
+    if (this.cancelForm.invalid) return;
+    const reason = this.cancelForm.getRawValue().reason.trim();
     this.confirmCancel.set(false);
-    await this.act(() => this.stepUp.run(() => this.api.cancel(this.id)));
+    this.cancelForm.reset({ reason: '' });
+    await this.act(() => this.stepUp.run(() => this.api.cancel(this.id, reason)));
   }
 }

@@ -1,7 +1,7 @@
 # Sprint en cours — Sprint 4 (Élections, éligibilité, candidatures), SANS le vote
 
 Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaque étape : une nouvelle session reprend ici.
-`docs/04-ELECTION-VOTING-FLOW.md` n'est **pas** à rédiger : il sera fourni. (Le 15/10 il était annoncé ajouté mais ABSENT du dépôt et du disque : §10.5 n'a pas pu être lu, les règles 4 et 5 viennent de la consigne directe.)
+`docs/04-ELECTION-VOTING-FLOW.md` n'est **pas** à rédiger : il sera fourni. (Ajouté au dépôt le 15/10 : `docs/04-ELECTION-VOTING-FLOW.md`, statut « proposition », référence pour les règles. Contrôle du Sprint 4 contre ce document : voir la section « Conformité à 04 » ci-dessous.)
 
 ## Décisions déjà prises (hors `docs/00-DECISIONS.md`)
 
@@ -47,6 +47,15 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 - **Photo / programme** : photo = JPEG/PNG ; programme = PDF/JPEG/PNG ; 5 Mo ; type réel (D-23) ; clé S3 `candidates/{institution}/{élection}/{uuid}.{ext}` ; servis par l'URL signée existante `/files/:fileId` (`POST /elections/:id/candidates/:cid/files/:photo|program/access`), lisibles par le candidat, le personnel de l'élection, et les étudiants éligibles pour un candidat validé (`candidate-access.ts`).
 - **Notifications** : nouveaux types `CANDIDACY_APPROVED` / `CANDIDACY_REJECTED` (le motif de rejet est dans `body`). Les clés de traduction côté frontend restent à ajouter (3e).
 - **Non fait volontairement** : `candidate:add` (saisie directe par le comité) ; liste nominative des électeurs (D-02) ; tout état VOTING_* ; gel de `voter_roll`. Aucune modification du module `voting` ni des tables `ballots` / `ballot_choices` / `voting_participations`.
+
+## Conformité à 04 (contrôle du 15/10)
+
+Conforme : états jusqu'à `CANDIDACY_CLOSED` et `CANCELLED` (§2) ; conditions d'ouverture des candidatures (§4.1) — postes, règle explicite, 3 membres actifs, calendrier cohérent, **éligibles > 0** ; refus 409 `conditions_not_met` avec **la liste de toutes les conditions manquantes** ; annulation IA 🔐 avec **motif obligatoire** (§4.6, motif dans `audit_logs`) ; chaque transition atomique et auditée ; retrait impossible après `CANDIDACY_CLOSED` (§10.5) ; un étudiant = un seul poste (D-05) ; comité ≠ candidat ; aucune liste nominative (D-02).
+Écarts connus, reportés :
+- §4.2 : la fermeture **automatique** des candidatures à `candidacyEndsAt` n'existe pas (pas de tâche planifiée ; `@nestjs/schedule` arrive au Sprint 5 avec l'ouverture/clôture automatiques du vote). Fermeture manuelle seulement.
+- §4.6 : l'annulation « depuis tout état sauf `RESULTS_PUBLISHED` » ne couvre que DRAFT, CANDIDACY_OPEN, CANDIDACY_CLOSED (les autres états n'existent pas encore).
+- §4.1 : la condition « verrou sur la ligne » est réalisée par une mise à jour conditionnelle à l'état lu (équivalent), pas par `SELECT … FOR UPDATE`.
+Incohérences du document 04 à trancher : (1) l'exemple §3 dit « groupe 1 » alors que D-25 corrigé = groupes A/B ; (2) §12 dit que les décisions iront en « D-24 et suivantes » : D-24 à D-29 sont pris, la suite est **D-30** ; (3) A-06 à A-12 sont à valider avant le Sprint 5.
 
 ## Reste à faire / notes de reprise
 
