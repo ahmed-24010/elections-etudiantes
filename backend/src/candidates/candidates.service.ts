@@ -137,7 +137,7 @@ export class CandidatesService {
     this.assertEditable(election, candidate);
     if (dto.positionId) await this.assertPosition(electionId, dto.positionId);
     const res = await this.prisma.candidate.updateMany({
-      where: { id: candidate.id, status: { in: CORRECTABLE } },
+      where: { id: candidate.id, status: { in: [...CORRECTABLE] } },
       data: { ...(dto.positionId ? { positionId: dto.positionId } : {}), ...(dto.statement !== undefined ? { statement: dto.statement } : {}) },
     });
     if (res.count !== 1) throw new ConflictException('candidacy_locked');
@@ -223,7 +223,7 @@ export class CandidatesService {
             uploadedById: user.id,
           },
         });
-        const res = await tx.candidate.updateMany({ where: { id: candidate.id, status: { in: CORRECTABLE } }, data: { [column]: stored.id } });
+        const res = await tx.candidate.updateMany({ where: { id: candidate.id, status: { in: [...CORRECTABLE] } }, data: { [column]: stored.id } });
         if (res.count !== 1) throw new ConflictException('candidacy_locked');
       });
     } catch (e) {
