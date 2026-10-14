@@ -23,12 +23,12 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 | 2 | Grille des groupes sans case pour une filière absente du niveau (+ formulaire d'inscription filtré par niveau) | fait |
 | 2 | Contrôle serveur (inscription `program_not_available_for_level`, création de groupe `level_not_allowed_for_program`) | fait |
 | 2 | Seed : tronc commun « Droit » L1-L2, groupes 1/2/3 | fait |
-| 2 | Seed : élection de démo « Bureau du groupe 1 — L3 Droit public » | **reportée à 3b** (dépend du module `elections`) |
+| 2 | Seed : élection de démo « Bureau du groupe 1 — L3 Droit public » | fait avec 3b (brouillon, règle sur le groupe 1 de Droit public L3, 3 postes) |
 | 2 | Textes ar/fr, tests verts (backend unit + e2e, frontend lint/tests/build), commit séparé | fait (`test:db` non lancé : pas de Docker/MySQL sur ce poste) |
-| 3a | `eligibility` : requête 02 §5 + 5 exemples + cas limites | à faire |
-| 3b | `elections` : brouillon, postes, règles, calendrier, états, comité, `GET /elections/mine`, `GET /elections/:id/eligible-count` | à faire |
-| 3c | `candidates` : dépôt (photo, programme S3), retrait, validation/rejet 🔐, unicité, comité ≠ candidat | à faire |
-| 3d | Point d'étape backend : lint, tests, build, résumé | à faire |
+| 3a | `eligibility` : requête 02 §5 + 5 exemples + cas limites | fait (`src/eligibility/eligibility.spec.ts`, 16 tests) |
+| 3b | `elections` : brouillon, postes, règles, calendrier, états, comité, `GET /elections/mine`, `GET /elections/:id/eligible-count` | fait (`test/elections.e2e-spec.ts`) |
+| 3c | `candidates` : dépôt (photo, programme S3), retrait, validation/rejet 🔐, unicité, comité ≠ candidat | fait (même fichier de test) |
+| 3d | Point d'étape backend : lint, tests, build, résumé | fait — **en attente de feu vert avant le frontend** ; `test:db` (nouveau `test/db/elections-flow.db-spec.ts`) écrit mais JAMAIS exécuté (pas de Docker) |
 | 3e | Frontend : section « Élections » du menu latéral | à faire |
 
 ## Décisions prises en cours de route (à reporter dans `docs/` si elles tiennent)
@@ -37,6 +37,19 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 - **D-24, migration** : les filières existantes reçoivent TOUS les niveaux de leur institution (pas de changement de comportement tant que l'admin ne restreint pas). Le seed n'enlève jamais un lien existant : une base de dev déjà semée garde Droit privé / public en L1-L2 et ses groupes A/B, à nettoyer à la main (ou `docker compose down -v`).
 - **D-24, API** : `levelIds` (tableau d'UUID, peut être vide côté serveur ; l'écran exige au moins un niveau) à la création/modification d'une filière ; la vue `GET /institutions/:id/academic` renvoie `levelIds` par filière. On ne retire pas un niveau qui a déjà des groupes ou des inscriptions (409 `in_use`).
 
+- **Sprint 4, ouverture des candidatures (DRAFT → CANDIDACY_OPEN)** exige : dates de candidature, ≥ 1 poste, ≥ 1 règle (une règle vide « toute l'institution » compte, elle se choisit avec `wholeInstitution: true`), ≥ 3 membres de comité actifs. Codes 409 : `candidacy_dates_required`, `positions_required`, `rules_required`, `committee_incomplete`.
+- **Éditions** : brouillon = tout modifiable ; CANDIDACY_OPEN / CLOSED = dates seulement ; règles et postes = brouillon seulement (changer les règles invaliderait des candidatures déjà déposées).
+- **Fermeture des candidatures** : le comité peut encore valider/rejeter ; le candidat peut encore se retirer ; plus de dépôt ni de correction. Pas de réouverture.
+- **Candidature** : fenêtre `candidacyStartsAt`–`candidacyEndsAt` contrôlée à l'heure du serveur (`candidacy_window_closed`) en plus du statut. Correction (texte, poste, photo, programme) seulement tant que PENDING. Retrait possible PENDING/APPROVED tant que l'élection est en CANDIDACY_OPEN/CLOSED ; une candidature RETIRÉE peut être redéposée (même ligne, repart de zéro, anciens fichiers supprimés) ; une candidature REJETÉE ne peut pas être redéposée (`candidacy_rejected`).
+- **Éligibilité** : contrôlée au dépôt ET à l'approbation (`candidate_not_eligible`). Un étudiant non éligible (ou sans inscription VERIFIED) reçoit 404 sur l'élection et ses candidats.
+- **Conflits d'intérêts** (03 §6) : membre du comité ≠ candidat dans les deux sens (dépôt → 409 `committee_member_cannot_apply` ; nomination au comité d'un candidat PENDING/APPROVED → 409 `candidate_cannot_be_committee`, dans `RolesService.assign`) ; un comité ne décide jamais de sa propre candidature (403).
+- **Photo / programme** : photo = JPEG/PNG ; programme = PDF/JPEG/PNG ; 5 Mo ; type réel (D-23) ; clé S3 `candidates/{institution}/{élection}/{uuid}.{ext}` ; servis par l'URL signée existante `/files/:fileId` (`POST /elections/:id/candidates/:cid/files/:photo|program/access`), lisibles par le candidat, le personnel de l'élection, et les étudiants éligibles pour un candidat validé (`candidate-access.ts`).
+- **Notifications** : nouveaux types `CANDIDACY_APPROVED` / `CANDIDACY_REJECTED` (le motif de rejet est dans `body`). Les clés de traduction côté frontend restent à ajouter (3e).
+- **Non fait volontairement** : `candidate:add` (saisie directe par le comité) ; liste nominative des électeurs (D-02) ; tout état VOTING_* ; gel de `voter_roll`. Aucune modification du module `voting` ni des tables `ballots` / `ballot_choices` / `voting_participations`.
+
 ## Reste à faire / notes de reprise
 
-_(voir le tableau)_
+- **3e Frontend « Élections »** : section dans le menu latéral admin (même style que la structure académique) ; pages : liste, création (formulaire en étapes : infos/dates → postes → règles → comité), détail avec états (ouvrir/fermer/annuler 🔐), écran de validation des candidatures du comité ; côté étudiant : « Mes élections », détail, dépôt/retrait de candidature, photo/programme. Clés `ar.json` ET `fr.json` (dont `notifications.types.CANDIDACY_*`), CSS en propriétés logiques, Reactive Forms.
+- Lancer `npm run test:db` sur une machine avec Docker (jamais exécuté pour D-24 ni Sprint 4).
+- Mettre à jour `docs/03-ROLES-PERMISSIONS.md` / `docs/07-MVP-ROADMAP.md` (cases du Sprint 4) une fois le frontend fini.
+- `docs/04-ELECTION-VOTING-FLOW.md` : sera fourni, ne pas le rédiger.

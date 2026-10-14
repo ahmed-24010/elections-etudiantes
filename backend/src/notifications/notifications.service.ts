@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Types de notification. `title` contient ce code : l'interface le traduit (ar/fr), le serveur n'écrit aucun texte de langue. */
-export type NotificationType = 'ENROLLMENT_VERIFIED' | 'ENROLLMENT_REJECTED';
+export type NotificationType = 'ENROLLMENT_VERIFIED' | 'ENROLLMENT_REJECTED' | 'CANDIDACY_APPROVED' | 'CANDIDACY_REJECTED';
 
 @Injectable()
 export class NotificationsService {

@@ -27,6 +27,23 @@ export const SEED_LEVELS = [
 export const SEED_YEAR = { label: '2026-2027', startsOn: new Date('2026-09-01'), endsOn: new Date('2027-07-15') };
 /** D-25 : groupes numérotés. */
 export const SEED_GROUPS = ['1', '2', '3'];
+/** Élection de démonstration (brouillon) : groupe 1 de L3 Droit public. Le comité et l'ouverture des candidatures se font à la main. */
+export const SEED_ELECTION = {
+  title: 'Bureau du groupe 1 — L3 Droit public',
+  titleAr: 'مكتب الفوج 1 — السنة الثالثة ليسانس قانون عام',
+  program: 'DPU',
+  level: 'L3',
+  group: '1',
+  candidacyStartsAt: new Date('2026-10-15T08:00:00Z'),
+  candidacyEndsAt: new Date('2026-10-25T18:00:00Z'),
+  votingStartsAt: new Date('2026-11-02T08:00:00Z'),
+  votingEndsAt: new Date('2026-11-04T18:00:00Z'),
+  positions: [
+    { title: 'Président', titleAr: 'الرئيس', displayOrder: 1 },
+    { title: 'Vice-président', titleAr: 'نائب الرئيس', displayOrder: 2 },
+    { title: 'Secrétaire', titleAr: 'الكاتب', displayOrder: 3 },
+  ],
+};
 export const SEED_PASSWORD_MIN = 10;
 
 export class SeedRefusedError extends Error {}
@@ -97,13 +114,13 @@ export async function runSeed(
     () => prisma.faculty.findFirst({ where: { institutionId, code: SEED_FACULTY.code } }),
     () => prisma.faculty.create({ data: { ...SEED_FACULTY, institutionId } }),
   );
-  const programs: { id: string; levels: string[] }[] = [];
+  const programs: { id: string; code: string; levels: string[] }[] = [];
   for (const { levels: levelCodes, ...p } of SEED_PROGRAMS) {
     const row = await ensure(
       () => prisma.program.findFirst({ where: { institutionId, code: p.code } }),
       () => prisma.program.create({ data: { ...p, institutionId, facultyId: faculty.id } }),
     );
-    programs.push({ id: row.id, levels: levelCodes });
+    programs.push({ id: row.id, code: p.code, levels: levelCodes });
   }
   const levels = [];
   for (const l of SEED_LEVELS) {
@@ -152,6 +169,38 @@ export async function runSeed(
 
   const admin = await ensureUser(config.admin);
   const roleCreated = await ensureRole(admin.id, Role.SUPER_ADMIN, null);
+
+  // ---- élection de démonstration (brouillon, D-25) --------------------------------------------------
+  const demoProgram = programs.find((p) => p.code === SEED_ELECTION.program)!;
+  const demoLevel = levels.find((l) => l.code === SEED_ELECTION.level)!;
+  const demoGroup = await prisma.group.findFirst({ where: { programId: demoProgram.id, levelId: demoLevel.id, academicYearId: year.id, name: SEED_ELECTION.group } });
+  const demo = await ensure(
+    () => prisma.election.findFirst({ where: { institutionId, title: SEED_ELECTION.title } }),
+    () =>
+      prisma.election.create({
+        data: {
+          institutionId,
+          academicYearId: year.id,
+          title: SEED_ELECTION.title,
+          titleAr: SEED_ELECTION.titleAr,
+          candidacyStartsAt: SEED_ELECTION.candidacyStartsAt,
+          candidacyEndsAt: SEED_ELECTION.candidacyEndsAt,
+          votingStartsAt: SEED_ELECTION.votingStartsAt,
+          votingEndsAt: SEED_ELECTION.votingEndsAt,
+          createdById: admin.id,
+        },
+      }),
+  );
+  if ((await prisma.eligibilityRule.count({ where: { electionId: demo.id } })) === 0) {
+    await prisma.eligibilityRule.create({ data: { electionId: demo.id, programId: demoProgram.id, levelId: demoLevel.id, groupId: demoGroup?.id ?? null } });
+    created++;
+  }
+  for (const position of SEED_ELECTION.positions) {
+    await ensure(
+      () => prisma.position.findFirst({ where: { electionId: demo.id, title: position.title } }),
+      () => prisma.position.create({ data: { ...position, electionId: demo.id } }),
+    );
+  }
   let officerCreated = false;
   let institutionAdminCreated = false;
   if (config.officer) {

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { EligibilityModule } from '../eligibility/eligibility.module';
+import { ElectionsController } from './elections.controller';
+import { ElectionsService } from './elections.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Module({ imports: [EligibilityModule], controllers: [ElectionsController], providers: [ElectionsService], exports: [ElectionsService] })
 export class ElectionsModule {}

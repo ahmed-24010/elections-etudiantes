@@ -4,6 +4,7 @@ import { AuditService } from '../audit/audit.service';
 import type { RequestInfo } from '../auth/auth.service';
 import type { RoleGrant } from '../common/authz/auth-user';
 import { ADMIN_ROLES } from '../common/authz/permissions';
+import { canViewCandidateFile } from '../candidates/candidate-access';
 import { PrismaService } from '../prisma/prisma.service';
 import { SignedUrlService } from '../storage/signed-url.service';
 import { StorageService } from '../storage/storage.service';
@@ -12,6 +13,8 @@ export interface DocumentViewer {
   id: string;
   roles: Pick<RoleGrant, 'role' | 'institutionId'>[];
 }
+
+type ServedFile = { body: Buffer; mimeType: string; filename: string };
 
 /**
  * Qui peut lire une attestation (03 §5.3) : l'étudiant pour la SIENNE, et le VÉRIFICATEUR de l'institution. Personne
@@ -50,7 +53,7 @@ export class DocumentsService {
    * Sert le fichier si la signature est valide ET que l'utilisateur est toujours autorisé (compte actif, rôle non révoqué,
    * 2FA active pour un rôle administratif). Toute erreur renvoie 403 sans préciser la raison.
    */
-  async serve(fileId: string, uid: string, exp: number, sig: string, info: RequestInfo) {
+  async serve(fileId: string, uid: string, exp: number, sig: string, info: RequestInfo): Promise<ServedFile> {
     if (!this.signer.verify(fileId, uid, exp, sig)) throw new ForbiddenException();
     const user = await this.prisma.user.findUnique({ where: { id: uid }, include: { roles: { where: { revokedAt: null } } } });
     if (!user || user.status !== UserStatus.ACTIVE) throw new ForbiddenException();
@@ -60,7 +63,9 @@ export class DocumentsService {
       where: { fileId },
       include: { file: true, enrollment: { include: { student: true } } },
     });
-    if (!document || document.file.deletedAt || !canViewDocument({ id: user.id, roles }, document.enrollment)) throw new ForbiddenException();
+    // Pas une attestation : peut-être la photo ou le programme d'un candidat (même URL signée, autres règles d'accès).
+    if (!document) return this.serveCandidateFile(fileId, user.id, roles);
+    if (document.file.deletedAt || !canViewDocument({ id: user.id, roles }, document.enrollment)) throw new ForbiddenException();
 
     const body = await this.storage.get(document.file.storageKey);
     await this.audit.record({
@@ -75,5 +80,20 @@ export class DocumentsService {
     });
     const ext = document.file.mimeType === 'application/pdf' ? 'pdf' : document.file.mimeType === 'image/png' ? 'png' : 'jpg';
     return { body, mimeType: document.file.mimeType, filename: `attestation.${ext}` };
+  }
+
+  /** Photo ou programme d'un candidat (03 §5.5) : lisibles par le candidat, le personnel de l'élection, ou les étudiants pour un candidat validé. */
+  private async serveCandidateFile(fileId: string, userId: string, activeRoles: Pick<RoleGrant, 'role' | 'institutionId' | 'electionId'>[]): Promise<ServedFile> {
+    const candidate = await this.prisma.candidate.findFirst({
+      where: { OR: [{ photoFileId: fileId }, { programFileId: fileId }] },
+      include: { student: true, election: true, photoFile: true, programFile: true },
+    });
+    const file = candidate && (candidate.photoFileId === fileId ? candidate.photoFile : candidate.programFile);
+    if (!candidate || !file || file.deletedAt) throw new ForbiddenException();
+    if (!canViewCandidateFile({ id: userId, roles: activeRoles }, candidate, candidate.election)) throw new ForbiddenException();
+    const body = await this.storage.get(file.storageKey);
+    const isPhoto = candidate.photoFileId === fileId;
+    const ext = file.mimeType === 'application/pdf' ? 'pdf' : file.mimeType === 'image/png' ? 'png' : 'jpg';
+    return { body, mimeType: file.mimeType, filename: `${isPhoto ? 'photo' : 'programme'}.${ext}` };
   }
 }

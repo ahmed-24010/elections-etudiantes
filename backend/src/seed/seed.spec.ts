@@ -64,6 +64,19 @@ describe('seed (développement)', () => {
     expect(prisma.program.rows.every((p) => !!p.nameAr)).toBe(true);
   });
 
+  it('crée l’élection de démonstration « Bureau du groupe 1 — L3 Droit public » en brouillon, règle sur le groupe 1 de Droit public L3', async () => {
+    const { prisma, deps } = make();
+    await runSeed(deps, env);
+    expect(prisma.election.rows).toEqual([expect.objectContaining({ title: 'Bureau du groupe 1 — L3 Droit public', status: 'DRAFT', institutionId: prisma.institutions[0].id })]);
+    const program = prisma.program.rows.find((p) => p.code === 'DPU')!;
+    const level = prisma.level.rows.find((l) => l.code === 'L3')!;
+    const group = prisma.group.rows.find((g) => g.programId === program.id && g.levelId === level.id && g.name === '1')!;
+    expect(prisma.eligibilityRule.rows).toEqual([expect.objectContaining({ programId: program.id, levelId: level.id, groupId: group.id, facultyId: null })]);
+    expect(prisma.position.rows.map((p) => p.title)).toEqual(['Président', 'Vice-président', 'Secrétaire']);
+    await runSeed(deps, env);
+    expect([prisma.election.rows.length, prisma.eligibilityRule.rows.length, prisma.position.rows.length]).toEqual([1, 1, 3]); // idempotent
+  });
+
   it('crée un SUPER_ADMIN, un VERIFICATION_OFFICER et un INSTITUTION_ADMIN de test, aux bonnes portées', async () => {
     const { prisma, deps } = make();
     await runSeed(deps, env);
@@ -78,7 +91,7 @@ describe('seed (développement)', () => {
   it('est idempotent : relancé, ne crée rien de plus et ne change aucun mot de passe', async () => {
     const { prisma, audit, hashPassword, deps } = make();
     const first = await runSeed(deps, env);
-    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 3 + 5 + 1 + 8 + 24, officerCreated: true, institutionAdminCreated: true });
+    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 3 + 5 + 1 + 8 + 24 + 1 + 1 + 3, officerCreated: true, institutionAdminCreated: true });
     const counts = () => [prisma.institutions.length, prisma.users.length, prisma.roleAssignments.length, prisma.faculty.rows.length, prisma.program.rows.length, prisma.level.rows.length, prisma.academicYear.rows.length, prisma.group.rows.length];
     const before = counts();
 

@@ -58,6 +58,15 @@ export class RolesService {
       if (!election || election.institutionId !== institutionId) throw new NotFoundException();
     }
 
+    if (dto.role === Role.ELECTION_COMMITTEE && dto.electionId) {
+      // 03 §6 : un candidat (en cours ou retenu) ne peut pas siéger au comité de la même élection.
+      const candidacy = await this.prisma.candidate.findFirst({
+        where: { electionId: dto.electionId, status: { in: ['PENDING', 'APPROVED'] }, student: { userId: target.id } },
+        select: { id: true },
+      });
+      if (candidacy) throw new ConflictException('candidate_cannot_be_committee');
+    }
+
     const existing = await this.prisma.roleAssignment.findFirst({
       where: { userId: target.id, role: dto.role, institutionId, electionId: dto.electionId ?? null, revokedAt: null },
       select: { id: true },
