@@ -28,8 +28,9 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 | 3a | `eligibility` : requête 02 §5 + 5 exemples + cas limites | fait (`src/eligibility/eligibility.spec.ts`, 16 tests) |
 | 3b | `elections` : brouillon, postes, règles, calendrier, états, comité, `GET /elections/mine`, `GET /elections/:id/eligible-count` | fait (`test/elections.e2e-spec.ts`) |
 | 3c | `candidates` : dépôt (photo, programme S3), retrait, validation/rejet 🔐, unicité, comité ≠ candidat | fait (même fichier de test) |
-| 3d | Point d'étape backend : lint, tests, build, résumé | fait — **en attente de feu vert avant le frontend** ; `test:db` (nouveau `test/db/elections-flow.db-spec.ts`) écrit mais JAMAIS exécuté (pas de Docker) |
-| 3e | Frontend : section « Élections » du menu latéral | à faire |
+| 3d | Point d'étape backend : lint, tests, build, résumé | fait ; `test:db` (`test/db/elections-flow.db-spec.ts`) exécuté par la CI de la PR #6 : vert (migration `program_levels`, droits, unicité sous concurrence) |
+| 3e | Frontend : section « Élections » du menu latéral | fait (liste, création en 5 étapes, détail, validation du comité, « mes élections », candidature) ; captures ar/fr dans `docs/captures/sprint-4/` |
+| 4 | PR brouillon #6 ouverte (`feat/sprint-4-elections` → `main`), CI verte | fait ; **ne rien fusionner** |
 
 ## Décisions prises en cours de route (à reporter dans `docs/` si elles tiennent)
 
@@ -49,7 +50,6 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 
 ## Reste à faire / notes de reprise
 
-- **3e Frontend « Élections »** : section dans le menu latéral admin (même style que la structure académique) ; pages : liste, création (formulaire en étapes : infos/dates → postes → règles → comité), détail avec états (ouvrir/fermer/annuler 🔐), écran de validation des candidatures du comité ; côté étudiant : « Mes élections », détail, dépôt/retrait de candidature, photo/programme. Clés `ar.json` ET `fr.json` (dont `notifications.types.CANDIDACY_*`), CSS en propriétés logiques, Reactive Forms.
-- Lancer `npm run test:db` sur une machine avec Docker (jamais exécuté pour D-24 ni Sprint 4).
-- Mettre à jour `docs/03-ROLES-PERMISSIONS.md` / `docs/07-MVP-ROADMAP.md` (cases du Sprint 4) une fois le frontend fini.
+- **Frontend Élections (fait)** : `frontend/src/app/features/elections/` (6 pages), clients `core/api/elections.api.ts` et `candidates.api.ts`, route `/admin/elections…` (IA et comité) et `/student/elections…`, menu « Élections », lien « Mes élections » sur l'accueil étudiant (si inscription vérifiée), section « Points à contrôler » dans l'examen d'une inscription (aide « المجموعة الأولى = A ، المجموعة الثانية = B »). Dates saisies en texte « AAAA-MM-JJ HH:mm » (comme les années, pas de champ natif).
+- **À faire / à décider** : (1) `docs/04-ELECTION-VOTING-FLOW.md` absent du dépôt le 15/10 : relire §10.5 quand il sera là ; (2) pas de fenêtre « modifier le titre » après ouverture (volontaire) ; (3) pas de liste des membres du comité hors de l'écran de création (le détail ne donne que le compte) ; (4) prochaine étape métier : Sprint 5 (vote), à ne pas commencer sans 04.
 - `docs/04-ELECTION-VOTING-FLOW.md` : sera fourni, ne pas le rédiger.

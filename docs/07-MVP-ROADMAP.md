@@ -115,15 +115,17 @@
 
 **Objectif :** chaque étudiant voit exactement les élections qui le concernent.
 
-- [ ] Module `elections` : création, positions, calendrier, statuts (02 §7)
-- [ ] Attribution du comité ; contrôle **3 membres minimum** avant ouverture du vote (D-03)
-- [ ] Module `eligibility` : règles (02 §5), calcul des éligibles, nombre d'éligibles affiché au comité
-- [ ] « Mes élections » pour l'étudiant
-- [ ] Module `candidates` : candidature (photo, programme), retrait, validation par le comité
-- [ ] Règles : un seul poste par élection (D-05) ; membre du comité ≠ candidat (03 §6) ; candidat éligible
-- [ ] Angular : création d'élection (formulaire en étapes), liste et page d'un candidat, écran de validation du comité
-- [ ] **Tests :** les 5 exemples d'éligibilité de 02 §5 en tests automatisés
-- [ ] **Écrire et relire 04-ELECTION-VOTING-FLOW avant la fin du sprint**
+- [x] Module `elections` : création, positions, calendrier, statuts (02 §4.4)
+- [x] Attribution du comité ; contrôle **3 membres minimum** avant ouverture du vote (D-03)
+- [x] Module `eligibility` : règles (02 §5), calcul des éligibles, nombre d'éligibles affiché au comité
+- [x] « Mes élections » pour l'étudiant
+- [x] Module `candidates` : candidature (photo, programme), retrait, validation par le comité
+- [x] Règles : un seul poste par élection (D-05) ; membre du comité ≠ candidat (03 §6) ; candidat éligible
+- [x] Angular : création d'élection (formulaire en étapes), liste et page d'un candidat, écran de validation du comité
+- [x] **Tests :** les 5 exemples d'éligibilité de 02 §5 en tests automatisés
+- [ ] **Écrire et relire 04-ELECTION-VOTING-FLOW avant la fin du sprint** (fourni par le porteur du projet ; absent du dépôt au 15/10)
+
+_Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et gel de `voter_roll` au Sprint 5. Détail et décisions : `SPRINT-EN-COURS.md`, D-24 à D-29._
 
 **Démo :** deux étudiants de groupes différents se connectent ; chacun voit des élections différentes. Un candidat est validé.
 

@@ -50,7 +50,7 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
           <dt class="col-sm-4">{{ 'elections.wizard.steps.positions' | transloco }}</dt>
           <dd class="col-sm-8">
             @for (p of d.positions; track p.id; let last = $last) {
-              {{ positionName(p) }}@if (!last) {، }
+              {{ positionName(p) }}@if (!last) {<span>{{ separator() }}</span>}
             }
           </dd>
         </dl>
@@ -252,6 +252,10 @@ export class MyElectionPage implements OnInit {
     this.form.reset({ positionId: m?.positionId ?? '', statement: m?.statement ?? '' });
   }
 
+  /** Séparateur de liste : virgule arabe en arabe. */
+  protected separator(): string {
+    return this.lang.current() === 'ar' ? '، ' : ', ';
+  }
   protected backArrow(): string {
     return this.lang.dir() === 'rtl' ? '→' : '←';
   }
