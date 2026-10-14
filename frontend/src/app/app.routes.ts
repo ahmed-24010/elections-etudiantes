@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, adminHomeGuard, guestGuard, roleGuard, studentGuard, twoFactorSetupGuard } from './core/auth/auth.guards';
+import { adminGuard, adminHomeGuard, anyRoleGuard, guestGuard, roleGuard, studentGuard, twoFactorSetupGuard } from './core/auth/auth.guards';
 import { AdminLayout } from './layout/admin/admin-layout';
 import { PublicLayout } from './layout/public/public-layout';
 import { StudentLayout } from './layout/student/student-layout';
@@ -24,7 +24,11 @@ export const routes: Routes = [
     path: 'student',
     component: StudentLayout,
     canActivate: [studentGuard],
-    children: [{ path: '', pathMatch: 'full', loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome) }],
+    children: [
+      { path: '', pathMatch: 'full', loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome) },
+      { path: 'elections', pathMatch: 'full', loadComponent: () => import('./features/elections/my-elections-page').then((m) => m.MyElectionsPage) },
+      { path: 'elections/:id', loadComponent: () => import('./features/elections/my-election-page').then((m) => m.MyElectionPage) },
+    ],
   },
   {
     path: 'admin',
@@ -39,6 +43,32 @@ export const routes: Routes = [
         data: { kind },
         loadComponent: () => import('./features/admin/academic-list-page').then((m) => m.AcademicListPage),
       })),
+      {
+        path: 'elections',
+        pathMatch: 'full',
+        canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
+        loadComponent: () => import('./features/elections/elections-list-page').then((m) => m.ElectionsListPage),
+      },
+      {
+        path: 'elections/new',
+        canActivate: [roleGuard('INSTITUTION_ADMIN')],
+        loadComponent: () => import('./features/elections/election-wizard-page').then((m) => m.ElectionWizardPage),
+      },
+      {
+        path: 'elections/:id/edit',
+        canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
+        loadComponent: () => import('./features/elections/election-wizard-page').then((m) => m.ElectionWizardPage),
+      },
+      {
+        path: 'elections/:id/candidates',
+        canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
+        loadComponent: () => import('./features/elections/candidates-review-page').then((m) => m.CandidatesReviewPage),
+      },
+      {
+        path: 'elections/:id',
+        canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
+        loadComponent: () => import('./features/elections/election-detail-page').then((m) => m.ElectionDetailPage),
+      },
       {
         path: 'verification',
         canActivate: [roleGuard('VERIFICATION_OFFICER')],

@@ -13,7 +13,7 @@ interface MenuSection {
   /** Clé Transloco du titre de section. */
   title: string;
   /** Rôle qui voit la section (le serveur contrôle les droits ; ceci filtre l'affichage). */
-  role: Role;
+  role: Role | readonly Role[];
   items: { label: string; path: string }[];
 }
 
@@ -28,6 +28,11 @@ export const ADMIN_MENU: readonly MenuSection[] = [
       { label: 'nav.levels', path: '/admin/academic/levels' },
       { label: 'nav.groups', path: '/admin/academic/groups' },
     ],
+  },
+  {
+    title: 'nav.electionsSection',
+    role: ['INSTITUTION_ADMIN', 'ELECTION_COMMITTEE'],
+    items: [{ label: 'nav.elections', path: '/admin/elections' }],
   },
   {
     title: 'nav.verification',
@@ -94,7 +99,7 @@ export class AdminLayout {
   protected readonly mobile = signal(this.query?.matches ?? false);
   /** Ouvert d'office sur grand écran, replié sur mobile. */
   protected readonly open = signal(!this.mobile());
-  protected readonly sections = computed(() => ADMIN_MENU.filter((s) => this.auth.hasRole(s.role)));
+  protected readonly sections = computed(() => ADMIN_MENU.filter((s) => ([] as Role[]).concat(s.role).some((r) => this.auth.hasRole(r))));
 
   /** Échap referme le tiroir sur mobile. */
   @HostListener('document:keydown.escape')

@@ -15,7 +15,9 @@
     "programs": "Filières",
     "levels": "Niveaux",
     "groups": "Groupes",
-    "toggleMenu": "Afficher ou masquer le menu"
+    "toggleMenu": "Afficher ou masquer le menu",
+    "electionsSection": "Élections",
+    "elections": "Élections"
   },
   "home": {
     "title": "Élections étudiantes",
@@ -116,7 +118,29 @@
     "ownEnrollment": "Vous ne pouvez pas décider de votre propre inscription.",
     "inUse": "Suppression impossible : cet élément est utilisé.",
     "alreadyExists": "Cet élément existe déjà.",
-    "invalidDates": "La date de début doit précéder la date de fin."
+    "invalidDates": "La date de début doit précéder la date de fin.",
+    "invalidState": "Cette action n'est pas possible dans l'état actuel de l'élection.",
+    "electionLocked": "Cette élection ne peut plus être modifiée.",
+    "candidacyDatesRequired": "Renseignez les dates de candidature avant d'ouvrir les candidatures.",
+    "positionsRequired": "Ajoutez au moins un poste avant d'ouvrir les candidatures.",
+    "rulesRequired": "Définissez qui peut voter (règles d'éligibilité) avant d'ouvrir les candidatures.",
+    "committeeIncomplete": "Le comité doit compter au moins 3 membres pour ouvrir les candidatures.",
+    "invalidRule": "Cette règle d'éligibilité est incohérente (filière, niveau, groupe ou année qui ne vont pas ensemble).",
+    "invalidPosition": "Ce poste n'appartient pas à cette élection.",
+    "alreadyCandidate": "Vous avez déjà une candidature à cette élection (un seul poste par élection).",
+    "candidacyRejected": "Votre candidature a été rejetée : corrigez-la puis redéposez-la.",
+    "candidacyNotOpen": "Les candidatures ne sont pas ouvertes.",
+    "candidacyWindowClosed": "Nous ne sommes pas dans la période de candidature.",
+    "candidacyLocked": "Cette candidature ne peut plus être modifiée ni retirée.",
+    "candidacyNotRejected": "Seule une candidature rejetée peut être redéposée.",
+    "committeeCannotApply": "Un membre du comité ne peut pas se porter candidat à cette élection.",
+    "candidateCannotBeCommittee": "Cette personne est candidate à cette élection : elle ne peut pas siéger au comité.",
+    "candidateNotEligible": "Ce candidat n'est plus éligible à cette élection.",
+    "electionNotReviewable": "Les candidatures ne peuvent plus être examinées dans l'état actuel de l'élection.",
+    "ownCandidacy": "Vous ne pouvez pas décider de votre propre candidature.",
+    "roleAlreadyAssigned": "Cette personne fait déjà partie du comité de cette élection.",
+    "userNotActive": "Ce compte n'est pas actif.",
+    "fileRequired": "Choisissez un fichier."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -179,7 +203,9 @@
     "empty": "Aucune notification.",
     "types": {
       "ENROLLMENT_VERIFIED": "Votre inscription a été vérifiée. Votre compte est maintenant vérifié.",
-      "ENROLLMENT_REJECTED": "Votre inscription a été rejetée."
+      "ENROLLMENT_REJECTED": "Votre inscription a été rejetée.",
+      "CANDIDACY_APPROVED": "Votre candidature a été validée par le comité.",
+      "CANDIDACY_REJECTED": "Votre candidature a été rejetée. Corrigez-la puis redéposez-la si les candidatures sont encore ouvertes."
     }
   },
   "verification": {
@@ -291,5 +317,164 @@
     "noYear": "Aucune année universitaire : créez-en une d'abord.",
     "groupBadge": "Groupe {{name}} — {{program}}, {{level}} : actions",
     "addGroupIn": "Ajouter un groupe — {{program}}, {{level}}"
+  },
+  "elections": {
+    "list": {
+      "title": "Élections",
+      "subtitle": "Créer et suivre les élections de votre faculté.",
+      "allStatuses": "Tous les états",
+      "new": "Nouvelle élection",
+      "open": "Ouvrir"
+    },
+    "status": {
+      "DRAFT": "Brouillon",
+      "CANDIDACY_OPEN": "Candidatures ouvertes",
+      "CANDIDACY_CLOSED": "Candidatures fermées",
+      "VOTING_OPEN": "Vote ouvert",
+      "VOTING_CLOSED": "Vote clos",
+      "RESULTS_PUBLISHED": "Résultats publiés",
+      "CANCELLED": "Annulée"
+    },
+    "fields": {
+      "title": "Titre",
+      "titleAr": "Titre en arabe",
+      "description": "Description",
+      "year": "Année universitaire",
+      "status": "État",
+      "candidacyStartsAt": "Début des candidatures",
+      "candidacyEndsAt": "Fin des candidatures",
+      "votingStartsAt": "Début du vote",
+      "votingEndsAt": "Fin du vote",
+      "candidacyPeriod": "Candidatures",
+      "votingPeriod": "Vote"
+    },
+    "wizard": {
+      "title": "Nouvelle élection",
+      "editTitle": "Modifier le brouillon",
+      "subtitle": "Quatre étapes : informations, postes, qui peut voter, comité. L'élection reste un brouillon jusqu'à l'ouverture des candidatures.",
+      "stepsLabel": "Étapes de création",
+      "steps": {
+        "info": "Informations",
+        "positions": "Postes",
+        "rules": "Électeurs",
+        "committee": "Comité",
+        "summary": "Récapitulatif"
+      },
+      "datePlaceholder": "AAAA-MM-JJ HH:mm",
+      "datesHelp": "Les dates se suivent : début des candidatures, fin des candidatures, début du vote, fin du vote. Heure locale, format AAAA-MM-JJ HH:mm.",
+      "saveNext": "Enregistrer et continuer",
+      "next": "Continuer",
+      "back": "Retour",
+      "finish": "Terminer",
+      "locked": "Cette élection n'est plus un brouillon : elle ne peut plus être modifiée ici.",
+      "toDetail": "Voir l'élection",
+      "positionsHelp": "Les postes à pourvoir (Président, Vice-président, Secrétaire…). Un étudiant ne peut candidater qu'à un seul poste.",
+      "noPositions": "Aucun poste pour l'instant.",
+      "rulesHelp": "Qui peut voter et se porter candidat. Une règle regroupe des critères (faculté, filière, niveau, groupe) qui doivent TOUS être satisfaits ; plusieurs règles s'additionnent.",
+      "committeeHelp": "Le comité conduit l'élection. Il faut au moins {{min}} membres pour ouvrir les candidatures."
+    },
+    "positions": {
+      "seats": "{{count}} siège(s)",
+      "title": "Poste",
+      "titleAr": "Poste en arabe",
+      "seatsLabel": "Sièges"
+    },
+    "rules": {
+      "whole": "Toute l'institution",
+      "wholeHelp": "Tous les étudiants vérifiés de l'année pourront voter et se porter candidat. Décochez pour restreindre.",
+      "none": "Aucune règle : personne ne sera éligible. Ajoutez une règle ou choisissez « Toute l'institution ».",
+      "add": "Ajouter une règle",
+      "any": "Peu importe",
+      "needCriterion": "Choisissez au moins un critère.",
+      "orHelp": "Un étudiant est éligible s'il satisfait au moins une de ces règles.",
+      "facultyId": "Faculté",
+      "programId": "Filière",
+      "levelId": "Niveau",
+      "groupId": "Groupe"
+    },
+    "committee": {
+      "count": "{{count}} / {{min}} membres",
+      "remove": "Retirer",
+      "email": "E-mail du membre",
+      "emailHelp": "Le compte doit déjà exister dans votre institution. La saisie demande votre code 2FA.",
+      "add": "Ajouter au comité",
+      "adminOnly": "Seul l'administrateur d'institution compose le comité."
+    },
+    "readiness": {
+      "dates": "Dates de candidature renseignées",
+      "positions": "Au moins un poste",
+      "rules": "Règles d'éligibilité définies",
+      "committee": "Comité d'au moins 3 membres",
+      "ok": "Prêt",
+      "missing": "Manquant"
+    },
+    "summary": {
+      "eligible": "{{count}} étudiant(s) éligible(s) pour l'instant."
+    },
+    "detail": {
+      "back": "Retour aux élections",
+      "edit": "Modifier le brouillon",
+      "openCandidacy": "Ouvrir les candidatures",
+      "closeCandidacy": "Fermer les candidatures",
+      "candidates": "Candidatures",
+      "cancel": "Annuler l'élection",
+      "cancelConfirm": "L'annulation est définitive. Les candidatures déposées sont conservées pour l'historique, mais l'élection disparaît pour les étudiants.",
+      "notReady": "Pour ouvrir les candidatures : dates, au moins un poste, des règles d'éligibilité et 3 membres de comité.",
+      "calendar": "Calendrier",
+      "eligible": "Étudiants éligibles"
+    },
+    "candidate": {
+      "status": {
+        "PENDING": "En attente",
+        "APPROVED": "Validée",
+        "REJECTED": "Rejetée",
+        "WITHDRAWN": "Retirée"
+      },
+      "rejectionReason": "Motif du rejet :",
+      "viewPhoto": "Voir la photo",
+      "viewProgram": "Voir le programme",
+      "position": "Poste",
+      "statement": "Programme électoral",
+      "photo": "Photo",
+      "program": "Programme (PDF ou image)",
+      "uploaded": "Déposé",
+      "fileHelp": "PDF, JPEG ou PNG, 5 Mo maximum.",
+      "resubmit": "Redéposer ma candidature",
+      "withdraw": "Retirer ma candidature",
+      "withdrawConfirm": "Vous ne pourrez plus vous retirer une fois les candidatures fermées. Retirer votre candidature maintenant ?",
+      "apply": "Déposer ma candidature"
+    },
+    "review": {
+      "title": "Validation des candidatures",
+      "allStatuses": "Toutes les candidatures",
+      "closedNote": "Les candidatures sont fermées : vous pouvez encore examiner celles qui sont en attente.",
+      "approve": "Valider",
+      "reject": "Rejeter…",
+      "rejectTitle": "Rejeter la candidature",
+      "reason": "Explication pour le candidat",
+      "reasonHint": "Le candidat la lira ; il pourra corriger puis redéposer tant que les candidatures sont ouvertes.",
+      "confirmReject": "Rejeter"
+    },
+    "student": {
+      "title": "Mes élections",
+      "subtitle": "Les élections qui concernent votre filière, votre niveau et votre groupe.",
+      "empty": "Aucune élection ne vous concerne pour le moment.",
+      "open": "Ouvrir",
+      "backHome": "Retour à mon espace",
+      "backList": "Retour à mes élections",
+      "myCandidacy": "Ma candidature",
+      "homeText": "Consultez les élections qui vous concernent et déposez votre candidature.",
+      "homeLink": "Voir mes élections",
+      "applyIntro": "Choisissez le poste auquel vous vous présentez (un seul poste par élection).",
+      "noApply": "Vous n'avez pas de candidature à cette élection.",
+      "candidates": "Candidats",
+      "noCandidates": "Aucun candidat validé pour l'instant.",
+      "help": {
+        "PENDING": "Le comité examine votre candidature. Vous pouvez encore la corriger.",
+        "APPROVED": "Le comité a validé votre candidature.",
+        "REJECTED": "Corrigez votre candidature selon le motif, puis redéposez-la.",
+        "WITHDRAWN": "Vous avez retiré votre candidature. Vous pouvez la déposer à nouveau tant que les candidatures sont ouvertes."
+      }
+    }
   }
 }

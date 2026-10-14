@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AcademicApi, AcademicOverview, localName } from '../../core/api/academic.api';
 import { ACCEPTED_TYPES, AppNotification, EnrollmentApi, MAX_UPLOAD_BYTES, StudentMe } from '../../core/api/enrollment.api';
@@ -20,12 +21,20 @@ export function studentState(me: StudentMe | null): StudentState {
 
 @Component({
   selector: 'app-student-home',
-  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe],
+  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe, RouterLink],
   template: `
     <section class="app-card p-4 mb-4">
       <h1 class="h3 app-page-title">{{ 'student.welcome.title' | transloco }}</h1>
       <p class="lead mb-0">{{ 'student.welcome.text' | transloco }}</p>
     </section>
+
+    @if (state() === 'VERIFIED') {
+      <section class="app-card p-4 mb-4">
+        <h2 class="h5 app-page-title">{{ 'elections.student.title' | transloco }}</h2>
+        <p>{{ 'elections.student.homeText' | transloco }}</p>
+        <a class="btn btn-primary" routerLink="/student/elections" data-testid="to-elections">{{ 'elections.student.homeLink' | transloco }}</a>
+      </section>
+    }
 
     @if (loadError(); as key) {
       <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
