@@ -1,7 +1,7 @@
 # Sprint en cours — Sprint 4 (Élections, éligibilité, candidatures), SANS le vote
 
 Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaque étape : une nouvelle session reprend ici.
-`docs/04-ELECTION-VOTING-FLOW.md` n'est **pas** à rédiger : il sera fourni.
+`docs/04-ELECTION-VOTING-FLOW.md` n'est **pas** à rédiger : il sera fourni. (Le 15/10 il était annoncé ajouté mais ABSENT du dépôt et du disque : §10.5 n'a pas pu être lu, les règles 4 et 5 viennent de la consigne directe.)
 
 ## Décisions déjà prises (hors `docs/00-DECISIONS.md`)
 
@@ -22,8 +22,8 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 | 2 | Écran admin des niveaux autorisés par filière (cases à cocher dans la fiche filière) | fait |
 | 2 | Grille des groupes sans case pour une filière absente du niveau (+ formulaire d'inscription filtré par niveau) | fait |
 | 2 | Contrôle serveur (inscription `program_not_available_for_level`, création de groupe `level_not_allowed_for_program`) | fait |
-| 2 | Seed : tronc commun « Droit » L1-L2, groupes 1/2/3 | fait |
-| 2 | Seed : élection de démo « Bureau du groupe 1 — L3 Droit public » | fait avec 3b (brouillon, règle sur le groupe 1 de Droit public L3, 3 postes) |
+| 2 | Seed : tronc commun « Droit » L1-L2, groupes A/B (D-25 corrigé) | fait |
+| 2 | Seed : élection de démo « Bureau du groupe A — L3 Droit public » | fait avec 3b (brouillon, règle sur le groupe A de Droit public L3, 3 postes) |
 | 2 | Textes ar/fr, tests verts (backend unit + e2e, frontend lint/tests/build), commit séparé | fait (`test:db` non lancé : pas de Docker/MySQL sur ce poste) |
 | 3a | `eligibility` : requête 02 §5 + 5 exemples + cas limites | fait (`src/eligibility/eligibility.spec.ts`, 16 tests) |
 | 3b | `elections` : brouillon, postes, règles, calendrier, états, comité, `GET /elections/mine`, `GET /elections/:id/eligible-count` | fait (`test/elections.e2e-spec.ts`) |
@@ -33,14 +33,14 @@ Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaqu
 
 ## Décisions prises en cours de route (à reporter dans `docs/` si elles tiennent)
 
-- **D-24, masters** : le seed met M1/M2 avec Droit privé / Droit public (la scolarité n'a parlé que de L1-L2 / L3). À confirmer.
-- **D-24, migration** : les filières existantes reçoivent TOUS les niveaux de leur institution (pas de changement de comportement tant que l'admin ne restreint pas). Le seed n'enlève jamais un lien existant : une base de dev déjà semée garde Droit privé / public en L1-L2 et ses groupes A/B, à nettoyer à la main (ou `docker compose down -v`).
+- **D-24, masters** : M1/M2 avec Droit privé / Droit public — confirmé « OK pour l'instant » (D-28).
+- **D-24, migration** : les filières existantes reçoivent TOUS les niveaux de leur institution (pas de changement de comportement tant que l'admin ne restreint pas). Le seed n'enlève jamais un lien existant : une base de dev déjà semée avant le 15/10 garde Droit privé / public en L1-L2 et d'éventuels groupes 1/2/3, à nettoyer à la main (ou `docker compose down -v`).
 - **D-24, API** : `levelIds` (tableau d'UUID, peut être vide côté serveur ; l'écran exige au moins un niveau) à la création/modification d'une filière ; la vue `GET /institutions/:id/academic` renvoie `levelIds` par filière. On ne retire pas un niveau qui a déjà des groupes ou des inscriptions (409 `in_use`).
 
 - **Sprint 4, ouverture des candidatures (DRAFT → CANDIDACY_OPEN)** exige : dates de candidature, ≥ 1 poste, ≥ 1 règle (une règle vide « toute l'institution » compte, elle se choisit avec `wholeInstitution: true`), ≥ 3 membres de comité actifs. Codes 409 : `candidacy_dates_required`, `positions_required`, `rules_required`, `committee_incomplete`.
 - **Éditions** : brouillon = tout modifiable ; CANDIDACY_OPEN / CLOSED = dates seulement ; règles et postes = brouillon seulement (changer les règles invaliderait des candidatures déjà déposées).
-- **Fermeture des candidatures** : le comité peut encore valider/rejeter ; le candidat peut encore se retirer ; plus de dépôt ni de correction. Pas de réouverture.
-- **Candidature** : fenêtre `candidacyStartsAt`–`candidacyEndsAt` contrôlée à l'heure du serveur (`candidacy_window_closed`) en plus du statut. Correction (texte, poste, photo, programme) seulement tant que PENDING. Retrait possible PENDING/APPROVED tant que l'élection est en CANDIDACY_OPEN/CLOSED ; une candidature RETIRÉE peut être redéposée (même ligne, repart de zéro, anciens fichiers supprimés) ; une candidature REJETÉE ne peut pas être redéposée (`candidacy_rejected`).
+- **Fermeture des candidatures** : le comité peut encore valider/rejeter ; plus de dépôt, de correction, de retrait ni de redépôt. Pas de réouverture.
+- **Candidature** : fenêtre `candidacyStartsAt`–`candidacyEndsAt` contrôlée à l'heure du serveur (`candidacy_window_closed`) en plus du statut. Correction (texte, poste, photo, programme) seulement tant que PENDING. Retrait possible PENDING/APPROVED tant que l'élection est en CANDIDACY_OPEN/CLOSED ; une candidature RETIRÉE peut être redéposée tant que CANDIDACY_OPEN (même ligne, repart de zéro, anciens fichiers supprimés). **D-27 (15/10)** : retrait seulement en CANDIDACY_OPEN (`candidacy_locked` après fermeture) ; une candidature REJETÉE se corrige (PATCH, photo, programme) puis se redépose par `POST …/candidates/me/resubmit` (→ PENDING) ; `POST …/candidates` sur une rejetée reste `candidacy_rejected`.
 - **Éligibilité** : contrôlée au dépôt ET à l'approbation (`candidate_not_eligible`). Un étudiant non éligible (ou sans inscription VERIFIED) reçoit 404 sur l'élection et ses candidats.
 - **Conflits d'intérêts** (03 §6) : membre du comité ≠ candidat dans les deux sens (dépôt → 409 `committee_member_cannot_apply` ; nomination au comité d'un candidat PENDING/APPROVED → 409 `candidate_cannot_be_committee`, dans `RolesService.assign`) ; un comité ne décide jamais de sa propre candidature (403).
 - **Photo / programme** : photo = JPEG/PNG ; programme = PDF/JPEG/PNG ; 5 Mo ; type réel (D-23) ; clé S3 `candidates/{institution}/{élection}/{uuid}.{ext}` ; servis par l'URL signée existante `/files/:fileId` (`POST /elections/:id/candidates/:cid/files/:photo|program/access`), lisibles par le candidat, le personnel de l'élection, et les étudiants éligibles pour un candidat validé (`candidate-access.ts`).

@@ -413,6 +413,20 @@ describe('Élections et candidatures (Sprint 4)', () => {
       await fresh('c1', 'post', `${C()}/${cand}/reject`).send({ reason: 'Hors périmètre' }).expect(200);
     });
 
+    it('candidature rejetée : correction puis redépôt tant que les candidatures sont ouvertes (comme les attestations)', async () => {
+      const mine = () => as('s5', 'get', `${C()}/me`);
+      expect((await mine()).body.status).toBe('REJECTED');
+      const row = t.prisma.candidate.rows.find((c) => c.studentId === u.s5.studentId)!;
+      await as('s5', 'patch', `${C()}/me`).send({ statement: 'Programme corrigé après rejet' }).expect(200); // la correction est permise
+      await upload('s5', 'program', pdf(), 'p.pdf', 'application/pdf').expect(201);
+      expect((await apply('s5').expect(409)).body.message).toBe('candidacy_rejected'); // le redépôt passe par « resubmit »
+      const res = await as('s5', 'post', `${C()}/me/resubmit`).expect(200);
+      expect(res.body).toEqual(expect.objectContaining({ status: 'PENDING', rejectionReason: null, hasProgram: true }));
+      expect((await as('s5', 'post', `${C()}/me/resubmit`).expect(409)).body.message).toBe('candidacy_not_rejected');
+      expect(t.prisma.auditLogs.some((l) => l.action === 'CANDIDATE_RESUBMITTED')).toBe(true);
+      await fresh('c1', 'post', `${C()}/${row.id}/reject`).send({ reason: 'Encore incomplet' }).expect(200);
+    });
+
     it('liste publique et fichiers d’un candidat validé : visibles pour les étudiants éligibles, via URL signée liée à l’utilisateur', async () => {
       const list = (await as('s5', 'get', C()).expect(200)).body;
       expect(list.map((c: { id: string }) => c.id)).toContain(s1Candidate);
@@ -437,12 +451,12 @@ describe('Élections et candidatures (Sprint 4)', () => {
       expect((await as('s5', 'get', C()).expect(200)).body).toEqual([]); // retirée : plus listée
       const again = (await apply('s1', { statement: 'Nouvelle candidature' }).expect(201)).body;
       expect(again).toEqual(expect.objectContaining({ id: s1Candidate, status: 'PENDING', hasPhoto: false, hasProgram: false }));
-      expect(stored()).toHaveLength(0);
+      expect(stored()).toHaveLength(1); // il ne reste que le programme de s5, déposé lors de sa correction
       expect(t.prisma.candidate.rows.filter((c) => c.studentId === u.s1.studentId)).toHaveLength(1); // toujours une seule ligne
     });
 
     // ---- états
-    it('fermeture des candidatures : plus de dépôt, mais le comité peut encore décider et le candidat se retirer', async () => {
+    it('fermeture des candidatures : plus de dépôt, mais le comité peut encore décider ; plus de retrait ni de redépôt', async () => {
       await as('s5', 'post', `${E()}/candidacy/close`).expect(403);
       expect((await as('c1', 'post', `${E()}/candidacy/close`).expect(200)).body.status).toBe('CANDIDACY_CLOSED');
       await as('ia', 'post', `${E()}/candidacy/close`).expect(409);
@@ -450,7 +464,8 @@ describe('Élections et candidatures (Sprint 4)', () => {
       expect((await apply('s6').expect(409)).body.message).toBe('candidacy_not_open');
       await as('s1', 'patch', `${C()}/me`).send({ statement: 'x' }).expect(409);
       await fresh('c1', 'post', `${C()}/${s1Candidate}/approve`).expect(200); // examen encore possible
-      await as('s1', 'post', `${C()}/me/withdraw`).expect(200);
+      expect((await as('s1', 'post', `${C()}/me/withdraw`).expect(409)).body.message).toBe('candidacy_locked'); // 04 §10.5 : plus de retrait
+      await as('s5', 'post', `${C()}/me/resubmit`).expect(409); // ni de redépôt
       expect((await as('s6', 'get', '/elections/mine')).body[0].status).toBe('CANDIDACY_CLOSED'); // toujours visible
     });
 

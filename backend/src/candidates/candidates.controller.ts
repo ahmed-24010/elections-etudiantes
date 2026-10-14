@@ -46,6 +46,15 @@ export class CandidatesController {
     return this.candidates.update(u, id, dto, requestInfo(req));
   }
 
+  /** Redépôt d'une candidature rejetée, après correction (candidatures encore ouvertes). */
+  @Post('me/resubmit')
+  @HttpCode(200)
+  @RequirePermission('candidate:update')
+  @ScopeFrom('election', 'id')
+  resubmit(@CurrentUser() u: AuthUser, @Param('id') id: string, @Req() req: Request) {
+    return this.candidates.resubmit(u, id, requestInfo(req));
+  }
+
   @Post('me/withdraw')
   @HttpCode(200)
   @RequirePermission('candidate:withdraw')

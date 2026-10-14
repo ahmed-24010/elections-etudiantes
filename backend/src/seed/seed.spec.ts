@@ -38,7 +38,7 @@ describe('seed (développement)', () => {
     expect(prisma.users).toHaveLength(1);
   });
 
-  it('crée la structure de démonstration FSJP : tronc commun Droit en L1-L2, Droit privé / public dès L3, groupes 1 à 3 (D-24, D-25)', async () => {
+  it('crée la structure de démonstration FSJP : tronc commun Droit en L1-L2, Droit privé / public dès L3, groupes A et B (D-24, D-25)', async () => {
     const { prisma, deps } = make();
     await runSeed(deps, env);
     const inst = prisma.institutions[0];
@@ -57,20 +57,20 @@ describe('seed (développement)', () => {
     };
     expect(levelsOf('Droit')).toEqual({ allowed: ['L1', 'L2'], grouped: ['L1', 'L2'] });
     for (const name of ['Droit privé', 'Droit public']) expect(levelsOf(name)).toEqual({ allowed: ['L3', 'M1', 'M2'], grouped: ['L3', 'M1', 'M2'] }); // pas de case DP/DPU en L1-L2
-    expect(prisma.group.rows).toHaveLength(8 * 3);
-    expect([...new Set(prisma.group.rows.map((g) => g.name))].sort()).toEqual(['1', '2', '3']);
+    expect(prisma.group.rows).toHaveLength(8 * 2);
+    expect([...new Set(prisma.group.rows.map((g) => g.name))].sort()).toEqual(['A', 'B']);
     // Tout est rattaché à la même institution, noms arabes compris.
     for (const rows of [prisma.faculty.rows, prisma.program.rows, prisma.level.rows, prisma.group.rows]) expect(rows.every((r) => r.institutionId === inst.id)).toBe(true);
     expect(prisma.program.rows.every((p) => !!p.nameAr)).toBe(true);
   });
 
-  it('crée l’élection de démonstration « Bureau du groupe 1 — L3 Droit public » en brouillon, règle sur le groupe 1 de Droit public L3', async () => {
+  it('crée l’élection de démonstration « Bureau du groupe A — L3 Droit public » en brouillon, règle sur le groupe A de Droit public L3', async () => {
     const { prisma, deps } = make();
     await runSeed(deps, env);
-    expect(prisma.election.rows).toEqual([expect.objectContaining({ title: 'Bureau du groupe 1 — L3 Droit public', status: 'DRAFT', institutionId: prisma.institutions[0].id })]);
+    expect(prisma.election.rows).toEqual([expect.objectContaining({ title: 'Bureau du groupe A — L3 Droit public', status: 'DRAFT', institutionId: prisma.institutions[0].id })]);
     const program = prisma.program.rows.find((p) => p.code === 'DPU')!;
     const level = prisma.level.rows.find((l) => l.code === 'L3')!;
-    const group = prisma.group.rows.find((g) => g.programId === program.id && g.levelId === level.id && g.name === '1')!;
+    const group = prisma.group.rows.find((g) => g.programId === program.id && g.levelId === level.id && g.name === 'A')!;
     expect(prisma.eligibilityRule.rows).toEqual([expect.objectContaining({ programId: program.id, levelId: level.id, groupId: group.id, facultyId: null })]);
     expect(prisma.position.rows.map((p) => p.title)).toEqual(['Président', 'Vice-président', 'Secrétaire']);
     await runSeed(deps, env);
@@ -91,7 +91,7 @@ describe('seed (développement)', () => {
   it('est idempotent : relancé, ne crée rien de plus et ne change aucun mot de passe', async () => {
     const { prisma, audit, hashPassword, deps } = make();
     const first = await runSeed(deps, env);
-    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 3 + 5 + 1 + 8 + 24 + 1 + 1 + 3, officerCreated: true, institutionAdminCreated: true });
+    expect(first).toEqual({ institutionCreated: true, adminCreated: true, roleCreated: true, structureCreated: 1 + 3 + 5 + 1 + 8 + 16 + 1 + 1 + 3, officerCreated: true, institutionAdminCreated: true });
     const counts = () => [prisma.institutions.length, prisma.users.length, prisma.roleAssignments.length, prisma.faculty.rows.length, prisma.program.rows.length, prisma.level.rows.length, prisma.academicYear.rows.length, prisma.group.rows.length];
     const before = counts();
 

@@ -294,7 +294,7 @@ model Group {
   programId      String @db.Char(36)
   levelId        String @db.Char(36)
   academicYearId String @db.Char(36)
-  name           String @db.VarChar(32) // numéro du groupe : "1", "2", "3"… (D-25)
+  name           String @db.VarChar(32) // nom libre choisi par l'admin : "A", "B" à la FSJP (D-25)
 
   institution      Institution         @relation(fields: [institutionId], references: [id])
   program          Program             @relation(fields: [programId], references: [id])

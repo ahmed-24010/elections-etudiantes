@@ -198,6 +198,17 @@
       "searchPlaceholder": "Rechercher par nom ou numéro étudiant…"
     },
     "review": {
+      "checklist": {
+        "title": "Points à contrôler sur l'attestation",
+        "name": "Le nom correspond à celui déclaré",
+        "number": "Le numéro étudiant correspond",
+        "program": "La filière et le niveau correspondent",
+        "group": "Le groupe correspond (voir l'aide ci-dessous)",
+        "year": "L'année universitaire est l'année en cours",
+        "legible": "L'attestation est lisible et complète",
+        "groupHelp": "Sur l'attestation :",
+        "groupHelpAr": "المجموعة الأولى = A ، المجموعة الثانية = B"
+      },
       "back": "Retour à la liste",
       "title": "Examen d'une inscription",
       "document": "Attestation",

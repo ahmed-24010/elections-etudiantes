@@ -26,6 +26,8 @@ export type FileKind = 'photo' | 'program';
 
 /** On peut encore déposer, corriger ou retirer sa candidature tant que les candidatures sont ouvertes (et avant validation pour corriger). */
 const REVIEWABLE: readonly ElectionStatus[] = [ElectionStatus.CANDIDACY_OPEN, ElectionStatus.CANDIDACY_CLOSED];
+/** États d'une candidature que son auteur peut encore corriger (texte, poste, fichiers). */
+const CORRECTABLE: readonly CandidateStatus[] = [CandidateStatus.PENDING, CandidateStatus.REJECTED];
 
 @Injectable()
 export class CandidatesService {
@@ -107,7 +109,7 @@ export class CandidatesService {
 
     const existing = await this.prisma.candidate.findFirst({ where: { electionId, studentId: student.id } });
     // Un étudiant = un seul poste par élection (D-05). Une candidature retirée peut être redéposée ; une candidature rejetée non.
-    if (existing && existing.status !== CandidateStatus.WITHDRAWN) throw new ConflictException(existing.status === CandidateStatus.REJECTED ? 'candidacy_rejected' : 'already_candidate');
+    if (existing && existing.status !== CandidateStatus.WITHDRAWN) throw new ConflictException(existing.status === CandidateStatus.REJECTED ? 'candidacy_rejected' : 'already_candidate'); // rejetée : corriger puis « resubmit »
 
     let candidate;
     try {
@@ -135,7 +137,7 @@ export class CandidatesService {
     this.assertEditable(election, candidate);
     if (dto.positionId) await this.assertPosition(electionId, dto.positionId);
     const res = await this.prisma.candidate.updateMany({
-      where: { id: candidate.id, status: CandidateStatus.PENDING },
+      where: { id: candidate.id, status: { in: CORRECTABLE } },
       data: { ...(dto.positionId ? { positionId: dto.positionId } : {}), ...(dto.statement !== undefined ? { statement: dto.statement } : {}) },
     });
     if (res.count !== 1) throw new ConflictException('candidacy_locked');
@@ -145,20 +147,41 @@ export class CandidatesService {
 
   private assertEditable(election: { status: ElectionStatus }, candidate: { status: CandidateStatus }) {
     if (election.status !== ElectionStatus.CANDIDACY_OPEN) throw new ConflictException('candidacy_not_open');
-    if (candidate.status !== CandidateStatus.PENDING) throw new ConflictException('candidacy_locked'); // « avant validation »
+    if (!CORRECTABLE.includes(candidate.status)) throw new ConflictException('candidacy_locked'); // « avant validation » ; une candidature rejetée se corrige
   }
 
   async withdraw(user: AuthUser, electionId: string, info: RequestInfo) {
     const election = await this.election(electionId);
     const student = await this.myStudent(user, election);
     const candidate = await this.ownCandidate(electionId, student.id);
-    if (!REVIEWABLE.includes(election.status)) throw new ConflictException('candidacy_locked'); // jamais après le vote
+    // 04 §10.5 : plus de retrait après la fermeture des candidatures.
+    if (election.status !== ElectionStatus.CANDIDACY_OPEN) throw new ConflictException('candidacy_locked');
     const res = await this.prisma.candidate.updateMany({
       where: { id: candidate.id, status: { in: [CandidateStatus.PENDING, CandidateStatus.APPROVED] } },
       data: { status: CandidateStatus.WITHDRAWN },
     });
     if (res.count !== 1) throw new ConflictException('candidacy_locked');
     await this.record(user, election, 'CANDIDATE_WITHDRAWN', candidate.id, info);
+    return this.ownView(candidate.id);
+  }
+
+  /**
+   * Redépôt d'une candidature REJETÉE après correction (même principe que les attestations, D-21) : tant que les
+   * candidatures sont ouvertes, elle repasse en PENDING pour un nouvel examen du comité.
+   */
+  async resubmit(user: AuthUser, electionId: string, info: RequestInfo) {
+    const election = await this.election(electionId);
+    const student = await this.myStudent(user, election);
+    const candidate = await this.ownCandidate(electionId, student.id);
+    if (election.status !== ElectionStatus.CANDIDACY_OPEN) throw new ConflictException('candidacy_not_open');
+    this.assertWindow(election);
+    if (await this.isCommitteeMember(user.id, electionId)) throw new ConflictException('committee_member_cannot_apply');
+    const res = await this.prisma.candidate.updateMany({
+      where: { id: candidate.id, status: CandidateStatus.REJECTED },
+      data: { status: CandidateStatus.PENDING, reviewedById: null, reviewedAt: null, rejectionReason: null },
+    });
+    if (res.count !== 1) throw new ConflictException('candidacy_not_rejected');
+    await this.record(user, election, 'CANDIDATE_RESUBMITTED', candidate.id, info);
     return this.ownView(candidate.id);
   }
 
@@ -200,7 +223,7 @@ export class CandidatesService {
             uploadedById: user.id,
           },
         });
-        const res = await tx.candidate.updateMany({ where: { id: candidate.id, status: CandidateStatus.PENDING }, data: { [column]: stored.id } });
+        const res = await tx.candidate.updateMany({ where: { id: candidate.id, status: { in: CORRECTABLE } }, data: { [column]: stored.id } });
         if (res.count !== 1) throw new ConflictException('candidacy_locked');
       });
     } catch (e) {

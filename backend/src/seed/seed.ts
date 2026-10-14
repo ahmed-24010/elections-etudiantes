@@ -25,15 +25,15 @@ export const SEED_LEVELS = [
   { code: 'M2', name: 'Master 2', nameAr: 'السنة الثانية ماستر', rank: 5 },
 ];
 export const SEED_YEAR = { label: '2026-2027', startsOn: new Date('2026-09-01'), endsOn: new Date('2027-07-15') };
-/** D-25 : groupes numérotés. */
-export const SEED_GROUPS = ['1', '2', '3'];
-/** Élection de démonstration (brouillon) : groupe 1 de L3 Droit public. Le comité et l'ouverture des candidatures se font à la main. */
+/** D-25 (corrigé) : les groupes de la FSJP s'appellent A et B ; le nom reste un texte libre pour l'admin. */
+export const SEED_GROUPS = ['A', 'B'];
+/** Élection de démonstration (brouillon) : groupe A de L3 Droit public. Le comité et l'ouverture des candidatures se font à la main. */
 export const SEED_ELECTION = {
-  title: 'Bureau du groupe 1 — L3 Droit public',
-  titleAr: 'مكتب الفوج 1 — السنة الثالثة ليسانس قانون عام',
+  title: 'Bureau du groupe A — L3 Droit public',
+  titleAr: 'مكتب المجموعة أ — السنة الثالثة ليسانس قانون عام',
   program: 'DPU',
   level: 'L3',
-  group: '1',
+  group: 'A',
   candidacyStartsAt: new Date('2026-10-15T08:00:00Z'),
   candidacyEndsAt: new Date('2026-10-25T18:00:00Z'),
   votingStartsAt: new Date('2026-11-02T08:00:00Z'),

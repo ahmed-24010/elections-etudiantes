@@ -75,6 +75,20 @@ type Outcome = 'approved' | 'rejected';
         }
       </section>
 
+      <section class="app-card p-4 mb-4">
+        <h2 class="h5 app-page-title">{{ 'verification.review.checklist.title' | transloco }}</h2>
+        <ul class="mb-2">
+          @for (item of checklist; track item) {
+            <li>{{ 'verification.review.checklist.' + item | transloco }}</li>
+          }
+        </ul>
+        <!-- Aide de lecture de l'attestation : le texte arabe est celui de l'attestation, identique dans les deux langues. -->
+        <p class="form-text mb-0">
+          {{ 'verification.review.checklist.groupHelp' | transloco }}
+          <bdi dir="rtl">{{ 'verification.review.checklist.groupHelpAr' | transloco }}</bdi>
+        </p>
+      </section>
+
       <section class="app-card p-4 mb-4" aria-live="polite">
         <h2 class="h5 app-page-title">{{ 'verification.review.decision' | transloco }}</h2>
         @if (outcome(); as o) {
@@ -128,6 +142,8 @@ export class ReviewPage implements OnInit {
   private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly codes = REJECTION_CODES;
+  /** Liste de contrôle du vérificateur : clés de `verification.review.checklist.*`. */
+  protected readonly checklist = ['name', 'number', 'program', 'group', 'year', 'legible'] as const;
   protected readonly detail = signal<ReviewDetail | null>(null);
   protected readonly loadError = signal<string | null>(null);
   protected readonly viewerUrl = signal<SafeResourceUrl | null>(null);
