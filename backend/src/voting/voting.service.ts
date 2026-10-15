@@ -7,7 +7,6 @@ import type { AuthUser } from '../common/authz/auth-user';
 import { STUDENT_VISIBLE } from '../elections/election-states';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignedUrlService } from '../storage/signed-url.service';
 import type { CastBallotDto } from './voting.dto';
 
 /** D-31 : sous ce nombre d'électeurs, la participation n'est mise à jour que par tranches de 15 minutes. */
@@ -39,7 +38,6 @@ export class VotingService {
     private readonly prisma: PrismaService,
     private readonly limiter: LoginAttemptLimiter,
     private readonly notifications: NotificationsService,
-    private readonly signer: SignedUrlService,
   ) {}
 
   // ------------------------------------------------------------------ mot de passe (avant la transaction)
@@ -196,11 +194,6 @@ export class VotingService {
       where: { electionId, status: CandidateStatus.APPROVED },
       select: { id: true, positionId: true, statement: true, photoFileId: true, programFileId: true, student: { select: { firstName: true, lastName: true, fullNameAr: true } } },
     });
-    const file = (fileId: string | null) => {
-      if (!fileId) return null;
-      const { exp, sig } = this.signer.sign(fileId, user.id);
-      return `/api/v1/files/${fileId}?uid=${user.id}&exp=${exp}&sig=${sig}`;
-    };
     return {
       electionId,
       title: election.title,
@@ -218,8 +211,10 @@ export class VotingService {
           lastName: c.student.lastName,
           fullNameAr: c.student.fullNameAr,
           statement: c.statement,
-          photoUrl: file(c.photoFileId),
-          programUrl: file(c.programFileId),
+          // Photo et programme se lisent par l'URL signée à la demande (POST /elections/:id/candidates/:cid/files/:kind/access) : une URL
+          // émise ici expirerait (5 min) pendant que l'électeur remplit son bulletin.
+          hasPhoto: !!c.photoFileId,
+          hasProgram: !!c.programFileId,
         })),
       })),
     };
