@@ -4,7 +4,7 @@
 
 Ce fichier liste toutes les décisions de conception validées. En cas de doute pendant le développement, **ce journal fait foi**. Pour changer une décision : ajouter une nouvelle ligne qui la remplace (ne jamais effacer l'ancienne), puis mettre à jour les documents concernés.
 
-**Dernière mise à jour :** 10/10/2026
+**Dernière mise à jour :** 15/10/2026
 
 ---
 
@@ -41,6 +41,14 @@ Ce fichier liste toutes les décisions de conception validées. En cas de doute 
 | D-27 | 15/10/2026 | Candidatures : retrait et redépôt | Le **retrait** d'une candidature n'est possible que pendant `CANDIDACY_OPEN` (jamais après `CANDIDACY_CLOSED`, 04 §10.5). Une candidature **rejetée** peut être **corrigée** (texte, poste, photo, programme) puis **redéposée** (`POST …/candidates/me/resubmit`, retour en `PENDING`) tant que `CANDIDACY_OPEN` ; même principe que les attestations (D-21). Une candidature retirée peut être redéposée tant que `CANDIDACY_OPEN`. Le comité peut encore examiner après la fermeture | Cohérence avec 04 ; évite qu'un rejet soit définitif pour une erreur corrigeable | 03 §5.5 |
 | D-28 | 15/10/2026 | Masters et filières | Les masters M1 et M2 sont rattachés à **Droit privé et Droit public** (pas au tronc commun « Droit »), à titre provisoire | Seul L1-L2 / L3 a été précisé par la scolarité (D-24) | 02 §4.2 |
 | D-29 | 15/10/2026 | Visibilité et comité (Sprint 4) | Une élection est visible par l'étudiant à partir de `CANDIDACY_OPEN` et seulement s'il est éligible (sinon 404). **Zéro règle d'éligibilité = personne** ; « toute l'institution » est un choix explicite (`wholeInstitution`). L'ouverture des candidatures exige dates, au moins un poste, au moins une règle et **3 membres de comité actifs**. Membre du comité ≠ candidat dans les deux sens | Précise D-03, D-05 et 03 §6 | 03 §5.4-5.5, 03 §6 |
+| D-30 | 15/10/2026 | Ressaisie du mot de passe pour voter (A-06) | L'étudiant **ressaisit son mot de passe** à la confirmation du vote : champ `password` du corps de `POST /voting/:id/ballot`, vérifié **avant** la transaction, jamais journalisé ; chaque échec compte dans le blocage du compte (5 échecs / 15 min) | Protège contre le vol de session (ordinateur laissé ouvert) | 04 §6.1, §7.5 |
+| D-31 | 15/10/2026 | Participation des petites élections (A-07) | Sous **50 électeurs**, le chiffre de participation est mis à jour **par tranches de 15 minutes** | On ne peut pas déduire qui vient de voter en regardant le compteur bouger | 04 §7.2 |
+| D-32 | 15/10/2026 | Seuil de publication par poste (A-08) | **3 votants minimum** par poste pour publier le détail ; en dessous, seuls l'élu et la mention « effectif trop faible » apparaissent | Avec 2 votants, chacun saurait pour qui l'autre a voté | 04 §7.3 |
+| D-33 | 15/10/2026 | Prolongation du vote (A-09) | **Une seule fois**, au plus la durée de la panne, par le comité (🔐, motif obligatoire, audité). Jamais de raccourcissement | Compenser une panne sans ouvrir la porte aux abus | 04 §10.1 |
+| D-34 | 15/10/2026 | Poste sans candidat validé (A-10) | **Bloque l'ouverture du vote** : le comité supprime le poste ou refait un scrutin | Un poste sans candidat n'a pas de sens | 04 §4.3 |
+| D-35 | 15/10/2026 | Ordre des candidats sur le bulletin (A-11) | **Aléatoire pour chaque électeur** | Ne favorise personne | 04 §6.1 |
+| D-36 | 15/10/2026 | Notification de vote (A-12) | Après le vote, notification dans l'application : « Un vote a été enregistré pour vous dans l'élection X. Si ce n'est pas vous, contactez le comité. » Elle ne contient aucun choix | Détecte un vote frauduleux après vol de compte | 04 §7.5 |
+| D-37 | 15/10/2026 | Mobile d'abord | La plupart des étudiants utilisent un **téléphone** (iOS Safari et Android Chrome). Écrans conçus pour **320-430 px d'abord** ; cibles tactiles **≥ 44 px** ; champs de saisie **≥ 16 px** (pas de zoom automatique sur iOS) ; **aucune action au survol seulement** ; dépôt d'attestation possible **par l'appareil photo** ; pages légères sur réseau lent. La CI exécute des tests Playwright avec un profil iPhone (WebKit) et un profil Android (Chromium mobile) | Public cible réel ; le bureau est le cas secondaire | 01, 07, CLAUDE.md |
 
 ---
 

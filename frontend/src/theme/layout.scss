@@ -139,8 +139,8 @@ app-admin-layout {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
   border: 1px solid transparent;
   border-radius: 0.5rem;
   background: transparent;
@@ -255,8 +255,8 @@ app-admin-layout {
     display: flex;
     align-items: center;
     justify-content: center;
-    inline-size: 2.5rem;
-    block-size: 2.5rem;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
     margin-inline-start: auto;
     margin-inline-end: 0.5rem;
     border: 0;
@@ -741,4 +741,16 @@ app-admin-layout {
 .app-photo-preview {
   max-inline-size: 100%;
   background: repeating-conic-gradient(#aab4c3 0% 25%, #dfe5ec 0% 50%) 50% / 16px 16px;
+}
+
+// D-37 « mobile d'abord » : cibles tactiles ≥ 44 px, champs ≥ 16 px (iOS ne zoome pas la page à la saisie).
+.btn,
+.navbar-toggler {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+}
+.form-control,
+.form-select {
+  font-size: 1rem;
+  min-block-size: 44px;
 }

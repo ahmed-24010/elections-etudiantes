@@ -37,12 +37,14 @@ docker compose down -v                     # tout arrêter ET effacer les volume
 cd backend && npm run lint && npm run test # lint + tests unitaires
 cd backend && npm run test:e2e             # tests e2e (Prisma simulé : chaîne HTTP, guards, services)
 cd backend && npm run test:db              # tests sur la VRAIE base MySQL (DATABASE_URL = compte app_runtime d'une base migrée ; la CI les lance)
+# test:db exige aussi DATABASE_READONLY_URL (compte app_readonly) pour les tests du vote secret (04 §11, test 11)
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
 cd backend && npm run seed                  # SUPER_ADMIN + structure de démo FSJP + comptes de test vérificateur et admin d'institution (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production ; lit le .env de la racine)
 cd backend && npm run seed:demo             # seed de DÉMO complet (étudiants Aïcha/Omar/Sara, comité comite1-3, élection en CANDIDACY_OPEN, 2FA de dev) : SEED_DEMO_PASSWORD et SEED_DEMO_TOTP_SECRET requis, refusé si NODE_ENV=production ; affiche la liste des comptes
 cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
+cd frontend && npm run test:mobile            # Playwright : iPhone (WebKit) et Android (Chromium mobile), D-37 ; port 4300, première fois : npx playwright install webkit chromium
 cd frontend && npm run build
 ```
 
@@ -82,6 +84,7 @@ Ne **jamais** enfreindre ces règles, même si une demande semble l'exiger :
 - Aucun texte en dur : tout passe par Transloco, avec la clé dans `ar.json` **et** `fr.json`.
 - CSS en propriétés logiques (`margin-inline-start`, `padding-inline-end`), jamais `left`/`right` fixes. L'interface doit fonctionner en RTL et en LTR.
 - Reactive Forms pour tous les formulaires.
+- Mobile d'abord (D-37) : écrans conçus pour 320-430 px, cibles tactiles ≥ 44 px, champs ≥ 16 px, aucune action au survol seulement, pages légères.
 - Les guards Angular sont un confort d'affichage, pas une sécurité.
 
 ## Manière de travailler
