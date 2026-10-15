@@ -5,10 +5,11 @@ export const PASSWORD_MIN = 10;
 // Plafond contre le déni de service par hachage Argon2 de très longues chaînes.
 export const PASSWORD_MAX = 128;
 
+const noSpaces = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.replace(/\s+/g, '') : value);
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 export class RegisterDto {
-  @IsOptional() @Transform(trim) @IsEmail() @MaxLength(191)
+  @IsOptional() @Transform(noSpaces) @IsEmail() @MaxLength(191)
   email?: string;
 
   @IsOptional() @Transform(trim) @Matches(/^\+?[0-9 .-]{8,20}$/, { message: 'phone invalide' })

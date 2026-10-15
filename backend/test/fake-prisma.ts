@@ -39,7 +39,6 @@ export class FakePrisma {
   roleAssignments: Row[] = [];
   refreshTokens: Row[] = [];
   institutions: Row[] = [];
-  elections: Row[] = [];
   auditLogs: Row[] = [];
   private auditSeq = 0n;
 
@@ -141,10 +140,10 @@ export class FakePrisma {
     },
   };
 
-  election = {
-    findUnique: async (a: Row) => this.shape(this.elections.find((e) => e.id === a.where.id), a),
-    count: async (a: Row = {}) => this.elections.filter((e) => Object.entries(a.where ?? {}).every(([k, v]) => e[k] === v)).length,
-  };
+  /** Les fixtures de World poussent directement dans `elections`. */
+  get elections(): Row[] {
+    return this.election.rows;
+  }
 
   // ---- Sprint 3 : structure académique, étudiants, fichiers, notifications ------------------------------------
   faculty: Table = new Table({ name: 'faculties', unique: [['institutionId', 'code']] });
@@ -155,6 +154,7 @@ export class FakePrisma {
     unique: [['institutionId', 'code']],
     relations: { faculty: (r) => this.faculty.rows.find((f) => f.id === r.facultyId) },
   });
+  programLevel: Table = new Table({ name: 'program_levels', unique: [['programId', 'levelId']] });
   group: Table = new Table({
     name: 'study_groups',
     unique: [['programId', 'levelId', 'academicYearId', 'name']],
@@ -198,6 +198,37 @@ export class FakePrisma {
     },
   });
   notification: Table = new Table({ name: 'notifications', defaults: () => ({ readAt: null }) });
+
+  // ---- Sprint 4 : élections, règles, postes, candidatures -----------------------------------------------------
+  election: Table = new Table({
+    name: 'elections',
+    defaults: () => ({ status: 'DRAFT', titleAr: null, description: null, candidacyStartsAt: null, candidacyEndsAt: null, voterRollFrozenAt: null, round: 1, parentElectionId: null }),
+    relations: {
+      rules: (r) => this.eligibilityRule.rows.filter((x) => x.electionId === r.id),
+      positions: (r) => this.position.rows.filter((x) => x.electionId === r.id),
+    },
+  });
+  eligibilityRule: Table = new Table({
+    name: 'eligibility_rules',
+    defaults: () => ({ facultyId: null, programId: null, levelId: null, groupId: null }),
+  });
+  position: Table = new Table({
+    name: 'positions',
+    unique: [['electionId', 'title']],
+    defaults: () => ({ titleAr: null, seats: 1, maxChoices: 1, allowBlank: true, displayOrder: 0 }),
+  });
+  candidate: Table = new Table({
+    name: 'candidates',
+    unique: [['electionId', 'studentId'], ['photoFileId'], ['programFileId']],
+    defaults: () => ({ status: 'PENDING', statement: null, photoFileId: null, programFileId: null, reviewedById: null, reviewedAt: null, rejectionReason: null }),
+    relations: {
+      student: (r) => this.student.rows.find((x) => x.id === r.studentId),
+      position: (r) => this.position.rows.find((x) => x.id === r.positionId),
+      election: (r) => this.election.rows.find((x) => x.id === r.electionId),
+      photoFile: (r) => this.storedFile.rows.find((x) => x.id === r.photoFileId),
+      programFile: (r) => this.storedFile.rows.find((x) => x.id === r.programFileId),
+    },
+  });
 
   auditLog = {
     findFirst: async (a: Row = {}) => {

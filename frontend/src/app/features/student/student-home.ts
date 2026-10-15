@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AcademicApi, AcademicOverview, localName } from '../../core/api/academic.api';
 import { ACCEPTED_TYPES, AppNotification, EnrollmentApi, MAX_UPLOAD_BYTES, StudentMe } from '../../core/api/enrollment.api';
@@ -20,12 +21,20 @@ export function studentState(me: StudentMe | null): StudentState {
 
 @Component({
   selector: 'app-student-home',
-  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe],
+  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe, RouterLink],
   template: `
     <section class="app-card p-4 mb-4">
       <h1 class="h3 app-page-title">{{ 'student.welcome.title' | transloco }}</h1>
       <p class="lead mb-0">{{ 'student.welcome.text' | transloco }}</p>
     </section>
+
+    @if (state() === 'VERIFIED') {
+      <section class="app-card p-4 mb-4">
+        <h2 class="h5 app-page-title">{{ 'elections.student.title' | transloco }}</h2>
+        <p>{{ 'elections.student.homeText' | transloco }}</p>
+        <a class="btn btn-primary" routerLink="/student/elections" data-testid="to-elections">{{ 'elections.student.homeLink' | transloco }}</a>
+      </section>
+    }
 
     @if (loadError(); as key) {
       <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
@@ -112,20 +121,20 @@ export function studentState(me: StudentMe | null): StudentState {
                 </select>
               </div>
               <div class="col-12 col-md-6">
-                <label class="form-label" for="programId">{{ 'student.fields.program' | transloco }}</label>
-                <select id="programId" class="form-select" formControlName="programId">
-                  <option value="">{{ 'student.fields.choose' | transloco }}</option>
-                  @for (p of programs(ov); track p.id) {
-                    <option [value]="p.id">{{ name(p) }}</option>
-                  }
-                </select>
-              </div>
-              <div class="col-12 col-md-6">
                 <label class="form-label" for="levelId">{{ 'student.fields.level' | transloco }}</label>
                 <select id="levelId" class="form-select" formControlName="levelId">
                   <option value="">{{ 'student.fields.choose' | transloco }}</option>
                   @for (l of ov.levels; track l.id) {
                     <option [value]="l.id">{{ name(l) }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="programId">{{ 'student.fields.program' | transloco }}</label>
+                <select id="programId" class="form-select" formControlName="programId">
+                  <option value="">{{ 'student.fields.choose' | transloco }}</option>
+                  @for (p of programs(ov); track p.id) {
+                    <option [value]="p.id">{{ name(p) }}</option>
                   }
                 </select>
               </div>
@@ -221,7 +230,13 @@ export class StudentHome implements OnInit {
       this.form.controls.groupId.setValue('');
     });
     this.form.controls.programId.valueChanges.subscribe(() => this.form.controls.groupId.setValue(''));
-    this.form.controls.levelId.valueChanges.subscribe(() => this.form.controls.groupId.setValue(''));
+    this.form.controls.levelId.valueChanges.subscribe(() => {
+      // D-24 : la filière choisie doit exister au nouveau niveau, sinon on la vide.
+      const ov = this.overview();
+      const program = ov?.programs.find((p) => p.id === this.form.controls.programId.value);
+      if (program && !program.levelIds.includes(this.form.controls.levelId.value)) this.form.controls.programId.setValue('');
+      this.form.controls.groupId.setValue('');
+    });
     await this.refresh();
   }
 
@@ -239,8 +254,9 @@ export class StudentHome implements OnInit {
   }
 
   protected programs(ov: AcademicOverview) {
-    const faculty = this.form.controls.facultyId.value;
-    return ov.programs.filter((p) => p.facultyId === faculty);
+    // D-24 : l'étudiant ne voit que les filières valables pour son niveau (le serveur revérifie).
+    const { facultyId, levelId } = this.form.getRawValue();
+    return ov.programs.filter((p) => p.facultyId === facultyId && !!levelId && p.levelIds.includes(levelId));
   }
 
   /** Groupes de la filière, du niveau et de l'année courante choisis (le serveur revérifie la cohérence). */

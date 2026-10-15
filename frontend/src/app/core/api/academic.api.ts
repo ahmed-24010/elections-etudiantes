@@ -15,6 +15,8 @@ export interface Faculty extends Named {
 export interface Program extends Named {
   code: string;
   facultyId: string;
+  /** Niveaux où la filière existe (D-24). */
+  levelIds: string[];
 }
 export interface Level extends Named {
   code: string;

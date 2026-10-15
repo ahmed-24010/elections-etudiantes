@@ -47,7 +47,7 @@ export class RolesService {
     const actorIsSuperAdmin = actor.roles.some((r) => r.role === Role.SUPER_ADMIN);
     // Hors SUPER_ADMIN, seuls les comptes déjà rattachés à l'institution sont visibles : pas de sondage d'e-mails.
     if (!target || (!actorIsSuperAdmin && !target.roles.some((r) => r.institutionId === institutionId))) {
-      throw new NotFoundException();
+      throw new NotFoundException('account_not_found'); // même réponse dans les deux cas
     }
     this.conflicts.assertNotSelfAssignment(actor.id, target.id);
     if (target.status !== UserStatus.ACTIVE) throw new ConflictException('user_not_active');
@@ -56,6 +56,15 @@ export class RolesService {
       // L'institution de l'élection vient de la base ; une élection d'une autre institution reste invisible.
       const election = await this.prisma.election.findUnique({ where: { id: dto.electionId }, select: { institutionId: true } });
       if (!election || election.institutionId !== institutionId) throw new NotFoundException();
+    }
+
+    if (dto.role === Role.ELECTION_COMMITTEE && dto.electionId) {
+      // 03 §6 : un candidat (en cours ou retenu) ne peut pas siéger au comité de la même élection.
+      const candidacy = await this.prisma.candidate.findFirst({
+        where: { electionId: dto.electionId, status: { in: ['PENDING', 'APPROVED'] }, student: { userId: target.id } },
+        select: { id: true },
+      });
+      if (candidacy) throw new ConflictException('candidate_cannot_be_committee');
     }
 
     const existing = await this.prisma.roleAssignment.findFirst({

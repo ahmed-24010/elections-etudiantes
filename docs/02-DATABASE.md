@@ -104,6 +104,8 @@ Choix :
 
 - **Les niveaux sont des données**, pas un enum, car chaque institution a sa propre nomenclature.
 - **Un groupe dépend de l'année** : le groupe B de L3 Droit privé 2026-2027 n'est pas celui de 2027-2028.
+- **Une filière n'existe que pour certains niveaux** (D-24) : table `program_levels` (clé `programId + levelId`). À la FSJP, le tronc commun « Droit » n'existe qu'en L1-L2, Droit privé / Droit public dès L3. Un groupe n'est créé et une inscription n'est acceptée que pour un couple filière / niveau présent dans cette table (contrôle serveur).
+- **Groupes** (D-25) : le nom est un texte libre (« A », « B » à la FSJP) ; un étudiant ne change pas de groupe dans l'année.
 - **Départements** : non modélisés au MVP. Ils s'ajouteront entre Faculty et Program si une institution en a besoin.
 
 ### 4.3 Étudiants et vérification

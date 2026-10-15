@@ -90,6 +90,10 @@ export class StudentsService {
     ]);
     if (!faculty || !program || !level) throw new BadRequestException('invalid_academic_choice');
     if (program.facultyId !== faculty.id) throw new BadRequestException('invalid_academic_choice');
+    // D-24 : la filière doit exister à ce niveau (contrôle serveur, l'écran ne fait que filtrer).
+    if (!(await this.prisma.programLevel.findUnique({ where: { programId_levelId: { programId: program.id, levelId: level.id } } }))) {
+      throw new BadRequestException('program_not_available_for_level');
+    }
     if (dto.groupId) {
       const group = await this.prisma.group.findFirst({ where: { id: dto.groupId, institutionId } });
       if (!group || group.programId !== program.id || group.levelId !== level.id || group.academicYearId !== year.id) {

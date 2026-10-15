@@ -555,6 +555,16 @@ app-admin-layout {
   }
 }
 
+.app-group-na {
+  color: var(--app-text-muted);
+}
+
+.app-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
 .app-group-add {
   inline-size: 1.8rem;
   block-size: 1.8rem;
@@ -608,4 +618,91 @@ app-admin-layout {
   flex: none;
   color: var(--app-navy);
   font-weight: 700;
+}
+
+// ---- Élections (Sprint 4) ----------------------------------------------------------------------
+
+// Étapes de création : une ligne numérotée, qui passe à la ligne sur mobile.
+.app-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--app-text-muted);
+  }
+  .is-current {
+    color: var(--app-navy);
+    font-weight: 700;
+  }
+  .is-done .app-step-num {
+    background: var(--app-primary);
+    color: var(--app-on-dark);
+  }
+}
+
+.app-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  font-size: 0.85rem;
+}
+
+.app-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    border-block-end: 1px solid var(--app-border);
+  }
+}
+
+.app-rule {
+  margin-block-end: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+}
+
+.app-checklist {
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding-block: 0.2rem;
+    color: var(--app-text-muted);
+  }
+  .is-ok {
+    color: var(--app-navy);
+  }
+}
+
+.app-candidates {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+}
+
+.app-candidate {
+  padding: 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
 }

@@ -12,6 +12,12 @@ import { AcademicListPage } from './features/admin/academic-list-page';
 import { QueuePage } from './features/verification/queue-page';
 import { ReviewPage } from './features/verification/review-page';
 import { StudentHome } from './features/student/student-home';
+import { CandidatesReviewPage } from './features/elections/candidates-review-page';
+import { ElectionDetailPage } from './features/elections/election-detail-page';
+import { ElectionWizardPage } from './features/elections/election-wizard-page';
+import { ElectionsListPage } from './features/elections/elections-list-page';
+import { MyElectionPage } from './features/elections/my-election-page';
+import { MyElectionsPage } from './features/elections/my-elections-page';
 import { StepUpDialog } from './shared/components/step-up-dialog/step-up-dialog';
 import { HomePage } from './features/home/home-page';
 import { LoginPage } from './features/auth/login-page';
@@ -109,6 +115,12 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     ['file du vérificateur', QueuePage],
     ['examen d’une inscription', ReviewPage],
     ['fenêtre de code 2FA', StepUpDialog],
+    ['élections : liste', ElectionsListPage],
+    ['élections : création en étapes', ElectionWizardPage],
+    ['élections : détail', ElectionDetailPage],
+    ['élections : validation des candidatures', CandidatesReviewPage],
+    ['élections : mes élections', MyElectionsPage],
+    ['élections : une élection (étudiant)', MyElectionPage],
   ];
 
   for (const lang of LANGS) {
@@ -165,6 +177,15 @@ describe('Traductions : aucune clé brute à l’écran', () => {
         'student_number_unavailable', 'enrollment_verified_locked', 'enrollment_under_review', 'document_not_allowed', 'enrollment_required',
         'no_current_year', 'not_reviewable', 'in_use', 'already_exists',
       ].map((message) => new HttpErrorResponse({ status: 409, error: { message } })),
+      ...[
+        'invalid_state', 'election_locked', 'candidacy_dates_required', 'positions_required', 'rules_required', 'committee_incomplete', 'already_candidate',
+        'candidacy_rejected', 'candidacy_not_open', 'candidacy_window_closed', 'candidacy_locked', 'candidacy_not_rejected', 'committee_member_cannot_apply',
+        'candidate_cannot_be_committee', 'candidate_not_eligible', 'election_not_reviewable', 'role_already_assigned', 'user_not_active',
+      ].map((message) => new HttpErrorResponse({ status: 409, error: { message } })),
+      ...['invalid_rule', 'invalid_position', 'file_required'].map((message) => new HttpErrorResponse({ status: 400, error: { message } })),
+      new HttpErrorResponse({ status: 403, error: { message: 'cannot_review_own_candidacy' } }),
+      new HttpErrorResponse({ status: 400, error: { message: 'program_not_available_for_level' } }),
+      new HttpErrorResponse({ status: 400, error: { message: 'level_not_allowed_for_program' } }),
       new HttpErrorResponse({ status: 400, error: { message: 'invalid_academic_choice' } }),
       new HttpErrorResponse({ status: 400, error: { message: 'invalid_dates' } }),
       new HttpErrorResponse({ status: 403, error: { message: 'cannot_review_own_enrollment' } }),
@@ -183,6 +204,13 @@ describe('Traductions : aucune clé brute à l’écran', () => {
       ...REJECTION_CODES.map((c) => `verification.codes.${c}`),
       'notifications.types.ENROLLMENT_VERIFIED',
       'notifications.types.ENROLLMENT_REJECTED',
+      'notifications.types.CANDIDACY_APPROVED',
+      'notifications.types.CANDIDACY_REJECTED',
+      ...['DRAFT', 'CANDIDACY_OPEN', 'CANDIDACY_CLOSED', 'VOTING_OPEN', 'VOTING_CLOSED', 'RESULTS_PUBLISHED', 'CANCELLED'].map((st) => `elections.status.${st}`),
+      ...['PENDING', 'APPROVED', 'REJECTED', 'WITHDRAWN'].flatMap((st) => [`elections.candidate.status.${st}`, `elections.student.help.${st}`]),
+      ...['info', 'positions', 'rules', 'committee', 'summary'].map((st) => `elections.wizard.steps.${st}`),
+      ...['dates', 'positions', 'rules', 'committee'].map((st) => `elections.readiness.${st}`),
+      ...['facultyId', 'programId', 'levelId', 'groupId'].map((st) => `elections.rules.${st}`),
       'verification.review.done.approved',
       'verification.review.done.rejected',
     ];
@@ -253,11 +281,131 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     }
   });
 
+  describe('écrans Élections avec données : aucune clé brute dans chaque état', () => {
+    const position = { id: 'p1', title: 'Président', titleAr: 'الرئيس', seats: 1, maxChoices: 1, allowBlank: true, displayOrder: 1 };
+    const election = (status: string) => ({
+      id: 'e', institutionId: 'i', academicYearId: 'y', title: 'Bureau', titleAr: 'مكتب', description: 'Description', status,
+      candidacyStartsAt: '2026-10-15T08:00:00Z', candidacyEndsAt: '2026-10-25T18:00:00Z', votingStartsAt: '2026-11-02T08:00:00Z', votingEndsAt: '2026-11-04T18:00:00Z',
+      positions: [position], rules: { wholeInstitution: false, items: [{ programId: 'p', levelId: 'l', groupId: 'g' }] }, committeeCount: 2, minCommittee: 3,
+    });
+    const academic = {
+      years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01', endsOn: '2027-07-15', isCurrent: true }], faculties: [{ id: 'f', code: 'F', name: 'F' }],
+      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', facultyId: 'f', levelIds: ['l'] }], levels: [{ id: 'l', code: 'L3', name: 'L3', rank: 3 }],
+      groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
+    };
+    const route = (params: Record<string, string>) => ({ provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(params) } } });
+    const as = (role: 'INSTITUTION_ADMIN' | 'ELECTION_COMMITTEE' | 'STUDENT') =>
+      TestBed.inject(AuthService).user.set({ id: 'u', email: 'a@example.test', phone: null, twoFactorEnabled: true, roles: [{ role, institutionId: 'i', electionId: null }] });
+
+    for (const lang of LANGS) {
+      for (const status of ['DRAFT', 'CANDIDACY_OPEN', 'CANDIDACY_CLOSED', 'CANCELLED']) {
+        it(`détail administrateur, ${status}, en ${lang}`, async () => {
+          configure(json, lang);
+          TestBed.configureTestingModule({ providers: [route({ id: 'e' })] });
+          as('INSTITUTION_ADMIN');
+          const http = TestBed.inject(HttpTestingController);
+          const fixture = TestBed.createComponent(ElectionDetailPage);
+          fixture.detectChanges();
+          http.expectOne('/api/v1/elections/e').flush(election(status));
+          await settle(fixture);
+          http.expectOne('/api/v1/institutions/i/academic').flush(academic);
+          await settle(fixture);
+          http.expectOne('/api/v1/elections/e/eligible-count').flush({ count: 7 });
+          await settle(fixture);
+          expect(rawKeys(fixture.nativeElement)).toEqual([]);
+        });
+
+        it(`validation des candidatures, ${status}, en ${lang}`, async () => {
+          configure(json, lang);
+          TestBed.configureTestingModule({ providers: [route({ id: 'e' })] });
+          as('ELECTION_COMMITTEE');
+          const http = TestBed.inject(HttpTestingController);
+          const fixture = TestBed.createComponent(CandidatesReviewPage);
+          fixture.detectChanges();
+          http.expectOne('/api/v1/elections/e').flush(election(status));
+          await settle(fixture);
+          http.expectOne('/api/v1/institutions/i/academic').flush(academic);
+          await settle(fixture);
+          const base = { positionId: 'p1', statement: 'Programme', hasPhoto: true, hasProgram: true, reviewedAt: null, firstName: 'A', lastName: 'B', fullNameAr: 'ا ب', enrollment: { programId: 'p', levelId: 'l', groupId: 'g' } };
+          http.expectOne('/api/v1/elections/e/candidates/all').flush(
+            ['PENDING', 'APPROVED', 'REJECTED', 'WITHDRAWN'].map((st, i) => ({ ...base, id: `c${i}`, status: st, rejectionReason: st === 'REJECTED' ? 'Motif' : null })),
+          );
+          await settle(fixture);
+          const el = fixture.nativeElement as HTMLElement;
+          expect(rawKeys(el)).toEqual([]);
+          Array.from(el.querySelectorAll('button')).find((b) => b.getAttribute('class')?.includes('btn-outline-danger'))?.click();
+          fixture.detectChanges();
+          expect(rawKeys(el)).withContext('fenêtre de rejet').toEqual([]);
+        });
+      }
+
+      for (const mine of [null, 'PENDING', 'APPROVED', 'REJECTED', 'WITHDRAWN']) {
+        for (const status of ['CANDIDACY_OPEN', 'CANDIDACY_CLOSED']) {
+          it(`une élection côté étudiant, candidature ${mine ?? 'absente'}, ${status}, en ${lang}`, async () => {
+            configure(json, lang);
+            TestBed.configureTestingModule({ providers: [route({ id: 'e' })] });
+            as('STUDENT');
+            const http = TestBed.inject(HttpTestingController);
+            const fixture = TestBed.createComponent(MyElectionPage);
+            fixture.detectChanges();
+            http.expectOne('/api/v1/elections/e').flush({ ...election(status), rules: undefined, committeeCount: undefined });
+            await settle(fixture);
+            http.expectOne('/api/v1/elections/e/candidates').flush([{ id: 'c9', positionId: 'p1', statement: 'x', hasPhoto: true, hasProgram: true, firstName: 'A', lastName: 'B', fullNameAr: 'ا ب' }]);
+            await settle(fixture);
+            const req = http.expectOne('/api/v1/elections/e/candidates/me');
+            if (mine) req.flush({ id: 'c1', positionId: 'p1', status: mine, statement: 'Programme', rejectionReason: mine === 'REJECTED' ? 'Motif' : null, hasPhoto: true, hasProgram: false });
+            else req.flush({ message: 'x' }, { status: 404, statusText: 'Not Found' });
+            await settle(fixture);
+            const el = fixture.nativeElement as HTMLElement;
+            expect(rawKeys(el)).toEqual([]);
+            Array.from(el.querySelectorAll('button')).find((b) => b.getAttribute('class')?.includes('btn-outline-danger'))?.click();
+            fixture.detectChanges();
+            expect(rawKeys(el)).withContext('confirmation de retrait').toEqual([]);
+          });
+        }
+      }
+
+      it(`création en étapes : informations, postes, règles, comité et récapitulatif, en ${lang}`, async () => {
+        configure(json, lang);
+        TestBed.configureTestingModule({ providers: [route({ id: 'e' })] });
+        as('INSTITUTION_ADMIN');
+        const http = TestBed.inject(HttpTestingController);
+        const fixture = TestBed.createComponent(ElectionWizardPage);
+        fixture.detectChanges();
+        http.expectOne('/api/v1/institutions/i/academic').flush(academic);
+        await settle(fixture);
+        http.expectOne('/api/v1/elections/e').flush(election('DRAFT'));
+        await settle(fixture);
+        http.expectOne('/api/v1/institutions/i/staff').flush([{ assignmentId: 'a', role: 'ELECTION_COMMITTEE', electionId: 'e', user: { id: 'x', email: 'm@example.test', phone: null } }]);
+        await settle(fixture);
+        const el = fixture.nativeElement as HTMLElement;
+        const t = json[lang] as Record<string, Record<string, Record<string, string>>>;
+        expect(rawKeys(el)).withContext('informations').toEqual([]);
+        // Enregistrer l'étape 1 (brouillon repris : PATCH puis rechargement) mène aux postes.
+        el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+        await settle(fixture);
+        http.expectOne('/api/v1/elections/e').flush(election('DRAFT'));
+        await settle(fixture);
+        http.expectOne('/api/v1/elections/e').flush(election('DRAFT'));
+        await settle(fixture);
+        http.expectOne('/api/v1/institutions/i/staff').flush([]);
+        await settle(fixture);
+        expect(rawKeys(el)).withContext('postes').toEqual([]);
+        const next = () => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === t['elections']['wizard']['next'])!;
+        next().click();
+        fixture.detectChanges();
+        el.querySelector<HTMLButtonElement>('.app-rule ~ button, button.btn-outline-primary.btn-sm')?.click(); // « Ajouter une règle »
+        fixture.detectChanges();
+        expect(rawKeys(el)).withContext('règles').toEqual([]);
+      });
+    }
+  });
+
   describe('pages de structure académique : aucune clé brute (liste, fenêtres d’ajout, de modification et de suppression)', () => {
     const data = {
       years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }, { id: 'y2', label: '2027-2028', startsOn: '2027-09-01T00:00:00Z', endsOn: '2028-07-15T00:00:00Z', isCurrent: false }],
       faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP', nameAr: 'ك' }],
-      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', nameAr: 'خ', facultyId: 'f' }],
+      programs: [{ id: 'p', code: 'DP', name: 'Droit privé', nameAr: 'خ', facultyId: 'f', levelIds: ['l'] }],
       levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
       groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
     };

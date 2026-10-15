@@ -60,7 +60,7 @@ describe('Structure académique (Sprint 3)', () => {
       await as(iaB, 'delete', `${B()}/faculties/${facA.id}`).expect(404);
       expect((await as(iaA, 'get', A())).body.faculties[0].name).toBe('Faculté des Sciences Juridiques et Politiques');
       // Créer une filière dans B avec la faculté de A : refusé.
-      await as(iaB, 'post', `${B()}/programs`).send({ facultyId: facA.id, code: 'P', name: 'P' }).expect(404);
+      await as(iaB, 'post', `${B()}/programs`).send({ facultyId: facA.id, code: 'P', name: 'P', levelIds: [] }).expect(404);
     });
   });
 
@@ -72,8 +72,8 @@ describe('Structure académique (Sprint 3)', () => {
 
     it('crée années, niveaux, filières et groupes cohérents', async () => {
       faculty = (await as(iaA, 'get', A())).body.faculties[0].id;
-      program = (await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص' }).expect(201)).body.id;
       level = (await as(iaA, 'post', `${A()}/levels`).send({ code: 'L1', name: 'Licence 1', rank: 1 }).expect(201)).body.id;
+      program = (await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'DP', name: 'Droit privé', nameAr: 'القانون الخاص', levelIds: [level] }).expect(201)).body.id;
       year = (await as(iaA, 'post', `${A()}/years`).send({ label: '2026-2027', startsOn: '2026-09-01', endsOn: '2027-07-15' }).expect(201)).body.id;
       const group = await as(iaA, 'post', `${A()}/groups`).send({ programId: program, levelId: level, academicYearId: year, name: 'A' }).expect(201);
       expect(group.body.institutionId).toBe(t.world.instA.id);
@@ -107,6 +107,50 @@ describe('Structure académique (Sprint 3)', () => {
     it('un changement de nom n’autorise pas à déplacer une filière dans une autre faculté', async () => {
       await as(iaA, 'patch', `${A()}/programs/${program}`).send({ name: 'Droit privé (modifié)' }).expect(200);
       await as(iaA, 'patch', `${A()}/programs/${program}`).send({ facultyId: faculty }).expect(400);
+    });
+
+    describe('niveaux autorisés par filière (D-24)', () => {
+      let tronc: string;
+      let l2: string;
+      let l3: string;
+      let droit: string;
+      let droitPrive: string;
+
+      it('une filière porte ses niveaux ; la grille les renvoie (levelIds)', async () => {
+        l2 = (await as(iaA, 'post', `${A()}/levels`).send({ code: 'L2', name: 'Licence 2', rank: 2 }).expect(201)).body.id;
+        l3 = (await as(iaA, 'post', `${A()}/levels`).send({ code: 'L3', name: 'Licence 3', rank: 3 }).expect(201)).body.id;
+        droit = (await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'DRT', name: 'Droit', nameAr: 'القانون', levelIds: [level, l2] }).expect(201)).body.id;
+        droitPrive = (await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'DP3', name: 'Droit privé L3', levelIds: [l3] }).expect(201)).body.id;
+        tronc = droit;
+        const programs = (await as(student, 'get', A())).body.programs as { id: string; levelIds: string[] }[];
+        expect(programs.find((p) => p.id === tronc)!.levelIds.sort()).toEqual([level, l2].sort());
+        expect(programs.find((p) => p.id === droitPrive)!.levelIds).toEqual([l3]);
+      });
+
+      it('niveaux : tableau d’identifiants requis, et propres à l’institution (404 sinon)', async () => {
+        await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'NOLV', name: 'x' }).expect(400);
+        await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'NOLV', name: 'x', levelIds: ['pas-un-uuid'] }).expect(400);
+        const levelB = (await as(iaB, 'get', B())).body.levels[0].id;
+        await as(iaA, 'post', `${A()}/programs`).send({ facultyId: faculty, code: 'NOLV', name: 'x', levelIds: [levelB] }).expect(404);
+        await as(iaA, 'patch', `${A()}/programs/${droit}`).send({ levelIds: [levelB] }).expect(404);
+      });
+
+      it('pas de groupe d’une filière dans un niveau où elle n’existe pas', async () => {
+        await as(iaA, 'post', `${A()}/groups`).send({ programId: droitPrive, levelId: level, academicYearId: year, name: 'Z' }).expect(400);
+        await as(iaA, 'post', `${A()}/groups`).send({ programId: droitPrive, levelId: l3, academicYearId: year, name: 'Z' }).expect(201);
+      });
+
+      it('on ne retire pas un niveau qui a déjà des groupes ; on peut en retirer un autre et en ajouter', async () => {
+        await as(iaA, 'patch', `${A()}/programs/${droitPrive}`).send({ levelIds: [] }).expect(409);
+        const res = await as(iaA, 'patch', `${A()}/programs/${droit}`).send({ levelIds: [level, l3] }).expect(200);
+        expect(res.body.levelIds.sort()).toEqual([level, l3].sort());
+        await as(iaA, 'patch', `${A()}/programs/${droit}`).send({ levelIds: [level, l2] }).expect(200);
+      });
+
+      it('seul l’administrateur d’institution modifie les niveaux', async () => {
+        await as(student, 'patch', `${A()}/programs/${droit}`).send({ levelIds: [] }).expect(403);
+        await as(iaB, 'patch', `${A()}/programs/${droit}`).send({ levelIds: [] }).expect(404);
+      });
     });
 
     it('suppression : refusée (409) si la ressource est utilisée, acceptée sinon', async () => {

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EligibilityService } from './eligibility.service';
 
-// Module vide du Sprint 1 : la logique métier arrive dans les sprints suivants.
-@Module({})
+@Module({ providers: [EligibilityService], exports: [EligibilityService] })
 export class EligibilityModule {}

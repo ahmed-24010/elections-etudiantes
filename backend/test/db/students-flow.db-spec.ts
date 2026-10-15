@@ -70,8 +70,8 @@ describe('Étudiants et vérification sur la vraie base MySQL', () => {
   it('l’administrateur d’institution construit la structure (écritures réelles, une seule année courante)', async () => {
     const base = `/institutions/${instId}/academic`;
     facultyId = (await api('post', `${base}/faculties`, tokens.ia).send({ code: 'FSJP', name: 'FSJP' }).expect(201)).body.id;
-    programId = (await api('post', `${base}/programs`, tokens.ia).send({ facultyId, code: 'DP', name: 'Droit privé' }).expect(201)).body.id;
     levelId = (await api('post', `${base}/levels`, tokens.ia).send({ code: 'L1', name: 'L1', rank: 1 }).expect(201)).body.id;
+    programId = (await api('post', `${base}/programs`, tokens.ia).send({ facultyId, code: 'DP', name: 'Droit privé', levelIds: [levelId] }).expect(201)).body.id;
     yearId = (await api('post', `${base}/years`, tokens.ia).send({ label: '2026-2027', startsOn: '2026-09-01', endsOn: '2027-07-15' }).expect(201)).body.id;
     const y2 = (await api('post', `${base}/years`, tokens.ia).send({ label: '2027-2028', startsOn: '2027-09-01', endsOn: '2028-07-15' }).expect(201)).body.id;
     await api('post', `${base}/years/${y2}/current`, tokens.ia).expect(200);
@@ -80,7 +80,7 @@ describe('Étudiants et vérification sur la vraie base MySQL', () => {
     await api('post', `${base}/faculties`, tokens.ia).send({ code: 'FSJP', name: 'Doublon' }).expect(409); // index unique réel
     await api('get', `/institutions/${otherInstId}/academic`, tokens.ia).expect(404);
     await api('delete', `${base}/programs/${programId}`, tokens.ia).expect(204); // inutilisée : supprimable
-    programId = (await api('post', `${base}/programs`, tokens.ia).send({ facultyId, code: 'DP', name: 'Droit privé' }).expect(201)).body.id;
+    programId = (await api('post', `${base}/programs`, tokens.ia).send({ facultyId, code: 'DP', name: 'Droit privé', levelIds: [levelId] }).expect(201)).body.id;
   });
 
   it('déclaration, dépôt, file du vérificateur, URL signée, décision 🔐 et notification', async () => {

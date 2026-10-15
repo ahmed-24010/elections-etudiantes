@@ -1,6 +1,6 @@
 import { OmitType, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDateString, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { ArrayUnique, IsArray, IsDateString, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 const CODE = /^[A-Za-z0-9_-]+$/;
@@ -29,6 +29,10 @@ export class ProgramDto {
 
   @IsOptional() @Transform(trim) @IsString() @MaxLength(255)
   nameAr?: string;
+
+  /** Niveaux où la filière existe (D-24). Vide = ouverte à aucun niveau. */
+  @IsArray() @ArrayUnique() @IsUUID('all', { each: true })
+  levelIds: string[];
 }
 // Une filière ne change pas de faculté : ses inscriptions et ses groupes en dépendent.
 export class UpdateProgramDto extends PartialType(OmitType(ProgramDto, ['facultyId'] as const)) {}

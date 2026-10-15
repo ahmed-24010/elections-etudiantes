@@ -140,6 +140,17 @@ export class Table {
     return this.shape(row, a)!;
   }
 
+  async createMany(a: Row) {
+    for (const data of a.data as Row[]) await this.create({ data });
+    return { count: (a.data as Row[]).length };
+  }
+
+  async deleteMany(a: Row = {}) {
+    const doomed = this.rows.filter((r) => this.match(r, a.where));
+    this.rows = this.rows.filter((r) => !doomed.includes(r));
+    return { count: doomed.length };
+  }
+
   async update(a: Row) {
     const row = this.rows.find((r) => Object.entries(a.where).every(([k, v]) => r[k] === v));
     if (!row) throw new Prisma.PrismaClientKnownRequestError('Not found', { code: 'P2025', clientVersion: 'test' });

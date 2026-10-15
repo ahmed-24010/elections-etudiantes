@@ -230,10 +230,25 @@ model Program {
   groups           Group[]
   enrollments      StudentEnrollment[]
   eligibilityRules EligibilityRule[]
+  allowedLevels    ProgramLevel[]
 
   @@unique([institutionId, code])
   @@index([facultyId])
   @@map("programs")
+}
+
+// Niveaux où une filière existe (D-24). Ex. « Droit » (tronc commun) en L1-L2 ; Droit privé / Droit public dès L3.
+// Aucune ligne = la filière n'est ouverte à aucun niveau.
+model ProgramLevel {
+  programId String @db.Char(36)
+  levelId   String @db.Char(36)
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  level   Level   @relation(fields: [levelId], references: [id], onDelete: Cascade)
+
+  @@id([programId, levelId])
+  @@index([levelId])
+  @@map("program_levels")
 }
 
 // Niveau d'études (L1, L2, L3, M1, M2…), propre à chaque institution
@@ -249,6 +264,7 @@ model Level {
   groups           Group[]
   enrollments      StudentEnrollment[]
   eligibilityRules EligibilityRule[]
+  programLevels    ProgramLevel[]
 
   @@unique([institutionId, code])
   @@map("levels")
@@ -278,7 +294,7 @@ model Group {
   programId      String @db.Char(36)
   levelId        String @db.Char(36)
   academicYearId String @db.Char(36)
-  name           String @db.VarChar(32) // "A", "B"…
+  name           String @db.VarChar(32) // nom libre choisi par l'admin : "A", "B" à la FSJP (D-25)
 
   institution      Institution         @relation(fields: [institutionId], references: [id])
   program          Program             @relation(fields: [programId], references: [id])

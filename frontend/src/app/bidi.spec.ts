@@ -103,7 +103,7 @@ describe('Arabe (RTL) : nombres et codes isolés', () => {
       page.detectChanges();
       http.expectOne('/api/v1/institutions/inst-1/academic').flush({
         years: [{ id: 'y', label: '2026-2027', startsOn: '2026-09-01T00:00:00Z', endsOn: '2027-07-15T00:00:00Z', isCurrent: true }],
-        faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP' }], programs: [{ id: 'p', code: 'DP', name: 'Droit privé', facultyId: 'f' }], levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
+        faculties: [{ id: 'f', code: 'FSJP', name: 'FSJP' }], programs: [{ id: 'p', code: 'DP', name: 'Droit privé', facultyId: 'f', levelIds: ['l'] }], levels: [{ id: 'l', code: 'L1', name: 'L1', rank: 1 }],
         groups: [{ id: 'g', name: 'A', programId: 'p', levelId: 'l', academicYearId: 'y' }],
       });
       await settle(page);

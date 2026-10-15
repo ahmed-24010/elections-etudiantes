@@ -33,12 +33,22 @@ export const roleGuard =
     return auth.hasRole(role) || inject(Router).createUrlTree(['/admin']);
   };
 
+/** Écran réservé à l'un de ces rôles (ex. les élections : administrateur d'institution ou comité). */
+export const anyRoleGuard =
+  (...roles: Role[]): CanActivateFn =>
+  () => {
+    const auth = inject(AuthService);
+    if (!auth.isAuthenticated()) return inject(Router).createUrlTree(['/login']);
+    return roles.some((r) => auth.hasRole(r)) || inject(Router).createUrlTree(['/admin']);
+  };
+
 /** Accueil de l'administration : renvoie vers l'écran du rôle (vérificateur, puis administrateur d'institution). */
 export const adminHomeGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.hasRole('VERIFICATION_OFFICER')) return router.createUrlTree(['/admin/verification']);
   if (auth.hasRole('INSTITUTION_ADMIN')) return router.createUrlTree(['/admin/academic/years']);
+  if (auth.hasRole('ELECTION_COMMITTEE')) return router.createUrlTree(['/admin/elections']);
   return true;
 };
 

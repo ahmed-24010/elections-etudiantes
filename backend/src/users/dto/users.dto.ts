@@ -13,7 +13,8 @@ export class ChangePasswordDto {
 
 export class AssignRoleDto {
   /** Compte existant du destinataire (il s'est inscrit comme étudiant). */
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value)) @IsEmail()
+  // Les espaces (copier-coller) sont retirés, pas refusés ; un e-mail invalide renvoie un code que l'interface sait afficher.
+  @Transform(({ value }) => (typeof value === 'string' ? value.replace(/\s+/g, '').toLowerCase() : value)) @IsEmail({}, { message: 'invalid_email' })
   email: string;
 
   @IsEnum(Role)
