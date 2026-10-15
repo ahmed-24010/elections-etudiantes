@@ -13,8 +13,8 @@ import type { CreateElectionDto, PositionDto, SetRulesDto, UpdateElectionDto, Up
 /** Un comité d'au moins 3 membres est exigé dès l'ouverture des candidatures (03 §6, D-03). */
 export const MIN_COMMITTEE = 3;
 
-/** Ce sprint ne gère pas le vote : aucune transition ne mène à VOTING_OPEN. */
-const CANCELLABLE: readonly ElectionStatus[] = [ElectionStatus.DRAFT, ElectionStatus.CANDIDACY_OPEN, ElectionStatus.CANDIDACY_CLOSED];
+/** 04 §4.6 : annulable depuis tout état sauf RESULTS_PUBLISHED (et CANCELLED). En vote, l'urne et la participation restent figées en base. */
+const CANCELLABLE: readonly ElectionStatus[] = [ElectionStatus.DRAFT, ElectionStatus.CANDIDACY_OPEN, ElectionStatus.CANDIDACY_CLOSED, ElectionStatus.VOTING_OPEN, ElectionStatus.VOTING_CLOSED];
 const DATE_FIELDS = ['candidacyStartsAt', 'candidacyEndsAt', 'votingStartsAt', 'votingEndsAt'] as const;
 
 export interface ElectionView {
@@ -51,7 +51,10 @@ export class ElectionsService {
     const isStudentHere = user.roles.some((g) => g.role === Role.STUDENT && g.institutionId === election.institutionId);
     if (!isStudentHere || !STUDENT_VISIBLE.includes(election.status)) throw new NotFoundException();
     const student = await this.prisma.student.findUnique({ where: { userId: user.id } });
-    if (!student || !(await this.eligibility.isEligible(election, student.id))) throw new NotFoundException();
+    if (!student) throw new NotFoundException();
+    // Après le gel (04 §5.1), c'est la liste électorale qui fait foi : une inscription modifiée ensuite ne retire pas le droit de vote.
+    const onRoll = election.voterRollFrozenAt ? await this.prisma.voterRollEntry.findUnique({ where: { electionId_studentId: { electionId: election.id, studentId: student.id } } }) : null;
+    if (!onRoll && !(await this.eligibility.isEligible(election, student.id))) throw new NotFoundException();
     return { election, staff: false, studentId: student.id };
   }
 
@@ -124,12 +127,20 @@ export class ElectionsService {
       orderBy: { votingStartsAt: 'asc' },
     });
     const candidacies = await this.prisma.candidate.findMany({ where: { studentId: student.id } });
+    const frozenIds = elections.filter((e) => e.voterRollFrozenAt).map((e) => e.id);
+    const rolls = frozenIds.length === 0 ? [] : await this.prisma.voterRollEntry.findMany({ where: { studentId: student.id, electionId: { in: frozenIds } }, include: { participation: true } });
     return elections
       .filter((e) => {
+        if (rolls.some((r) => r.electionId === e.id)) return true; // liste gelée : elle fait foi (04 §5.1)
         const enrollment = enrollments.find((x) => x.academicYearId === e.academicYearId);
         return !!enrollment && rulesMatch(e.rules as RuleCriteria[], enrollment);
       })
-      .map((e) => ({ ...this.publicFields(e), myCandidacy: candidacies.find((c) => c.electionId === e.id)?.status ?? null }));
+      .map((e) => {
+        const roll = rolls.find((r) => r.electionId === e.id);
+        // `myVote` : seulement « puis-je voter / ai-je voté », jamais le contenu du vote. null tant que la liste n'est pas gelée.
+        const myVote = !e.voterRollFrozenAt ? null : !roll ? 'NOT_ON_ROLL' : roll.participation ? 'VOTED' : 'NOT_VOTED';
+        return { ...this.publicFields(e), myCandidacy: candidacies.find((c) => c.electionId === e.id)?.status ?? null, myVote };
+      });
   }
 
   /** Nombre d'électeurs éligibles : un chiffre, jamais une liste nominative (D-02). */
@@ -328,6 +339,13 @@ export class ElectionsService {
     await this.transition(electionId, [ElectionStatus.CANDIDACY_OPEN], ElectionStatus.CANDIDACY_CLOSED);
     await this.record(actor, election, 'ELECTION_CANDIDACY_CLOSED', info);
     return this.get(actor, electionId);
+  }
+
+  /** CANDIDACY_OPEN → CANDIDACY_CLOSED à `candidacyEndsAt` (tâche planifiée, 04 §4.2). Même transition que la clôture manuelle, sans acteur. */
+  async closeCandidacyAutomatically(electionId: string) {
+    const election = await this.loadForUpdate(electionId);
+    await this.transition(electionId, [ElectionStatus.CANDIDACY_OPEN], ElectionStatus.CANDIDACY_CLOSED);
+    await this.audit.record({ actorId: null, institutionId: election.institutionId, action: 'ELECTION_CANDIDACY_CLOSED', resourceType: 'election', resourceId: election.id, result: AuditResult.SUCCESS, metadata: { automatic: true } });
   }
 
   /** 🔐 IA seulement (le comité n'annule pas sa propre élection). Les candidatures en cours sont conservées pour l'historique. */

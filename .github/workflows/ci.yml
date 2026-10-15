@@ -52,19 +52,21 @@ jobs:
       # avec app_runtime : les droits réduits sont donc exercés comme en production.
       - name: Comptes MySQL (02 §10)
         run: bash ../docker/mysql/init/01-users.sh
+      - name: Base de test séparée (elections_test)
+        run: bash ../docker/mysql/init/02-test-db.sh
       - name: Migrations (app_migrate)
         run: npx prisma migrate deploy
         env:
-          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
+          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections_test
       - name: Le schéma Prisma correspond aux migrations (aucune dérive)
         run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
         env:
-          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections
+          DATABASE_URL: mysql://app_migrate:ci-migrate@127.0.0.1:3306/elections_test
       - name: Tests sur la vraie base MySQL (app_runtime)
         run: npm run test:db
         env:
-          DATABASE_READONLY_URL: mysql://app_readonly:ci-readonly@127.0.0.1:3306/elections
-          DATABASE_URL: mysql://app_runtime:ci-runtime@127.0.0.1:3306/elections
+          DATABASE_READONLY_URL: mysql://app_readonly:ci-readonly@127.0.0.1:3306/elections_test
+          DATABASE_URL: mysql://app_runtime:ci-runtime@127.0.0.1:3306/elections_test
 
   frontend:
     runs-on: ubuntu-latest

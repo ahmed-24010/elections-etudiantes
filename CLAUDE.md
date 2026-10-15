@@ -36,8 +36,11 @@ docker compose up -d --build               # tout lancer (db, s3, backend, front
 docker compose down -v                     # tout arrêter ET effacer les volumes (base vide au prochain up)
 cd backend && npm run lint && npm run test # lint + tests unitaires
 cd backend && npm run test:e2e             # tests e2e (Prisma simulé : chaîne HTTP, guards, services)
-cd backend && npm run test:db              # tests sur la VRAIE base MySQL (DATABASE_URL = compte app_runtime d'une base migrée ; la CI les lance)
-# test:db exige aussi DATABASE_READONLY_URL (compte app_readonly) pour les tests du vote secret (04 §11, test 11)
+cd backend && npm run test:db              # tests sur la VRAIE base MySQL, SÉPARÉE de la base de dev (voir ci-dessous ; la CI les lance)
+# test:db exige DATABASE_URL (compte app_runtime) ET DATABASE_READONLY_URL (compte app_readonly, test 11 de 04 §11), tous deux
+# sur la base elections_test : le nom doit finir par « _test », sinon les tests refusent de démarrer (setup-env-db.ts)
+docker compose exec -T db bash /docker-entrypoint-initdb.d/02-test-db.sh   # une fois : crée elections_test (volume existant)
+cd backend && DATABASE_URL=mysql://app_migrate:<APP_MIGRATE_PASSWORD>@localhost:3306/elections_test npx prisma migrate deploy   # une fois, puis à chaque migration
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
