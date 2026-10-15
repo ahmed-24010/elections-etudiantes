@@ -80,14 +80,19 @@ export class VotingService {
       try {
         const election = await this.prisma.$transaction((tx) => this.castInTransaction(tx, electionId, student.id, dto), {
           isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-          maxWait: 20_000, // attente d'une connexion du pool (2 s par défaut) : sous forte charge, mieux vaut attendre qu'échouer
+          // Délai pour DÉMARRER la transaction (2 s par défaut). Sous forte charge (un millier d'étudiants au même instant), 2 s ne
+          // suffisent pas : le vote échouait en 500 « Unable to start a transaction in the given time » (P2028). Reproduit et
+          // corrigé au Sprint 5 ; voir docs/SPRINT-EN-COURS.md.
+          maxWait: 20_000,
           timeout: 15_000,
         });
         await this.notifyRecorded(user.id, election.title);
         return { status: 'recorded' };
       } catch (e) {
-        // Interblocage entre transactions concurrentes : la transaction est annulée en entier, on peut la rejouer.
-        const retryable = e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034';
+        // P2034 : interblocage entre transactions concurrentes. P2028 : la transaction n'a pas pu démarrer (ou a expiré) sous
+        // forte charge. Dans les deux cas elle est annulée en entier, rien n'est écrit, et la clé primaire de voting_participations
+        // garantit qu'un rejeu ne peut pas produire un second vote : on peut la rejouer.
+        const retryable = e instanceof Prisma.PrismaClientKnownRequestError && (e.code === 'P2034' || e.code === 'P2028');
         if (!retryable || attempt >= MAX_RETRIES) throw e;
       }
     }

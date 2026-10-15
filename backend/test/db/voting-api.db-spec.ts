@@ -78,6 +78,26 @@ describe('Écrans du vote : bulletin, statut, notification, participation', () =
     });
   });
 
+  describe('« Mes élections » (GET /elections/mine) : hasVoted', () => {
+    it('un simple booléen : false avant le vote, true après ; jamais un choix, un identifiant de bulletin ni l’ancien champ myVote', async () => {
+      const w = await t.election({ voters: 2, positions: [{ title: 'Président' }, { title: 'Trésorier' }] });
+      const mine = async (token: string) => {
+        const res = await t.api('get', '/elections/mine', token).expect(200);
+        return res.body.find((e: { id: string }) => e.id === w.electionId);
+      };
+      const before = await mine(w.voters[0].token);
+      expect(before.hasVoted).toBe(false);
+      await t.vote(w.voters[0], w.electionId, t.firstChoices(w)).expect(201);
+      const after = await mine(w.voters[0].token);
+      expect(after.hasVoted).toBe(true);
+      expect(after).not.toHaveProperty('myVote');
+      expect((await mine(w.voters[1].token)).hasVoted).toBe(false); // l'autre électeur n'a pas voté
+      const text = JSON.stringify(after);
+      for (const id of w.positions.flatMap((p) => [p.id, ...p.candidateIds])) expect(text).not.toContain(id);
+      expect(Object.values(after).filter((v) => typeof v === 'boolean')).toEqual([true]); // le seul booléen est hasVoted
+    });
+  });
+
   describe('participation en chiffres (GET /elections/:id/turnout, D-02, D-31)', () => {
     it('sous 50 électeurs : le nombre de votants ne bouge que par tranches de 15 minutes', async () => {
       const w = await t.election({ voters: 5 });

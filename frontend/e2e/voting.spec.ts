@@ -7,7 +7,7 @@ import { expect, Page, test } from '@playwright/test';
 const ELECTION = {
   id: 'e1', institutionId: 'i1', academicYearId: 'y1', title: 'Bureau du groupe 1', titleAr: 'مكتب المجموعة 1', description: null,
   status: 'VOTING_OPEN', candidacyStartsAt: '2026-10-01T00:00:00.000Z', candidacyEndsAt: '2026-10-10T00:00:00.000Z',
-  votingStartsAt: '2026-10-15T08:00:00.000Z', votingEndsAt: '2099-10-15T18:00:00.000Z', myCandidacy: null, myVote: 'NOT_VOTED',
+  votingStartsAt: '2026-10-15T08:00:00.000Z', votingEndsAt: '2099-10-15T18:00:00.000Z', myCandidacy: null, hasVoted: false,
 };
 const person = (id: string, firstName: string, lastName: string, extra: object = {}) => ({ id, firstName, lastName, fullNameAr: null, statement: 'Un programme court et clair pour le groupe.', hasPhoto: false, hasProgram: false, ...extra });
 // L'ordre est celui tiré au hasard par le serveur : l'interface ne doit pas le retrier (D-35).
@@ -39,7 +39,7 @@ async function mockApi(page: Page, lang: 'ar' | 'fr'): Promise<Mock> {
     const json = (status: number, body: unknown) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
     if (req.method() === 'POST' && path === '/auth/refresh') return json(200, { status: 'authenticated', accessToken: 'token' });
     if (path === '/users/me') return json(200, { id: 'u1', email: 'aicha@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i1', electionId: null }] });
-    if (path === '/elections/mine') return json(200, [{ ...ELECTION, myVote: mock.voted ? 'VOTED' : 'NOT_VOTED' }]);
+    if (path === '/elections/mine') return json(200, [{ ...ELECTION, hasVoted: mock.voted }]);
     if (path === '/voting/e1/status') {
       return json(200, { state: mock.voted ? 'VOTED' : 'NOT_VOTED', electionStatus: 'VOTING_OPEN', open: true, votingStartsAt: ELECTION.votingStartsAt, votingEndsAt: ELECTION.votingEndsAt, votedAt: mock.voted ? '2026-10-15T09:41:00.000Z' : null });
     }

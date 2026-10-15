@@ -22,6 +22,9 @@ describe('Vote unique et concurrence (04 §11, 1-3)', () => {
     const w = await t.election({ voters: 1000, positions: [{ title: 'Président' }, { title: 'Trésorier' }] });
     const attempts = w.voters.flatMap((v) => [v, v]);
     const results = await inBatches(attempts, 200, (v) => t.vote(v, w.electionId, t.firstChoices(w)));
+    // Quoi qu'il arrive aux requêtes (même une erreur serveur), jamais de participation sans bulletin ni l'inverse.
+    const counts = await t.counts(w.electionId);
+    expect(counts.participations).toBe(counts.ballots);
     expect(results.filter((r) => r.status === 201)).toHaveLength(1000);
     expect(results.filter((r) => r.status === 409)).toHaveLength(1000);
     expect(results.filter((r) => r.status !== 201 && r.status !== 409)).toHaveLength(0);

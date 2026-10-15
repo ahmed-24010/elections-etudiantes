@@ -137,9 +137,8 @@ export class ElectionsService {
       })
       .map((e) => {
         const roll = rolls.find((r) => r.electionId === e.id);
-        // `myVote` : seulement « puis-je voter / ai-je voté », jamais le contenu du vote. null tant que la liste n'est pas gelée.
-        const myVote = !e.voterRollFrozenAt ? null : !roll ? 'NOT_ON_ROLL' : roll.participation ? 'VOTED' : 'NOT_VOTED';
-        return { ...this.publicFields(e), myCandidacy: candidacies.find((c) => c.electionId === e.id)?.status ?? null, myVote };
+        // `hasVoted` : UN booléen (a voté / n'a pas voté), jamais un choix ni un identifiant de bulletin.
+        return { ...this.publicFields(e), myCandidacy: candidacies.find((c) => c.electionId === e.id)?.status ?? null, hasVoted: !!roll?.participation };
       });
   }
 

@@ -20,8 +20,8 @@ export interface ElectionSummary {
   votingEndsAt: string;
   /** « Mes élections » seulement. */
   myCandidacy?: CandidateStatus | null;
-  /** « Mes élections » seulement : peut-il voter / a-t-il voté. null tant que la liste électorale n'est pas gelée. Jamais le contenu du vote. */
-  myVote?: 'NOT_ON_ROLL' | 'NOT_VOTED' | 'VOTED' | null;
+  /** « Mes élections » seulement : l'étudiant a-t-il voté ? Un booléen, jamais le contenu du vote. */
+  hasVoted?: boolean;
 }
 
 export interface Position {
