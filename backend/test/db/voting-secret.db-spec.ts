@@ -69,7 +69,7 @@ describe('Secret du vote (04 §11, 7-11)', () => {
       }
     }
     // et rien dans audit_logs : ni choix, ni corps
-    const audit = JSON.stringify(await t.prisma.auditLog.findMany({ where: { createdAt: { gte: new Date(Date.now() - 60_000) } } }));
+    const audit = JSON.stringify(await t.prisma.auditLog.findMany({ where: { createdAt: { gte: new Date(Date.now() - 60_000) } } }), (_k, v) => (typeof v === 'bigint' ? v.toString() : v)); // l'id d'audit_logs est un BigInt
     expect(audit).not.toContain(w.positions[0].candidateIds[0]);
   });
 

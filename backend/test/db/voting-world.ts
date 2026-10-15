@@ -79,7 +79,9 @@ export class VotingWorld {
     configureApp(this.app, { trustProxy: 1 });
     await this.app.init();
     this.jwt = this.app.get(JwtService);
-    this.hash = await argon2.hash(PASSWORD);
+    // Hash bon marché : ces tests portent sur la concurrence, pas sur le coût du hash. Avec les paramètres de production (64 Mo, t=3),
+    // la vérification du mot de passe à chaque vote (D-30) coûte ~50 ms de CPU et 2 000 votes dépasseraient le délai du test 2.
+    this.hash = await argon2.hash(PASSWORD, { type: argon2.argon2id, memoryCost: 1024, timeCost: 1, parallelism: 1 });
     const inst = await this.prisma.institution.create({ data: { code: `V${this.run}`.toUpperCase(), name: `Institution V ${this.run}` } });
     this.institutionId = inst.id;
     this.facultyId = (await this.prisma.faculty.create({ data: { institutionId: inst.id, code: 'F', name: 'Faculté' } })).id;
