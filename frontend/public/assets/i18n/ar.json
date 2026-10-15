@@ -52,7 +52,9 @@
     "delete": "حذف",
     "choose": "اختر…",
     "editItem": "تعديل «{{name}}»",
-    "deleteItem": "حذف «{{name}}»"
+    "deleteItem": "حذف «{{name}}»",
+    "chooseFile": "اختيار ملف",
+    "noFile": "لم يتم اختيار أي ملف"
   },
   "auth": {
     "identifier": "البريد الإلكتروني أو الهاتف",
@@ -143,7 +145,8 @@
     "roleAlreadyAssigned": "هذا الشخص عضو بالفعل في لجنة هذا الانتخاب.",
     "userNotActive": "هذا الحساب غير نشط.",
     "fileRequired": "اختر ملفًا.",
-    "conditionsNotMet": "لا يمكن فتح باب الترشح بعد. الناقص:"
+    "conditionsNotMet": "لا يمكن فتح باب الترشح بعد. الناقص:",
+    "photoType": "يجب أن تكون الصورة بصيغة JPEG أو PNG."
   },
   "institution": {
     "university": "جامعة نواكشوط",
@@ -447,7 +450,8 @@
       "resubmit": "إعادة إيداع ترشحي",
       "withdraw": "سحب ترشحي",
       "withdrawConfirm": "لن يمكنك السحب بعد إغلاق باب الترشح. هل تريد سحب ترشحك الآن؟",
-      "apply": "إيداع ترشحي"
+      "apply": "إيداع ترشحي",
+      "photoHelp": "JPEG أو PNG، 5 ميغابايت كحد أقصى."
     },
     "review": {
       "title": "المصادقة على الترشحات",

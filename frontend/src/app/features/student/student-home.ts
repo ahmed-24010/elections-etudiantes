@@ -6,6 +6,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AcademicApi, AcademicOverview, localName } from '../../core/api/academic.api';
 import { ACCEPTED_TYPES, AppNotification, EnrollmentApi, MAX_UPLOAD_BYTES, StudentMe } from '../../core/api/enrollment.api';
 import { apiErrorKey } from '../../core/auth/api-error';
+import { FilePicker } from '../../shared/components/file-picker/file-picker';
 import { LanguageService } from '../../core/services/language.service';
 
 /** Ce que voit l'étudiant : où il en est (cinq états), la suite à donner, et ses notifications. */
@@ -21,7 +22,7 @@ export function studentState(me: StudentMe | null): StudentState {
 
 @Component({
   selector: 'app-student-home',
-  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe, RouterLink],
+  imports: [ReactiveFormsModule, TranslocoPipe, DatePipe, RouterLink, FilePicker],
   template: `
     <section class="app-card p-4 mb-4">
       <h1 class="h3 app-page-title">{{ 'student.welcome.title' | transloco }}</h1>
@@ -163,7 +164,7 @@ export function studentState(me: StudentMe | null): StudentState {
           <h2 class="h5 app-page-title">{{ 'student.document.title' | transloco }}</h2>
           <p>{{ 'student.document.help' | transloco }}</p>
           <label class="form-label" for="document">{{ 'student.document.choose' | transloco }}</label>
-          <input id="document" type="file" class="form-control" [accept]="accepted" (change)="pick($event)" />
+          <app-file-picker inputId="document" [accept]="accepted" (picked)="pick($event)" />
           @if (uploadError(); as key) {
             <div class="alert alert-danger mt-3 mb-0" role="alert">{{ key | transloco }}</div>
           }
@@ -331,8 +332,7 @@ export class StudentHome implements OnInit {
     }
   }
 
-  protected pick(event: Event): void {
-    const picked = (event.target as HTMLInputElement).files?.[0] ?? null;
+  protected pick(picked: File | null): void {
     this.uploadError.set(null);
     // Confort seulement : le serveur vérifie la taille et le VRAI type du fichier.
     if (picked && picked.size > MAX_UPLOAD_BYTES) {

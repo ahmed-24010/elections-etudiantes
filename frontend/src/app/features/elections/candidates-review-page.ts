@@ -105,7 +105,7 @@ import { candidacyClass, electionTitle } from './election-ui';
       @if (viewer(); as v) {
         <app-modal [title]="('elections.candidate.' + (v.kind === 'photo' ? 'viewPhoto' : 'viewProgram')) | transloco" (closed)="closeViewer()">
           @if (v.image) {
-            <img class="img-fluid border rounded" [src]="v.url" [alt]="'elections.candidate.viewPhoto' | transloco" />
+            <img class="app-photo-preview img-fluid border rounded" [src]="v.url" [alt]="'elections.candidate.viewPhoto' | transloco" />
           } @else {
             <iframe class="app-doc-frame border rounded" [src]="v.url" [title]="'elections.candidate.viewProgram' | transloco"></iframe>
           }

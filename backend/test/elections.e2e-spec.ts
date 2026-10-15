@@ -337,8 +337,11 @@ describe('Élections et candidatures (Sprint 4)', () => {
       expect(res.body).toEqual(expect.objectContaining({ hasPhoto: true, hasProgram: true }));
       expect(stored()).toHaveLength(2);
       // Les fichiers sont reconnus par leur contenu, pas par ce que dit le client
-      await upload('s1', 'photo', pdf(), 'photo.jpg', 'image/jpeg').expect(415); // un PDF n'est pas une photo
-      await upload('s1', 'photo', Buffer.from('<script>alert(1)</script>'), 'photo.png', 'image/png').expect(415);
+      // Photo : JPEG ou PNG uniquement, quel que soit le type déclaré ; le message permet à l'interface d'être précise
+      for (const [label, buf] of [['PDF', pdf()], ['script', Buffer.from('<script>alert(1)</script>')], ['GIF', Buffer.from('GIF89a' + 'x'.repeat(40))]] as const) {
+        const refused = await upload('s1', 'photo', buf, 'photo.png', 'image/png').expect(415);
+        expect({ label, message: refused.body.message }).toEqual({ label, message: 'PHOTO_TYPE' });
+      }
       await upload('s1', 'photo', Buffer.concat([jpeg(), Buffer.alloc(5 * 1024 * 1024)]), 'enorme.jpg', 'image/jpeg').expect(413);
       await upload('s1', 'diaporama' as 'photo', png(), 'x.png', 'image/png').expect(404);
       expect(stored()).toHaveLength(2); // aucun refus n'a laissé de fichier
@@ -455,9 +458,17 @@ describe('Élections et candidatures (Sprint 4)', () => {
       const path = String(url).replace('/api/v1', '');
       const served = await t.api('get', path).expect(200); // la signature est l'authentification
       expect(served.headers['content-type']).toBe('image/jpeg');
+      expect(Buffer.compare(served.body, jpeg())).toBe(0); // la photo servie est exactement celle déposée (rien d'altéré, rien de vide)
+      expect(served.headers['content-length']).toBe(String(jpeg().length));
       expect(served.headers['x-content-type-options']).toBe('nosniff');
       expect(served.headers['content-security-policy']).toContain('sandbox');
       expect(served.headers['cache-control']).toBe('no-store');
+      // « Voir le programme » : le PDF est servi tel quel, en ligne, avec son vrai type
+      const program = (await as('s5', 'post', `${C()}/${s1Candidate}/files/program/access`).expect(200)).body;
+      const servedPdf = await t.api('get', String(program.url).replace('/api/v1', '')).expect(200);
+      expect(servedPdf.headers['content-type']).toBe('application/pdf');
+      expect(servedPdf.headers['content-disposition']).toMatch(/^inline;/);
+      expect(Buffer.compare(servedPdf.body, pdf())).toBe(0);
       // Un autre utilisateur ne peut pas réutiliser l'URL (signature liée à uid) ; un étudiant non éligible n'en obtient pas
       await t.api('get', path.replace(u.s5.id, u.s2.id)).expect(403);
       await as('s2', 'post', `${C()}/${s1Candidate}/files/photo/access`).expect(404);

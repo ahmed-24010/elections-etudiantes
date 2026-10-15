@@ -52,7 +52,9 @@
     "delete": "Supprimer",
     "choose": "Choisir…",
     "editItem": "Modifier « {{name}} »",
-    "deleteItem": "Supprimer « {{name}} »"
+    "deleteItem": "Supprimer « {{name}} »",
+    "chooseFile": "Choisir un fichier",
+    "noFile": "Aucun fichier choisi"
   },
   "auth": {
     "identifier": "E-mail ou téléphone",
@@ -143,7 +145,8 @@
     "roleAlreadyAssigned": "Cette personne fait déjà partie du comité de cette élection.",
     "userNotActive": "Ce compte n'est pas actif.",
     "fileRequired": "Choisissez un fichier.",
-    "conditionsNotMet": "Les candidatures ne peuvent pas encore s'ouvrir. Il manque :"
+    "conditionsNotMet": "Les candidatures ne peuvent pas encore s'ouvrir. Il manque :",
+    "photoType": "La photo doit être une image JPEG ou PNG."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -447,7 +450,8 @@
       "resubmit": "Redéposer ma candidature",
       "withdraw": "Retirer ma candidature",
       "withdrawConfirm": "Vous ne pourrez plus vous retirer une fois les candidatures fermées. Retirer votre candidature maintenant ?",
-      "apply": "Déposer ma candidature"
+      "apply": "Déposer ma candidature",
+      "photoHelp": "JPEG ou PNG, 5 Mo maximum."
     },
     "review": {
       "title": "Validation des candidatures",

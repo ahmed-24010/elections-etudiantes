@@ -419,3 +419,92 @@ describe('Une élection et ma candidature (étudiant)', () => {
     expect(none.el.textContent).toContain('elections.student.noApply');
   });
 });
+
+// Fichiers des candidatures : « Voir la photo » / « Voir le programme » (bug : image blanche), boutons de fichier
+// traduits, photo JPEG ou PNG seulement. Ces tests utilisent un vrai navigateur : l'image est réellement décodée.
+describe('Fichiers des candidatures', () => {
+  const png = (): Promise<Blob> => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 8;
+    canvas.height = 6;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(0, 0, 8, 6);
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b!), 'image/png'));
+  };
+  const SIGNED = '/api/v1/files/f1?uid=u&exp=1&sig=s';
+
+  async function openViewer(kind: 'photo' | 'program', blob: Blob) {
+    const t = setup('ELECTION_COMMITTEE', CandidatesReviewPage, { id: 'e1' });
+    await t.reply(`${API}/elections/e1`, detail());
+    await t.reply(ACADEMIC, overview);
+    await t.reply(`${API}/elections/e1/candidates/all`, [candidate({ hasProgram: true })]);
+    const card = t.el.querySelector('[data-testid=candidate-c1]')!;
+    t.button(kind === 'photo' ? /candidate\.viewPhoto/ : /candidate\.viewProgram/, card).click();
+    await settle(t.page);
+    t.http.expectOne(`${API}/elections/e1/candidates/c1/files/${kind}/access`).flush({ url: SIGNED });
+    await settle(t.page);
+    t.http.expectOne(SIGNED).flush(blob);
+    await settle(t.page);
+    return t;
+  }
+
+  it('« Voir la photo » : la photo reçue est réellement affichée (décodée, taille > 0), pas une image vide', async () => {
+    const { el } = await openViewer('photo', await png());
+    const img = el.querySelector<HTMLImageElement>('.modal-body img')!;
+    expect(img).not.toBeNull();
+    expect(img.src.startsWith('blob:')).toBeTrue(); // une URL blob: est acceptée par le navigateur pour <img>
+    await img.decode();
+    expect([img.naturalWidth, img.naturalHeight]).toEqual([8, 6]);
+    expect(el.querySelector('.modal-body iframe')).toBeNull();
+  });
+
+  it('« Voir la photo » : une photo transparente ou blanche reste visible (damier derrière l’image)', async () => {
+    const { el } = await openViewer('photo', await png());
+    const img = el.querySelector<HTMLImageElement>('.modal-body img')!;
+    expect(img.classList).toContain('app-photo-preview');
+    expect(getComputedStyle(img).backgroundImage).not.toBe('none');
+  });
+
+  it('« Voir le programme » : un PDF s’ouvre dans un cadre (blob), jamais dans une balise <img>', async () => {
+    const { el } = await openViewer('program', new Blob(['%PDF-1.4\n%%EOF\n'], { type: 'application/pdf' }));
+    const frame = el.querySelector<HTMLIFrameElement>('.modal-body iframe')!;
+    expect(frame).not.toBeNull();
+    expect(frame.src.startsWith('blob:')).toBeTrue();
+    expect(el.querySelector('.modal-body img')).toBeNull();
+  });
+
+  it('photo : un PDF ou une image GIF est refusé côté client (aucun envoi), un PNG est envoyé', async () => {
+    const t = setup('STUDENT', MyElectionPage, { id: 'e1' });
+    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN' }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
+    await t.reply(`${API}/elections/e1/candidates`, []);
+    await t.reply(`${API}/elections/e1/candidates/me`, { id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'x', rejectionReason: null, hasPhoto: false, hasProgram: false });
+    const pick = async (file: File) => {
+      const input = t.el.querySelector<HTMLInputElement>('#file-photo')!;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+      await settle(t.page);
+    };
+    for (const bad of [new File(['x'], 'a.pdf', { type: 'application/pdf' }), new File(['x'], 'a.gif', { type: 'image/gif' })]) {
+      await pick(bad);
+      t.http.expectNone(`${API}/elections/e1/candidates/me/files/photo`);
+      expect(t.el.querySelector('[role=alert]')!.textContent).toContain('errors.photoType');
+    }
+    await pick(new File([await png()], 'moi.png', { type: 'image/png' }));
+    t.http.expectOne(`${API}/elections/e1/candidates/me/files/photo`).flush({ id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'x', rejectionReason: null, hasPhoto: true, hasProgram: false });
+  });
+
+  it('sélecteur de fichier : libellé traduit (pas le texte natif du navigateur), champ natif masqué mais présent', async () => {
+    const t = setup('STUDENT', MyElectionPage, { id: 'e1' });
+    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN' }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
+    await t.reply(`${API}/elections/e1/candidates`, []);
+    await t.reply(`${API}/elections/e1/candidates/me`, { id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'x', rejectionReason: null, hasPhoto: false, hasProgram: false });
+    const label = t.el.querySelector<HTMLLabelElement>('label.app-file-button')!;
+    expect(label.textContent).toContain('common.chooseFile');
+    expect(label.htmlFor).toBe('file-photo');
+    expect(getComputedStyle(t.el.querySelector('#file-photo')!).opacity).toBe('0'); // le « Choose file » du navigateur n'est pas visible
+    expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  });
+});

@@ -706,3 +706,39 @@ app-admin-layout {
   border-radius: 0.5rem;
   background: var(--app-surface);
 }
+
+// Sélecteur de fichier traduit (FilePicker) : le champ natif est masqué mais reste atteignable au clavier.
+.app-file-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.app-file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.app-file-picker:focus-within .app-file-button {
+  outline: 2px solid var(--app-navy, #0d2b5c);
+  outline-offset: 2px;
+}
+.app-file-button {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px; // D-37 : cible tactile
+  margin: 0;
+}
+.app-file-name {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  color: var(--bs-secondary-color);
+}
+
+// Aperçu d'une photo de candidat : damier, pour qu'une image à fond transparent ou blanche reste visible.
+.app-photo-preview {
+  max-inline-size: 100%;
+  background: repeating-conic-gradient(#aab4c3 0% 25%, #dfe5ec 0% 50%) 50% / 16px 16px;
+}

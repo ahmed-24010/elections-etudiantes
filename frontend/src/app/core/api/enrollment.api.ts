@@ -11,6 +11,8 @@ export const REJECTION_CODES: readonly RejectionCode[] = ['WRONG_STUDENT_NUMBER'
 /** Attestation : 5 Mo maximum, PDF / JPEG / PNG (D-23). Le serveur vérifie le vrai type ; ceci n'est qu'un confort. */
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_TYPES = 'application/pdf,image/jpeg,image/png';
+/** Photo de candidat : JPEG ou PNG uniquement. */
+export const PHOTO_TYPES = ['image/jpeg', 'image/png'];
 
 interface Label {
   id?: string;
