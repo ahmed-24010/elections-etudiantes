@@ -3,7 +3,6 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-// Ce sprint ne gère pas le vote : VOTING_* existent côté serveur mais l'interface ne les propose pas.
 export type ElectionStatus = 'DRAFT' | 'CANDIDACY_OPEN' | 'CANDIDACY_CLOSED' | 'VOTING_OPEN' | 'VOTING_CLOSED' | 'RESULTS_PUBLISHED' | 'CANCELLED';
 export type CandidateStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
 
@@ -21,6 +20,8 @@ export interface ElectionSummary {
   votingEndsAt: string;
   /** « Mes élections » seulement. */
   myCandidacy?: CandidateStatus | null;
+  /** « Mes élections » seulement : peut-il voter / a-t-il voté. null tant que la liste électorale n'est pas gelée. Jamais le contenu du vote. */
+  myVote?: 'NOT_ON_ROLL' | 'NOT_VOTED' | 'VOTED' | null;
 }
 
 export interface Position {

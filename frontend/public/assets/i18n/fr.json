@@ -146,7 +146,14 @@
     "userNotActive": "Ce compte n'est pas actif.",
     "fileRequired": "Choisissez un fichier.",
     "conditionsNotMet": "Les candidatures ne peuvent pas encore s'ouvrir. Il manque :",
-    "photoType": "La photo doit être une image JPEG ou PNG."
+    "photoType": "La photo doit être une image JPEG ou PNG.",
+    "invalidPassword": "Mot de passe incorrect.",
+    "voteLocked": "Compte temporairement bloqué après trop d'échecs. Réessayez dans 15 minutes.",
+    "electionNotOpen": "Le vote n'est pas ouvert.",
+    "notOnVoterRoll": "Vous n'êtes pas sur la liste électorale de cette élection.",
+    "alreadyVoted": "Votre vote a déjà été enregistré.",
+    "invalidBallot": "Votre bulletin n'est pas valide. Recommencez depuis le début.",
+    "voteUncertain": "Nous n'avons pas pu confirmer l'enregistrement de votre vote. Vérifiez votre connexion puis réessayez : un vote ne peut être enregistré qu'une seule fois."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -211,7 +218,9 @@
       "ENROLLMENT_VERIFIED": "Votre inscription a été vérifiée. Votre compte est maintenant vérifié.",
       "ENROLLMENT_REJECTED": "Votre inscription a été rejetée.",
       "CANDIDACY_APPROVED": "Votre candidature a été validée par le comité.",
-      "CANDIDACY_REJECTED": "Votre candidature a été rejetée. Corrigez-la puis redéposez-la si les candidatures sont encore ouvertes."
+      "CANDIDACY_REJECTED": "Votre candidature a été rejetée. Corrigez-la puis redéposez-la si les candidatures sont encore ouvertes.",
+      "VOTE_RECORDED": "Un vote a été enregistré pour vous dans l'élection {{election}}. Si ce n'est pas vous, contactez le comité.",
+      "VOTING_OPEN_BLOCKED": "L'ouverture automatique du vote n'a pas eu lieu : une condition n'est pas remplie."
     }
   },
   "verification": {
@@ -484,6 +493,51 @@
         "REJECTED": "Corrigez votre candidature selon le motif, puis redéposez-la.",
         "WITHDRAWN": "Vous avez retiré votre candidature. Vous pouvez la déposer à nouveau tant que les candidatures sont ouvertes."
       }
+    }
+  },
+  "voting": {
+    "title": "Voter",
+    "progress": "Poste {{current}} sur {{total}}",
+    "chooseOne": "Choisissez un candidat.",
+    "chooseUpTo": "Choisissez jusqu'à {{max}} candidats.",
+    "selectedCount": "{{count}} choisi(s) sur {{max}}",
+    "blank": "Vote blanc",
+    "blankHelp": "Je ne choisis aucun candidat pour ce poste.",
+    "program": "Programme",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "review": "Récapitulatif",
+    "backToSummary": "Retour au récapitulatif",
+    "summary": {
+      "title": "Vérifiez votre bulletin",
+      "help": "Contrôlez vos choix avant de voter. Vous pouvez encore les modifier.",
+      "modify": "Modifier",
+      "continue": "Continuer"
+    },
+    "confirm": {
+      "title": "Confirmer votre vote",
+      "final": "Votre vote est définitif. Vous ne pourrez plus le modifier.",
+      "password": "Mot de passe",
+      "passwordHelp": "Saisissez à nouveau votre mot de passe pour confirmer que c'est bien vous.",
+      "submit": "Envoyer mon vote",
+      "sending": "Envoi en cours…",
+      "back": "Retour"
+    },
+    "done": {
+      "title": "Votre vote a bien été enregistré.",
+      "already": "Votre vote a déjà été enregistré.",
+      "at": "Enregistré le",
+      "secret": "Votre vote est secret : aucun reçu de vos choix n'est conservé.",
+      "back": "Retour à mes élections"
+    },
+    "panel": {
+      "title": "Vote",
+      "openUntil": "Le vote est ouvert jusqu'au",
+      "vote": "Voter",
+      "voted": "Vous avez voté.",
+      "votedBadge": "Vous avez voté",
+      "notOnRoll": "Vous n'êtes pas sur la liste électorale de cette élection.",
+      "notOpen": "Le vote n'est pas ouvert actuellement."
     }
   }
 }

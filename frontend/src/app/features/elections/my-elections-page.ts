@@ -49,7 +49,22 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
                   <span class="badge" [class]="candidacy(e.myCandidacy)">{{ 'elections.candidate.status.' + e.myCandidacy | transloco }}</span>
                 </p>
               }
-              <a class="btn btn-outline-primary btn-sm" [routerLink]="['/student/elections', e.id]">{{ 'elections.student.open' | transloco }}</a>
+              <div class="d-grid gap-2 d-sm-flex align-items-sm-center">
+                @if (e.status === 'VOTING_OPEN') {
+                  @switch (e.myVote) {
+                    @case ('NOT_VOTED') {
+                      <a class="btn btn-primary" [routerLink]="['/student/elections', e.id, 'vote']" data-testid="vote-link">{{ 'voting.panel.vote' | transloco }}</a>
+                    }
+                    @case ('VOTED') {
+                      <span class="badge text-bg-success align-self-start" data-testid="voted-badge">{{ 'voting.panel.votedBadge' | transloco }}</span>
+                    }
+                    @case ('NOT_ON_ROLL') {
+                      <span class="small text-body-secondary" data-testid="not-on-roll">{{ 'voting.panel.notOnRoll' | transloco }}</span>
+                    }
+                  }
+                }
+                <a class="btn btn-outline-primary btn-sm" [routerLink]="['/student/elections', e.id]">{{ 'elections.student.open' | transloco }}</a>
+              </div>
             </article>
           </div>
         }
