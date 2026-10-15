@@ -58,7 +58,7 @@ export function apiErrorKey(err: unknown): string {
   if (err.status === 429) return 'errors.tooMany';
   // 413 : réponse de l'API (TOO_LARGE) ou de nginx (même format JSON) ; 415 : type réel du fichier non accepté.
   if (err.status === 413) return 'errors.fileTooLarge';
-  if (err.status === 415) return 'errors.fileType';
+  if (err.status === 415) return message === 'PHOTO_TYPE' ? 'errors.photoType' : 'errors.fileType';
   if (typeof message === 'string' && BY_MESSAGE[message] && err.status !== 401) return BY_MESSAGE[message];
   if (err.status === 401 && message === 'invalid_credentials') return BY_MESSAGE['invalid_credentials'];
   if (err.status === 401 && message === 'step_up_required') return BY_MESSAGE['step_up_required'];

@@ -8,10 +8,11 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { localName } from '../../core/api/academic.api';
 import { CandidatesApi, FileKind, OwnCandidacy, PublicCandidate } from '../../core/api/candidates.api';
 import { ElectionDetail, ElectionsApi } from '../../core/api/elections.api';
-import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES } from '../../core/api/enrollment.api';
+import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES, PHOTO_TYPES } from '../../core/api/enrollment.api';
 import { apiErrorKey } from '../../core/auth/api-error';
 import { LanguageService } from '../../core/services/language.service';
 import { AppModal } from '../../shared/components/app-modal/app-modal';
+import { FilePicker } from '../../shared/components/file-picker/file-picker';
 import { candidacyClass, electionTitle, statusClass } from './election-ui';
 
 /**
@@ -20,7 +21,7 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
  */
 @Component({
   selector: 'app-my-election-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, DatePipe, AppModal],
+  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, DatePipe, AppModal, FilePicker],
   template: `
     <p><a routerLink="/student/elections">{{ backArrow() }} {{ 'elections.student.backList' | transloco }}</a></p>
     @if (loadError(); as key) {
@@ -100,8 +101,8 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
                       <span class="badge text-bg-success">{{ 'elections.candidate.uploaded' | transloco }}</span>
                     }
                   </label>
-                  <input [id]="'file-' + k" class="form-control" type="file" [accept]="k === 'photo' ? photoTypes : accepted" (change)="upload(k, $any($event.target))" [disabled]="busy()" />
-                  <div class="form-text">{{ 'elections.candidate.fileHelp' | transloco }}</div>
+                  <app-file-picker [inputId]="'file-' + k" [accept]="k === 'photo' ? photoTypes : accepted" [showName]="false" [disabled]="busy()" (picked)="upload(k, $event)" />
+                  <div class="form-text">{{ (k === 'photo' ? 'elections.candidate.photoHelp' : 'elections.candidate.fileHelp') | transloco }}</div>
                 </div>
               }
             </div>
@@ -179,7 +180,7 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
       @if (viewer(); as v) {
         <app-modal [title]="('elections.candidate.' + (v.kind === 'photo' ? 'viewPhoto' : 'viewProgram')) | transloco" (closed)="closeViewer()">
           @if (v.image) {
-            <img class="img-fluid border rounded" [src]="v.url" [alt]="'elections.candidate.viewPhoto' | transloco" />
+            <img class="app-photo-preview img-fluid border rounded" [src]="v.url" [alt]="'elections.candidate.viewPhoto' | transloco" />
           } @else {
             <iframe class="app-doc-frame border rounded" [src]="v.url" [title]="'elections.candidate.viewProgram' | transloco"></iframe>
           }
@@ -198,7 +199,7 @@ export class MyElectionPage implements OnInit {
   protected readonly dateFields = ['candidacyStartsAt', 'candidacyEndsAt', 'votingStartsAt', 'votingEndsAt'] as const;
   protected readonly kinds: FileKind[] = ['photo', 'program'];
   protected readonly accepted = ACCEPTED_TYPES;
-  protected readonly photoTypes = 'image/jpeg,image/png';
+  protected readonly photoTypes = PHOTO_TYPES.join(',');
 
   protected readonly e = signal<ElectionDetail | null>(null);
   protected readonly mine = signal<OwnCandidacy | null>(null);
@@ -304,13 +305,16 @@ export class MyElectionPage implements OnInit {
     await this.act(() => this.candidatesApi.withdraw(this.electionId), true);
   }
 
-  protected async upload(kind: FileKind, input: HTMLInputElement): Promise<void> {
-    const file = input.files?.[0];
-    input.value = '';
+  protected async upload(kind: FileKind, file: File | null): Promise<void> {
     if (!file) return;
     // Contrôle de confort ; le serveur reconnaît le vrai type d'après le contenu (D-23).
     if (file.size > MAX_UPLOAD_BYTES) {
       this.error.set('errors.fileTooLarge');
+      return;
+    }
+    // La photo est une image JPEG ou PNG, jamais un PDF (le serveur le refuse aussi, d'après le contenu).
+    if (kind === 'photo' && !PHOTO_TYPES.includes(file.type)) {
+      this.error.set('errors.photoType');
       return;
     }
     await this.act(() => this.candidatesApi.upload(this.electionId, kind, file));

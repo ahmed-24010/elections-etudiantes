@@ -202,9 +202,10 @@ export class CandidatesService {
       if (!(e instanceof FileRejected)) throw e;
       if (e.reason === 'TOO_LARGE') throw new PayloadTooLargeException(e.reason);
       if (e.reason === 'EMPTY') throw new BadRequestException(e.reason);
-      throw new UnsupportedMediaTypeException(e.reason);
+      throw new UnsupportedMediaTypeException(kind === 'photo' && e.reason === 'UNSUPPORTED_TYPE' ? 'PHOTO_TYPE' : e.reason);
     }
-    if (kind === 'photo' && detected.mime === 'application/pdf') throw new UnsupportedMediaTypeException('UNSUPPORTED_TYPE');
+    // Photo : JPEG ou PNG uniquement (liste blanche, d'après le contenu détecté).
+    if (kind === 'photo' && detected.mime !== 'image/jpeg' && detected.mime !== 'image/png') throw new UnsupportedMediaTypeException('PHOTO_TYPE');
 
     const key = `candidates/${election.institutionId}/${election.id}/${randomUUID()}.${detected.ext}`; // nom généré par le serveur
     await this.storage.put(key, file.buffer, detected.mime);
