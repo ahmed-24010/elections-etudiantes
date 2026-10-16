@@ -385,13 +385,16 @@ export class VotePage implements OnInit {
       this.error.set(apiErrorKey(err));
       return;
     }
-    // Panne ou délai dépassé : le vote a peut-être été enregistré. On le vérifie avant de proposer de réessayer.
+    // Panne, réseau coupé ou délai dépassé : l'écran de succès n'apparaît JAMAIS sur une erreur. Seul le serveur peut dire si le vote
+    // a quand même été enregistré (réponse perdue) : on l'interroge. Enregistré → écran final (c'est la vérité) ; pas enregistré →
+    // « Votre vote n'a PAS été enregistré » ; serveur injoignable → on ne l'affirme pas, mais on ne montre pas le succès non plus.
     try {
-      if ((await this.voting.status(this.electionId)).state === 'VOTED') return this.finish(false);
+      const { state } = await this.voting.status(this.electionId);
+      if (state === 'VOTED') return this.finish(false);
+      this.error.set('errors.voteNotRecorded');
     } catch {
-      /* statut inconnu : message prudent ci-dessous */
+      this.error.set('errors.voteUncertain');
     }
-    this.error.set('errors.voteUncertain');
   }
 
   /** Écran final. Aucun reçu : les choix et le mot de passe sont effacés de la page. */

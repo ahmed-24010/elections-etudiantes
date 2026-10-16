@@ -153,7 +153,8 @@
     "notOnVoterRoll": "Vous n'êtes pas sur la liste électorale de cette élection.",
     "alreadyVoted": "Votre vote a déjà été enregistré.",
     "invalidBallot": "Votre bulletin n'est pas valide. Recommencez depuis le début.",
-    "voteUncertain": "Nous n'avons pas pu confirmer l'enregistrement de votre vote. Vérifiez votre connexion puis réessayez : un vote ne peut être enregistré qu'une seule fois."
+    "voteUncertain": "Votre vote n'a PAS pu être confirmé et n'a peut-être pas été enregistré. Vérifiez votre connexion puis réessayez : si vous aviez déjà voté, l'application vous le dira.",
+    "voteNotRecorded": "Votre vote n'a PAS été enregistré. Réessayez."
   },
   "institution": {
     "university": "Université de Nouakchott",

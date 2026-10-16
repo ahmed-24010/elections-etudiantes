@@ -27,11 +27,14 @@ interface Mock {
   /** Réponses successives de POST /voting/e1/ballot (la dernière se répète). */
   castResponses: { status: number; body: object; delayMs?: number }[];
   voted: boolean;
+  /** Coupe le réseau pour POST /voting/e1/ballot (et, si `statusDown`, pour la vérification du statut). */
+  abortCast: boolean;
+  statusDown: boolean;
   ballotResponse?: { status: number; body: object };
 }
 
 async function mockApi(page: Page, lang: 'ar' | 'fr'): Promise<Mock> {
-  const mock: Mock = { posts: [], unhandled: [], castResponses: [{ status: 201, body: { status: 'recorded' } }], voted: false };
+  const mock: Mock = { posts: [], unhandled: [], castResponses: [{ status: 201, body: { status: 'recorded' } }], voted: false, abortCast: false, statusDown: false };
   await page.addInitScript((l) => localStorage.setItem('lang', l), lang);
   await page.route('**/api/v1/**', async (route) => {
     const req = route.request();
@@ -41,11 +44,13 @@ async function mockApi(page: Page, lang: 'ar' | 'fr'): Promise<Mock> {
     if (path === '/users/me') return json(200, { id: 'u1', email: 'aicha@example.test', phone: null, twoFactorEnabled: false, roles: [{ role: 'STUDENT', institutionId: 'i1', electionId: null }] });
     if (path === '/elections/mine') return json(200, [{ ...ELECTION, hasVoted: mock.voted }]);
     if (path === '/voting/e1/status') {
+      if (mock.statusDown) return route.abort('failed');
       return json(200, { state: mock.voted ? 'VOTED' : 'NOT_VOTED', electionStatus: 'VOTING_OPEN', open: true, votingStartsAt: ELECTION.votingStartsAt, votingEndsAt: ELECTION.votingEndsAt, votedAt: mock.voted ? '2026-10-15T09:41:00.000Z' : null });
     }
     if (req.method() === 'GET' && path === '/voting/e1/ballot') return mock.ballotResponse ? json(mock.ballotResponse.status, mock.ballotResponse.body) : json(200, BALLOT);
     if (req.method() === 'POST' && path === '/voting/e1/ballot') {
       mock.posts.push(req.postDataJSON());
+      if (mock.abortCast) return route.abort('failed');
       const res = mock.castResponses.length > 1 ? mock.castResponses.shift()! : mock.castResponses[0];
       if (res.delayMs) await new Promise((r) => setTimeout(r, res.delayMs));
       if (res.status === 201) mock.voted = true;
@@ -171,6 +176,47 @@ for (const lang of ['ar', 'fr'] as const) {
       });
       await expect(page.getByTestId('vote-done')).toBeVisible();
       expect(mock.posts).toHaveLength(1);
+    });
+
+    test('échec de l’envoi (500, réseau coupé) : « Votre vote n’a PAS été enregistré », jamais l’écran de succès ; le réessai aboutit', async ({ page }) => {
+      const mock = await mockApi(page, lang);
+      await page.goto('/student/elections/e1/vote');
+      await page.getByTestId('candidate-c1').click();
+      await page.getByTestId('vote-next').click();
+      await page.getByTestId('candidate-c3').click();
+      await page.getByTestId('vote-next').click();
+      await page.getByTestId('vote-continue').click();
+      const notRecorded = lang === 'ar' ? /لم يتم تسجيل تصويتك/ : /PAS été enregistré/;
+      const uncertain = lang === 'ar' ? /تعذر تأكيد تسجيل/ : /PAS pu être confirmé/;
+
+      // 1. erreur serveur : le statut confirme « pas voté »
+      mock.castResponses = [{ status: 500, body: { statusCode: 500, message: 'Internal server error' } }];
+      await page.locator('#vote-password').fill(PASSWORD);
+      await page.getByTestId('vote-submit').click();
+      await expect(page.getByTestId('vote-error')).toContainText(notRecorded);
+      await expect(page.getByTestId('vote-done')).toHaveCount(0);
+      await expectMobileFriendly(page, 'échec 500');
+
+      // 2. réseau coupé, statut injoignable aussi : message prudent, toujours pas de succès
+      mock.abortCast = true;
+      mock.statusDown = true;
+      await page.getByTestId('vote-submit').click();
+      await expect(page.getByTestId('vote-error')).toContainText(uncertain);
+      await expect(page.getByTestId('vote-done')).toHaveCount(0);
+
+      // 3. réseau coupé pour le vote seulement : le serveur confirme « pas voté »
+      mock.statusDown = false;
+      await page.getByTestId('vote-submit').click();
+      await expect(page.getByTestId('vote-error')).toContainText(notRecorded);
+      await expect(page.getByTestId('vote-done')).toHaveCount(0);
+
+      // 4. retour du réseau : le même bulletin part et le succès s'affiche
+      mock.abortCast = false;
+      mock.castResponses = [{ status: 201, body: { status: 'recorded' } }];
+      await page.getByTestId('vote-submit').click();
+      await expect(page.getByTestId('vote-done')).toBeVisible();
+      expect(mock.posts.at(-1)).toEqual({ choices: [{ positionId: 'p1', candidateIds: ['c1'] }, { positionId: 'p2', candidateIds: ['c3'] }], password: PASSWORD });
+      expect(mock.unhandled).toEqual([]);
     });
 
     test('déjà voté : « Votre vote a déjà été enregistré », sans bulletin', async ({ page }) => {

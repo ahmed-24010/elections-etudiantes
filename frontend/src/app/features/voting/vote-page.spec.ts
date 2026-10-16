@@ -221,20 +221,63 @@ describe('VotePage (écran de vote, D-37)', () => {
     expect(q('[data-testid=vote-done]')!.textContent).toContain('déjà été enregistré');
   });
 
-  it('panne pendant l’envoi : le serveur est interrogé ; si le vote est enregistré, écran final ; sinon message prudent', async () => {
-    await start();
+  /** Envoie le bulletin ; la requête de vote reçoit `failure`, puis le statut est interrogé et reçoit `statusReply`. */
+  async function failedSend(failure: { status: number; body?: object }, statusReply: { state: string } | 'unreachable') {
     await reachConfirm();
     await typePassword('Un-mot-de-passe-solide-1');
     await click('[data-testid=vote-submit]');
-    ctrl.expectOne('/api/v1/voting/e1/ballot').flush({}, { status: 500, statusText: 'Server Error' });
-    (await waitForRequest(ctrl, '/api/v1/voting/e1/status')).flush({ state: 'NOT_VOTED', votedAt: null });
+    ctrl.expectOne('/api/v1/voting/e1/ballot').flush(failure.body ?? {}, { status: failure.status, statusText: 'x' });
+    const check = await waitForRequest(ctrl, '/api/v1/voting/e1/status');
+    if (statusReply === 'unreachable') check.flush({}, { status: 0, statusText: 'x' });
+    else check.flush({ ...statusReply, votedAt: null });
     await settle(fixture);
-    expect(q('[data-testid=vote-error]')!.textContent).toContain('pas pu confirmer');
-    expect(q<HTMLButtonElement>('[data-testid=vote-submit]')!.disabled).toBeFalse(); // on peut réessayer : le serveur n'enregistrera qu'un vote
+  }
+  const noSuccessScreen = () => expect(q('[data-testid=vote-done]')).toBeNull();
+
+  for (const lang of ['fr', 'ar'] as const) {
+    const notRecorded = lang === 'fr' ? 'PAS été enregistré' : 'لم يتم تسجيل تصويتك';
+    const uncertain = lang === 'fr' ? 'PAS pu être confirmé' : 'تعذر تأكيد';
+    for (const [label, failure] of [
+      ['erreur serveur 500', { status: 500 }],
+      ['réseau coupé', { status: 0 }],
+      ['délai dépassé (504)', { status: 504 }],
+    ] as const) {
+      it(`${label} (${lang}) : « Votre vote n’a PAS été enregistré, réessayez », jamais l’écran de succès`, async () => {
+        await start(lang);
+        await failedSend(failure, { state: 'NOT_VOTED' });
+        noSuccessScreen();
+        expect(q('[data-testid=vote-error]')!.textContent).toContain(notRecorded);
+        expect(rawKeys(el())).toEqual([]);
+        expect(q<HTMLButtonElement>('[data-testid=vote-submit]')!.disabled).toBeFalse(); // on peut réessayer
+      });
+    }
+
+    it(`serveur injoignable même pour vérifier (${lang}) : message prudent, jamais l’écran de succès, réessai possible`, async () => {
+      await start(lang);
+      await failedSend({ status: 0 }, 'unreachable');
+      noSuccessScreen();
+      expect(q('[data-testid=vote-error]')!.textContent).toContain(uncertain);
+      expect(q<HTMLButtonElement>('[data-testid=vote-submit]')!.disabled).toBeFalse();
+    });
+  }
+
+  it('réessai après un échec : le bulletin est conservé ; un second envoi réussi donne l’écran de succès', async () => {
+    await start();
+    await failedSend({ status: 500 }, { state: 'NOT_VOTED' });
     await typePassword('Un-mot-de-passe-solide-1');
     await click('[data-testid=vote-submit]');
-    ctrl.expectOne('/api/v1/voting/e1/ballot').flush({}, { status: 0, statusText: 'x' });
-    (await waitForRequest(ctrl, '/api/v1/voting/e1/status')).flush({ state: 'VOTED', votedAt: '2026-10-15T09:41:00.000Z' }); // il l'était
+    const post = ctrl.expectOne('/api/v1/voting/e1/ballot');
+    expect(post.request.body.choices).toEqual([{ positionId: 'p1', candidateIds: ['c2'] }, { positionId: 'p2', candidateIds: ['c3', 'c4'] }]);
+    post.flush({ status: 'recorded' });
+    (await waitForRequest(ctrl, '/api/v1/voting/e1/status')).flush({ state: 'VOTED', votedAt: '2026-10-15T09:41:00.000Z' });
+    await settle(fixture);
+    expect(q('[data-testid=vote-done]')).not.toBeNull();
+  });
+
+  it('réponse perdue mais vote enregistré : le serveur le confirme, écran final (c’est la vérité, pas un faux succès)', async () => {
+    await start();
+    await failedSend({ status: 0 }, { state: 'VOTED' });
+    // finish() relit le statut pour l'heure
     (await waitForRequest(ctrl, '/api/v1/voting/e1/status')).flush({ state: 'VOTED', votedAt: '2026-10-15T09:41:00.000Z' });
     await settle(fixture);
     expect(q('[data-testid=vote-done]')).not.toBeNull();
