@@ -54,7 +54,7 @@ export interface DeclareEnrollment {
 
 export interface AppNotification {
   id: string;
-  type: 'ENROLLMENT_VERIFIED' | 'ENROLLMENT_REJECTED' | 'CANDIDACY_APPROVED' | 'CANDIDACY_REJECTED';
+  type: 'ENROLLMENT_VERIFIED' | 'ENROLLMENT_REJECTED' | 'CANDIDACY_APPROVED' | 'CANDIDACY_REJECTED' | 'VOTE_RECORDED' | 'VOTING_OPEN_BLOCKED';
   body: string;
   readAt: string | null;
   createdAt: string;

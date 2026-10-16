@@ -7,6 +7,6 @@ import { TwoFactorService } from './two-factor.service';
 @Module({
   controllers: [AuthController],
   providers: [AuthService, TwoFactorService, LoginAttemptLimiter],
-  exports: [AuthService],
+  exports: [AuthService, LoginAttemptLimiter], // le limiteur est partagé : un échec de mot de passe au vote compte comme à la connexion (D-30)
 })
 export class AuthModule {}

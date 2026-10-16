@@ -36,13 +36,21 @@ docker compose up -d --build               # tout lancer (db, s3, backend, front
 docker compose down -v                     # tout arrêter ET effacer les volumes (base vide au prochain up)
 cd backend && npm run lint && npm run test # lint + tests unitaires
 cd backend && npm run test:e2e             # tests e2e (Prisma simulé : chaîne HTTP, guards, services)
-cd backend && npm run test:db              # tests sur la VRAIE base MySQL (DATABASE_URL = compte app_runtime d'une base migrée ; la CI les lance)
+cd backend && npm run test:db              # tests sur la VRAIE base MySQL, SÉPARÉE de la base de dev (voir ci-dessous ; la CI les lance)
+# test:db exige DATABASE_URL (compte app_runtime) ET DATABASE_READONLY_URL (compte app_readonly, test 11 de 04 §11), tous deux
+# sur la base elections_test : le nom doit finir par « _test », sinon les tests refusent de démarrer (setup-env-db.ts)
+docker compose exec -T db bash /docker-entrypoint-initdb.d/02-test-db.sh   # une fois : crée elections_test (volume existant)
+cd backend && DATABASE_URL=mysql://app_migrate:<APP_MIGRATE_PASSWORD>@localhost:3306/elections_test npx prisma migrate deploy   # une fois, puis à chaque migration
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
 cd backend && npm run seed                  # SUPER_ADMIN + structure de démo FSJP + comptes de test vérificateur et admin d'institution (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production ; lit le .env de la racine)
 cd backend && npm run seed:demo             # seed de DÉMO complet (étudiants Aïcha/Omar/Sara, comité comite1-3, élection en CANDIDACY_OPEN, 2FA de dev) : SEED_DEMO_PASSWORD et SEED_DEMO_TOTP_SECRET requis, refusé si NODE_ENV=production ; affiche la liste des comptes
+cd backend && npm run demo:open-vote       # DÉMO seulement (refusé si NODE_ENV=production) : avance les dates de l'élection de démo et ouvre le vote
+cd backend && npm run demo:close-vote      # DÉMO : ferme le vote et lance le décompte
+cd backend && npm run demo:results         # DÉMO : affiche les résultats dans le terminal (même seuil de 3 votants que l'API)
 cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
+cd frontend && npm run test:mobile            # Playwright : iPhone (WebKit) et Android (Chromium mobile), D-37 ; port 4300, première fois : npx playwright install webkit chromium
 cd frontend && npm run build
 ```
 
@@ -82,6 +90,7 @@ Ne **jamais** enfreindre ces règles, même si une demande semble l'exiger :
 - Aucun texte en dur : tout passe par Transloco, avec la clé dans `ar.json` **et** `fr.json`.
 - CSS en propriétés logiques (`margin-inline-start`, `padding-inline-end`), jamais `left`/`right` fixes. L'interface doit fonctionner en RTL et en LTR.
 - Reactive Forms pour tous les formulaires.
+- Mobile d'abord (D-37) : écrans conçus pour 320-430 px, cibles tactiles ≥ 44 px, champs ≥ 16 px, aucune action au survol seulement, pages légères.
 - Les guards Angular sont un confort d'affichage, pas une sécurité.
 
 ## Manière de travailler

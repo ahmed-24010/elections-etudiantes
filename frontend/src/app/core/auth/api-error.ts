@@ -46,6 +46,12 @@ const BY_MESSAGE: Record<string, string> = {
   UNSUPPORTED_TYPE: 'errors.fileType',
   already_exists: 'errors.alreadyExists',
   invalid_dates: 'errors.invalidDates',
+  // Vote (04 §6.2) : les codes sont dans `message`.
+  INVALID_PASSWORD: 'errors.invalidPassword',
+  ELECTION_NOT_OPEN: 'errors.electionNotOpen',
+  NOT_ON_VOTER_ROLL: 'errors.notOnVoterRoll',
+  ALREADY_VOTED: 'errors.alreadyVoted',
+  INVALID_BALLOT: 'errors.invalidBallot',
   TOO_LARGE: 'errors.fileTooLarge',
   EMPTY: 'errors.fileEmpty',
 };
@@ -55,13 +61,14 @@ export function apiErrorKey(err: unknown): string {
   if (!(err instanceof HttpErrorResponse)) return 'errors.generic';
   const message = Array.isArray(err.error?.message) ? err.error.message[0] : err.error?.message;
   if (err.status === 0) return 'errors.network';
-  if (err.status === 429) return 'errors.tooMany';
+  if (err.status === 429) return message === 'ACCOUNT_LOCKED' ? 'errors.voteLocked' : 'errors.tooMany';
   // 413 : réponse de l'API (TOO_LARGE) ou de nginx (même format JSON) ; 415 : type réel du fichier non accepté.
   if (err.status === 413) return 'errors.fileTooLarge';
   if (err.status === 415) return message === 'PHOTO_TYPE' ? 'errors.photoType' : 'errors.fileType';
   if (typeof message === 'string' && BY_MESSAGE[message] && err.status !== 401) return BY_MESSAGE[message];
   if (err.status === 401 && message === 'invalid_credentials') return BY_MESSAGE['invalid_credentials'];
   if (err.status === 401 && message === 'step_up_required') return BY_MESSAGE['step_up_required'];
+  if (err.status === 401 && message === 'INVALID_PASSWORD') return BY_MESSAGE['INVALID_PASSWORD'];
   if (err.status === 401) return 'errors.sessionExpired';
   if (err.status === 403) return 'errors.forbidden';
   if (err.status === 404) return 'errors.notFound';
