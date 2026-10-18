@@ -185,8 +185,12 @@ export function studentState(me: StudentMe | null): StudentState {
           <ul class="list-group list-group-flush">
             @for (n of notifications(); track n.id) {
               <li class="list-group-item px-0" [class.fw-bold]="!n.readAt">
-                <div>{{ 'notifications.types.' + n.type | transloco }}</div>
-                @if (n.body) {
+                @if (n.type === 'VOTE_RECORDED') {
+                  <div>{{ 'notifications.types.VOTE_RECORDED' | transloco: { election: n.body } }}</div>
+                } @else {
+                  <div>{{ 'notifications.types.' + n.type | transloco }}</div>
+                }
+                @if (n.body && n.type !== 'VOTE_RECORDED') {
                   <div class="small text-body-secondary fw-normal">{{ n.body }}</div>
                 }
                 <div class="small text-body-secondary fw-normal"><bdi dir="ltr">{{ n.createdAt | date: 'yyyy-MM-dd HH:mm' }}</bdi></div>

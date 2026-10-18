@@ -1,4 +1,43 @@
-# Sprint en cours — Sprint 4 (Élections, éligibilité, candidatures), SANS le vote
+# Sprint en cours — Sprint 5 (Vote)
+
+Branche : `feat/sprint-5-voting` (PR #7, brouillon). **Ne rien fusionner.** Le Sprint 4 (ci-dessous) est fusionné ; son suivi est conservé pour l'historique.
+
+## État du Sprint 5 (15/10/2026)
+
+| Étape | État |
+|---|---|
+| Rebase sur `main` (PR #8 fusionnée) | fait |
+| `test:db` sur une base **séparée** `elections_test` (garde dans `setup-env-db.ts`, script `docker/mysql/init/02-test-db.sh`, CI) | fait |
+| Données `zlalr3-*` supprimées de la base de dev (`audit_logs` conservé : le hash de la chaîne inclut acteur et institution) | fait ; **20 institutions de tests plus anciennes** y restent (`V…`, `O…`), non touchées |
+| Backend : ouverture (gel de `voter_roll`), transaction de vote 04 §6.2, mot de passe avant la transaction (D-30), clôture + décompte, tâche planifiée, participation par tranches de 15 min (D-31), notification (D-36) | fait |
+| Tests `test:db` : les 16 tests de 04 §11 (29 cas) + 25 tests ajoutés (mot de passe et blocage, tâche planifiée, bulletin, statut, notification, participation, `hasVoted`, charge) | **77 / 77 verts** (toute la suite `test:db`) |
+| Frontend : bulletin mobile d'abord (D-37), Playwright iPhone + Android sur tout le parcours, ar + fr | fait ; captures dans `docs/captures/sprint-5/` |
+
+## Décisions prises en cours de route (absentes de `docs/`, à valider)
+
+- **Décompte, égalité et publication faits au Sprint 5** (les tests 14 à 16 de 04 §11 l'exigent) : `results` calcule le décompte à la clôture, détecte l'égalité du dernier siège, masque le détail sous 3 votants, pré-remplit le second tour (`GET /results/:id/second-round`) et publie (`POST /elections/:id/results/publish`). **Reste au Sprint 6** : procès-verbal PDF, création effective du second tour, tableau de bord.
+- Qui lit les résultats : le personnel (`results:read`) dès `VOTING_CLOSED` ; tous les autres, électeurs de la liste compris, seulement après `RESULTS_PUBLISHED`. Le seuil de 3 votants s'applique à tout le monde, personnel compris.
+- Égalité : les candidats strictement devant restent élus (poste à plusieurs sièges) ; seul le dernier siège est disputé. Un candidat sans voix n'est jamais élu.
+- Ouverture manuelle du vote : la condition « heure de la base ≥ `votingStartsAt` » s'applique aussi à l'ouverture manuelle (04 §4.3 ne distingue pas).
+- Annulation (04 §4.6) étendue à `VOTING_OPEN` et `VOTING_CLOSED` : l'urne et la participation restent en base.
+- Après le gel (04 §5.1), la liste électorale fait foi : « Mes élections » et le détail d'une élection restent visibles pour un inscrit dont l'inscription a changé. `GET /elections/mine` renvoie `hasVoted` (un booléen), jamais le contenu du vote.
+- Échecs de mot de passe au vote : même compteur que la connexion (`LoginAttemptLimiter`, en mémoire, par processus) ; le 429 s'applique même avec le bon mot de passe. Ils ne sont **pas** écrits dans `audit_logs` (pas d'identité à côté d'une mention du vote, 04 §7.2).
+- Notification de vote : créée **après** le COMMIT, sans jamais faire échouer un vote enregistré ; `body` = titre de l'élection, aucun choix.
+- Tâche planifiée : chaque minute, à l'heure de la **base** ; clôture des candidatures, ouverture, clôture, et rattrapage d'un décompte manquant. Inactive si `NODE_ENV=test` ou `SCHEDULER_ENABLED=false`. Si l'ouverture automatique est bloquée, le comité reçoit une notification `VOTING_OPEN_BLOCKED` (une seule par motif) ; **aucun écran** n'affiche encore les notifications des membres du comité.
+- Bulletin (`GET /voting/:id/ballot`) : ordre aléatoire tiré à chaque appel (D-35) ; photo et programme se lisent par l'URL signée existante, à la demande (une URL émise avec le bulletin expirerait en 5 min).
+- Interface : un 401 `INVALID_PASSWORD` n'est pas rejoué par l'intercepteur (sinon deux échecs comptés) ; après un envoi, les choix et le mot de passe sont effacés de la page ; après une panne réseau, l'interface interroge `GET /voting/:id/status` avant de proposer de réessayer.
+- Tests existants modifiés **avec accord du propriétaire** : `voting-world.ts` (hash argon2 bon marché : 2 000 votes avec les paramètres de production dépassent 60 s de CPU) et `voting-secret.db-spec.ts` (replacer `BigInt` dans un `JSON.stringify`).
+- **Incident « 992 votes sur 1 000 » (test 2) : cause trouvée et corrigée.** Prisma n'attend que 2 s pour *démarrer* une transaction ; sous forte charge, la transaction de vote échouait en `500` (« Unable to start a transaction in the given time », P2028). Preuve : 60 exécutions du scénario (120 000 requêtes, en processus chaud puis à froid après le test 1) avec `maxWait` à 20 s : 0 anomalie ; avec `maxWait` à 2 s sous triple charge : 9 exécutions sur 9 en échec (de 41 à 278 requêtes en 500), **participations = bulletins dans tous les cas** (876 = 876, 901 = 901, …) et **chaque étudiant sans vote a reçu un 500, jamais un 2xx**. Correctif : `maxWait` 20 s sur les transactions de vote, d'ouverture et de clôture ; rejeu automatique d'un échec P2028 ou P2034 (rien n'a pu être écrit, et la clé primaire interdit un double vote). Le test 2 vérifie maintenant `participations = bulletins` avant les statuts (modification demandée par le propriétaire) ; `voting-pool.db-spec.ts` protège contre la régression.
+- `app.module.ts` lit `LOG_LEVEL` dans l'environnement au démarrage du logger : `ConfigService` fige les valeurs à l'import, trop tôt pour le test 8.
+
+## Non fait (volontairement)
+
+- Prolongation du vote après une panne (D-33), ajout exceptionnel à la liste (`voter_roll:add`, 04 §5.2), écrans de résultats et du comité (participation, ouverture/clôture manuelles) : hors de la demande de ce sprint. Les routes serveur de participation, d'ouverture et de clôture existent.
+- Procès-verbal PDF, second tour effectif, tableau de bord : Sprint 6.
+
+---
+
+# Sprint 4 (fusionné) — Élections, éligibilité, candidatures, SANS le vote
 
 Branche : `feat/sprint-4-elections`. **Ne rien fusionner.** Mis à jour à chaque étape : une nouvelle session reprend ici.
 `docs/04-ELECTION-VOTING-FLOW.md` n'est **pas** à rédiger : il sera fourni. (Ajouté au dépôt le 15/10 : `docs/04-ELECTION-VOTING-FLOW.md`, statut « proposition », référence pour les règles. Contrôle du Sprint 4 contre ce document : voir la section « Conformité à 04 » ci-dessous.)

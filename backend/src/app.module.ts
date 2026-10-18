@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module';
@@ -43,7 +44,9 @@ function hasModule(name: string): boolean {
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         pinoHttp: {
-          level: config.get('LOG_LEVEL', 'info'),
+          // Lu dans l'environnement au démarrage du logger : ConfigService fige les valeurs à l'import du module, trop tôt
+          // pour un test qui règle le niveau juste avant de créer l'application.
+          level: process.env.LOG_LEVEL ?? config.get('LOG_LEVEL', 'info'),
           // Request ID : repris de l'en-tête s'il existe, sinon généré, et renvoyé au client.
           genReqId: (req, res) => {
             const id = (req.headers['x-request-id'] as string | undefined) ?? randomUUID();
@@ -62,6 +65,7 @@ function hasModule(name: string): boolean {
         },
       }),
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthzModule,

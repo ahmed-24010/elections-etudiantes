@@ -135,21 +135,21 @@ _Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et
 
 **Objectif :** voter est sûr, unique et secret. **C'est le sprint le plus important.**
 
-- [ ] Ouverture du vote : gel de `voter_roll` (02 §5), verrouillage des règles et candidats
-- [ ] Module `voting` : transaction de vote exactement comme 02 §6.3
-- [ ] Bulletins sans horodatage ni lien vers l'étudiant (02 §6.2)
-- [ ] Filtrage des logs : le body de `POST /voting/:id/ballot` n'est jamais journalisé
-- [ ] Clôture automatique à `votingEndsAt` (tâche planifiée `@nestjs/schedule`) + clôture manuelle (2FA)
-- [ ] Taux de participation en direct pour le comité, en chiffres uniquement (D-02)
-- [ ] Angular : bulletin (un poste par étape, vote blanc), écran de confirmation avant envoi, écran « Votre vote est enregistré »
-- [ ] **Tests obligatoires :**
-  - [ ] 50 requêtes de vote simultanées du même étudiant → exactement 1 bulletin
-  - [ ] Vote avant ouverture, après clôture → refusé
-  - [ ] Vote d'un étudiant absent de `voter_roll` → refusé
-  - [ ] Candidat non validé, position d'une autre élection, trop de choix → refusé, rien n'est écrit
-  - [ ] Erreur au milieu de la transaction → ni participation, ni bulletin
-  - [ ] Aucune réponse API ne contient un `studentId` avec un choix (03 §8 test 9)
-  - [ ] Invariant participants = bulletins après 1 000 votes simulés
+- [x] Ouverture du vote : gel de `voter_roll` (02 §5), verrouillage des règles et candidats
+- [x] Module `voting` : transaction de vote exactement comme 02 §6.3
+- [x] Bulletins sans horodatage ni lien vers l'étudiant (02 §6.2)
+- [x] Filtrage des logs : le body de `POST /voting/:id/ballot` n'est jamais journalisé
+- [x] Clôture automatique à `votingEndsAt` (tâche planifiée `@nestjs/schedule`) + clôture manuelle (2FA)
+- [x] Taux de participation (serveur ; l'écran du comité reste à faire) en direct pour le comité, en chiffres uniquement (D-02)
+- [x] Angular : bulletin (un poste par étape, vote blanc), écran de confirmation avant envoi, écran « Votre vote est enregistré »
+- [x] **Tests obligatoires :**
+  - [x] 50 requêtes de vote simultanées du même étudiant → exactement 1 bulletin
+  - [x] Vote avant ouverture, après clôture → refusé
+  - [x] Vote d'un étudiant absent de `voter_roll` → refusé
+  - [x] Candidat non validé, position d'une autre élection, trop de choix → refusé, rien n'est écrit
+  - [x] Erreur au milieu de la transaction → ni participation, ni bulletin
+  - [x] Aucune réponse API ne contient un `studentId` avec un choix (03 §8 test 9)
+  - [x] Invariant participants = bulletins après 1 000 votes simulés
 
 **Démo :** 20 comptes de test votent ; le compteur de participation monte ; aucune table ne permet de savoir qui a voté pour qui.
 

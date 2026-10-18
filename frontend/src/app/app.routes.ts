@@ -28,6 +28,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', loadComponent: () => import('./features/student/student-home').then((m) => m.StudentHome) },
       { path: 'elections', pathMatch: 'full', loadComponent: () => import('./features/elections/my-elections-page').then((m) => m.MyElectionsPage) },
       { path: 'elections/:id', loadComponent: () => import('./features/elections/my-election-page').then((m) => m.MyElectionPage) },
+      { path: 'elections/:id/vote', loadComponent: () => import('./features/voting/vote-page').then((m) => m.VotePage) },
     ],
   },
   {

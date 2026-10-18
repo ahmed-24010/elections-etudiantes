@@ -12,10 +12,14 @@ const isAuthPath = (url: string) => AUTH_PATHS.some((p) => url.startsWith(`${env
 const withToken = (req: HttpRequest<unknown>, token: string | null) =>
   token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
+/** 401 transmis tels quels à l'appelant : ce ne sont pas des sessions expirées (voir ci-dessous). */
+const PASSTHROUGH_401 = ['step_up_required', 'INVALID_PASSWORD'];
+
 /**
  * Ajoute le jeton d'accès (en mémoire) aux appels API. Sur 401, renouvelle le jeton UNE fois (coordonné entre
  * onglets) et rejoue la requête ; si le renouvellement échoue, la session est terminée.
- * Un 401 « step_up_required » n'est pas une session expirée : il est transmis tel quel à l'appelant.
+ * Un 401 « step_up_required » n'est pas une session expirée : il est transmis tel quel à l'appelant. Même chose pour
+ * « INVALID_PASSWORD » (mot de passe ressaisi pour voter) : le rejouer ferait compter deux échecs dans le blocage du compte.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Hors API, routes d'auth, ou en-tête déjà posé explicitement (jeton de configuration 2FA) : on ne touche à rien.
@@ -24,7 +28,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   return next(withToken(req, auth.accessToken())).pipe(
     catchError((err: unknown) => {
-      if (!(err instanceof HttpErrorResponse) || err.status !== 401 || err.error?.message === 'step_up_required') {
+      if (!(err instanceof HttpErrorResponse) || err.status !== 401 || PASSTHROUGH_401.includes(err.error?.message)) {
         return throwError(() => err);
       }
       return from(auth.refreshAccessToken()).pipe(

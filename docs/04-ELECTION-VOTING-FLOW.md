@@ -4,7 +4,7 @@
 
 **Version :** 1.0
 **Date :** 11/10/2026
-**Statut :** Proposition — à relire et valider AVANT le Sprint 5
+**Statut :** Validé (15/10/2026) — décisions A-06 à A-12 enregistrées comme D-30 à D-36
 **Dépend de :** `00-DECISIONS.md`, `02-DATABASE.md` (§5, §6, §7, §8), `03-ROLES-PERMISSIONS.md` (§5.4 à §5.7)
 
 ---
@@ -19,7 +19,7 @@ Ce document décrit, étape par étape, la vie d'une élection : de sa création
 - la **conduite à tenir en cas d'incident** ;
 - les **tests obligatoires** du Sprint 5.
 
-Le Sprint 5 ne commence pas tant que ce document n'est pas validé.
+Ce document est validé : le Sprint 5 peut commencer.
 
 ---
 
@@ -181,7 +181,17 @@ Après le vote, l'élection affiche « Vous avez voté » pour cet étudiant, et
 
 Endpoint : `POST /api/v1/voting/:electionId/ballot`. Permission `ballot:cast`.
 
-Le corps contient seulement : `{ choices: [{ positionId, candidateIds[] }] }`. `candidateIds` vide = vote blanc.
+Le corps contient : `{ choices: [{ positionId, candidateIds[] }], password }`. `candidateIds` vide = vote blanc. `password` est le mot de passe de l'étudiant, ressaisi à la confirmation (D-30).
+
+**Avant la transaction** (donc avant toute écriture dans l'urne) :
+
+- le mot de passe est vérifié ; un échec renvoie `401 INVALID_PASSWORD` ;
+- chaque échec compte dans le blocage du compte (5 échecs en 15 minutes, comme à la connexion) ; compte bloqué : `429` ;
+- le mot de passe n'est **jamais** journalisé, comme le reste du corps (CLAUDE.md, règle 5).
+
+Les erreurs gardent la convention actuelle : le code (`ELECTION_NOT_OPEN`, `ALREADY_VOTED`…) est dans le champ `message`.
+
+Routes associées : `POST /elections/:id/voting/open` et `/close` (comité, 🔐), `GET /voting/:id/status` (état de l'étudiant lui-même), `GET /results/:id`, `GET /results/:id/second-round`, `POST /elections/:id/results/publish` (🔐). Le décompte (§8) est **automatique** à la clôture ; `POST /results/:id/compute` sert seulement à le **relancer** (idempotent, comité, 🔐).
 
 ```text
 BEGIN (isolation READ COMMITTED)
@@ -388,7 +398,7 @@ L'étudiant voit lui-même son statut : non inscrit sur la liste, pas encore vot
 
 ---
 
-## 12. Décisions à valider
+## 12. Décisions (validées le 15/10/2026)
 
 | Réf. | Question | Proposition |
 |---|---|---|
@@ -400,7 +410,7 @@ L'étudiant voit lui-même son statut : non inscrit sur la liste, pas encore vot
 | A-11 | Ordre des candidats sur le bulletin | **Aléatoire pour chaque électeur** |
 | A-12 | Notification « un vote a été enregistré pour vous » | **Oui**, dans l'application |
 
-Une fois validées, ces décisions passent dans `00-DECISIONS.md` (D-24 et suivantes).
+Ces décisions sont enregistrées dans `00-DECISIONS.md` : A-06 = D-30, A-07 = D-31, A-08 = D-32, A-09 = D-33, A-10 = D-34, A-11 = D-35, A-12 = D-36. S'y ajoute D-37 (mobile d'abord).
 
 ---
 

@@ -8,6 +8,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { localName } from '../../core/api/academic.api';
 import { CandidatesApi, FileKind, OwnCandidacy, PublicCandidate } from '../../core/api/candidates.api';
 import { ElectionDetail, ElectionsApi } from '../../core/api/elections.api';
+import { VotingApi, VotingStatus } from '../../core/api/voting.api';
 import { ACCEPTED_TYPES, MAX_UPLOAD_BYTES, PHOTO_TYPES } from '../../core/api/enrollment.api';
 import { apiErrorKey } from '../../core/auth/api-error';
 import { LanguageService } from '../../core/services/language.service';
@@ -56,6 +57,27 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
           </dd>
         </dl>
       </section>
+
+      @if (d.status === 'VOTING_OPEN' && voteStatus(); as v) {
+        <section class="app-card p-3 p-md-4 mb-3" data-testid="voting-panel">
+          <h2 class="h5 app-page-title">{{ 'voting.panel.title' | transloco }}</h2>
+          @if (v.state === 'VOTED') {
+            <p class="mb-0">
+              {{ 'voting.panel.voted' | transloco }}
+              @if (v.votedAt) {
+                <bdi dir="ltr">{{ v.votedAt | date: 'yyyy-MM-dd HH:mm' }}</bdi>
+              }
+            </p>
+          } @else if (v.state === 'NOT_ON_ROLL') {
+            <p class="mb-0 text-body-secondary">{{ 'voting.panel.notOnRoll' | transloco }}</p>
+          } @else if (!v.open) {
+            <p class="mb-0 text-body-secondary">{{ 'voting.panel.notOpen' | transloco }}</p>
+          } @else {
+            <p>{{ 'voting.panel.openUntil' | transloco }} <bdi dir="ltr">{{ v.votingEndsAt | date: 'yyyy-MM-dd HH:mm' }}</bdi></p>
+            <a class="btn btn-primary" [routerLink]="['/student/elections', electionId, 'vote']" data-testid="vote-link">{{ 'voting.panel.vote' | transloco }}</a>
+          }
+        </section>
+      }
 
       <section class="app-card p-3 p-md-4 mb-3" aria-live="polite">
         <h2 class="h5 app-page-title">{{ 'elections.student.myCandidacy' | transloco }}</h2>
@@ -192,6 +214,7 @@ import { candidacyClass, electionTitle, statusClass } from './election-ui';
 export class MyElectionPage implements OnInit {
   private readonly elections = inject(ElectionsApi);
   private readonly candidatesApi = inject(CandidatesApi);
+  private readonly votingApi = inject(VotingApi);
   private readonly lang = inject(LanguageService);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -203,6 +226,7 @@ export class MyElectionPage implements OnInit {
 
   protected readonly e = signal<ElectionDetail | null>(null);
   protected readonly mine = signal<OwnCandidacy | null>(null);
+  protected readonly voteStatus = signal<VotingStatus | null>(null);
   protected readonly candidates = signal<PublicCandidate[]>([]);
   protected readonly loadError = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -234,8 +258,18 @@ export class MyElectionPage implements OnInit {
       this.e.set(await this.elections.get(this.electionId));
       this.candidates.set(await this.candidatesApi.listApproved(this.electionId));
       await this.loadMine();
+      if (this.e()?.status === 'VOTING_OPEN') await this.loadVoteStatus();
     } catch (err) {
       this.loadError.set(apiErrorKey(err));
+    }
+  }
+
+  /** Où en est l'étudiant pour le vote (inscrit ? a voté ?). Un échec ne bloque pas le reste de la page. */
+  private async loadVoteStatus(): Promise<void> {
+    try {
+      this.voteStatus.set(await this.votingApi.status(this.electionId));
+    } catch {
+      this.voteStatus.set(null);
     }
   }
 
