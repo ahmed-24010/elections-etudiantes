@@ -61,7 +61,7 @@
 - [x] Changement de `dir="rtl"` / `dir="ltr"` sur `<html>` selon la langue
 - [x] CSS en propriétés logiques (`margin-inline-start` plutôt que `margin-left`)
 - [x] Trois layouts vides : public, étudiant, admin
-- [x] Page d'accueil qui affiche l'état de `/health`
+- [x] État de `/health` affiché dans l’espace SUPER_ADMIN (retiré de l’accueil public)
 
 ### Infrastructure
 - [x] `docker-compose.yml` : `mysql`, `backend`, `frontend`, `s3` (stockage S3 local : SeaweedFS à la place de MinIO, D-17)
