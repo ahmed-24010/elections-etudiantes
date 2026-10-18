@@ -493,7 +493,18 @@
         "APPROVED": "Le comité a validé votre candidature.",
         "REJECTED": "Corrigez votre candidature selon le motif, puis redéposez-la.",
         "WITHDRAWN": "Vous avez retiré votre candidature. Vous pouvez la déposer à nouveau tant que les candidatures sont ouvertes."
-      }
+      },
+      "details": "Détails",
+      "becomeCandidate": "Se porter candidat",
+      "outsideWindow": "Nous ne sommes pas dans la période de candidature.",
+      "cancelled": "Cette élection a été annulée."
+    },
+    "phases": {
+      "label": "Phases de l'élection",
+      "candidacy": "Candidatures",
+      "review": "Examen",
+      "voting": "Vote",
+      "results": "Résultats"
     }
   },
   "voting": {
@@ -538,7 +549,17 @@
       "voted": "Vous avez voté.",
       "votedBadge": "Vous avez voté",
       "notOnRoll": "Vous n'êtes pas sur la liste électorale de cette élection.",
-      "notOpen": "Le vote n'est pas ouvert actuellement."
+      "notOpen": "Le vote n'est pas ouvert actuellement.",
+      "votedBig": "Vous avez voté ✓"
     }
+  },
+  "results": {
+    "title": "Résultats",
+    "participation": "Inscrits : {{registered}} · Votants : {{voters}} · Participation : {{rate}} %",
+    "tie": "Égalité pour le dernier siège : second tour à venir.",
+    "votes": "{{count}} voix",
+    "blank": "Votes blancs",
+    "withheld": "Effectif trop faible pour publier le détail.",
+    "pending": "Le vote est clos. Les résultats seront publiés prochainement."
   }
 }
