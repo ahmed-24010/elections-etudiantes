@@ -235,6 +235,10 @@ for (const lang of ['ar', 'fr'] as const) {
       const nextBox = (await page.getByTestId('vote-next').boundingBox())!;
       expect(nextBox.y + nextBox.height).toBeLessThanOrEqual(667);
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      // on mesure une fois le défilement terminé (WebKit sous Linux défile avec un léger retard)
+      await page.waitForFunction(() => Math.abs(window.scrollY + window.innerHeight - document.documentElement.scrollHeight) < 2);
+      const reserved = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('main')!).paddingBottom));
+      expect(reserved, 'la page réserve la place de la barre').toBeGreaterThanOrEqual(navBox.height);
       const last = (await page.getByTestId('candidate-c4').boundingBox())!;
       const barTop = (await nav.boundingBox())!.y;
       expect(last.y + last.height, 'le dernier candidat reste au-dessus de la barre').toBeLessThanOrEqual(barTop);
