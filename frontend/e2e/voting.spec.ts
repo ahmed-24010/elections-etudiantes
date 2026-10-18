@@ -219,6 +219,27 @@ for (const lang of ['ar', 'fr'] as const) {
       expect(mock.unhandled).toEqual([]);
     });
 
+    test('375×667 : « Précédent / Suivant » sont fixés en bas de l’écran et ne cachent jamais le dernier candidat', async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 });
+      await mockApi(page, lang);
+      await page.goto('/student/elections/e1/vote');
+      await page.getByTestId('candidate-c2').waitFor();
+      const nav = page.locator('.app-ballot-nav');
+      const box = await nav.boundingBox();
+      expect(box!.y + box!.height, 'barre collée au bas de l’écran').toBeCloseTo(667, 0);
+      await page.getByTestId('candidate-c1').click();
+      await page.getByTestId('vote-next').click(); // poste 2 : trois candidats, la page dépasse l’écran
+      await expect(page.getByTestId('vote-progress')).toContainText('2');
+      const navBox = (await nav.boundingBox())!;
+      expect(navBox.y + navBox.height).toBeCloseTo(667, 0); // toujours en bas, même page non défilée
+      const nextBox = (await page.getByTestId('vote-next').boundingBox())!;
+      expect(nextBox.y + nextBox.height).toBeLessThanOrEqual(667);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const last = (await page.getByTestId('candidate-c4').boundingBox())!;
+      const barTop = (await nav.boundingBox())!.y;
+      expect(last.y + last.height, 'le dernier candidat reste au-dessus de la barre').toBeLessThanOrEqual(barTop);
+    });
+
     test('déjà voté : « Votre vote a déjà été enregistré », sans bulletin', async ({ page }) => {
       const mock = await mockApi(page, lang);
       mock.ballotResponse = { status: 409, body: { statusCode: 409, message: 'ALREADY_VOTED' } };

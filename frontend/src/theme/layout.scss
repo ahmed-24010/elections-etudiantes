@@ -824,20 +824,30 @@ app-admin-layout {
 .app-choice-program {
   justify-self: start;
 }
-// Les boutons restent visibles en bas de l'écran pendant que l'on fait défiler les candidats (pouce, téléphone).
+// Précédent / Suivant : sur téléphone, fixés en bas de l'écran (pouce) ; la page garde de la place pour ne rien cacher.
 .app-ballot-nav {
-  position: sticky;
-  inset-block-end: 0;
-  z-index: 1;
   display: grid;
   gap: 0.5rem;
   margin-block-start: 1.25rem;
-  padding-block: 0.75rem;
-  background: var(--app-card);
-  border-block-start: 1px solid var(--app-border);
+  @media (max-width: 575.98px) {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 1030;
+    margin: 0;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: var(--app-card);
+    border-block-start: 1px solid var(--app-border);
+    box-shadow: 0 -4px 12px rgb(13 43 92 / 12%);
+  }
   @media (min-width: 576px) {
     display: flex;
     justify-content: space-between;
+  }
+}
+@media (max-width: 575.98px) {
+  main:has(.app-ballot-nav) {
+    padding-block-end: 7rem !important;
   }
 }
 // Titre d'étape : reçoit le focus à chaque changement d'écran (lecteurs d'écran) sans cadre de focus décoratif.
@@ -873,4 +883,88 @@ app-admin-layout {
   color: #fff;
   font-size: 2rem;
   line-height: 1;
+}
+
+// Page élection de l'étudiant (D-37) : frise des phases sur une ligne, action principale en tête, le reste replié.
+.app-min0 {
+  min-inline-size: 0;
+}
+.app-phases {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  li {
+    flex: 1 1 0;
+    display: grid;
+    justify-items: center;
+    min-inline-size: 0;
+    padding: 0.25rem 0.125rem;
+    border-block-end: 4px solid var(--app-border);
+    color: var(--app-text-muted, #5b6b82);
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    text-align: center;
+    &.is-done {
+      border-block-end-color: #7fbf9a;
+    }
+    &.is-current {
+      border-block-end-color: var(--app-navy, #0d2b5c);
+      background: var(--app-navy, #0d2b5c);
+      color: #fff;
+      border-radius: 0.375rem 0.375rem 0 0;
+      font-weight: 700;
+    }
+  }
+}
+.app-phase-name {
+  overflow-wrap: anywhere;
+}
+.app-phase-date {
+  font-size: 0.6875rem;
+  opacity: 0.85;
+}
+.app-primary {
+  margin-block-end: 0.75rem;
+}
+.app-vote-cta {
+  min-block-size: 4rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.app-fold {
+  margin-block-end: 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-card);
+  > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 44px;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+.app-fold-body {
+  padding: 0 0.75rem 0.75rem;
+}
+.app-cand-list {
+  display: grid;
+  gap: 0.5rem;
+}
+.app-cand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+}
+.app-result {
+  padding-block: 0.5rem;
+  border-block-start: 1px solid var(--app-border);
 }

@@ -31,6 +31,9 @@ const position = { id: 'p1', title: 'Président', titleAr: 'الرئيس', seats
 const detail = (over: Partial<ElectionDetail> = {}): ElectionDetail => ({
   ...summary(), positions: [position], rules: { wholeInstitution: false, items: [{ programId: 'pr1', levelId: 'l3', groupId: 'g1' }] }, committeeCount: 3, minCommittee: 3, ...over,
 });
+/** Période de candidature autour de maintenant : la page n'offre « déposer / modifier » que dans la période (comme le serveur). */
+const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString();
+const OPEN_WINDOW = { candidacyStartsAt: inDays(-1), candidacyEndsAt: inDays(5) };
 const overview: AcademicOverview = {
   years: [{ id: 'y1', label: '2026-2027', startsOn: '2026-09-01', endsOn: '2027-07-15', isCurrent: true }],
   faculties: [{ id: 'f1', code: 'FSJP', name: 'FSJP' }],
@@ -355,7 +358,7 @@ describe('Une élection et ma candidature (étudiant)', () => {
   const own = (over = {}) => ({ id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'Mon programme', rejectionReason: null, hasPhoto: false, hasProgram: false, ...over });
   async function load(status: ElectionDetail['status'], mine: object | null) {
     const t = setup('STUDENT', MyElectionPage, { id: 'e1' });
-    await t.reply(`${API}/elections/e1`, { ...detail({ status }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
+    await t.reply(`${API}/elections/e1`, { ...detail({ status, ...OPEN_WINDOW }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
     await t.reply(`${API}/elections/e1/candidates`, [{ id: 'c9', positionId: 'p1', statement: 'Pour tous', hasPhoto: false, hasProgram: false, firstName: 'Omar', lastName: 'Ba', fullNameAr: null }]);
     if (mine) await t.reply(`${API}/elections/e1/candidates/me`, mine);
     else await t.reply(`${API}/elections/e1/candidates/me`, { statusCode: 404, message: 'Not Found' }, 404);
@@ -365,6 +368,8 @@ describe('Une élection et ma candidature (étudiant)', () => {
   it('candidatures ouvertes, pas encore candidat : liste des candidats validés et formulaire de dépôt (poste obligatoire)', async () => {
     const { el, type, http, page } = await load('CANDIDACY_OPEN', null);
     expect(el.textContent).toContain('Omar Ba');
+    el.querySelector<HTMLButtonElement>('[data-testid=start-apply]')!.click(); // le formulaire est replié : on l'ouvre
+    page.detectChanges();
     const submit = () => el.querySelector<HTMLButtonElement>('form button[type=submit]')!;
     expect(submit().disabled).toBeTrue();
     type('#positionIdNew', 'p1', 'change');
@@ -381,6 +386,9 @@ describe('Une élection et ma candidature (étudiant)', () => {
 
   it('candidature en attente : correction et dépôt de fichiers possibles, retrait avec confirmation', async () => {
     const { el, button, page, http } = await load('CANDIDACY_OPEN', own());
+    expect(el.querySelector('#file-photo')).toBeNull(); // formulaire replié tant qu'on n'a pas appuyé sur « Modifier »
+    el.querySelector<HTMLButtonElement>('[data-testid=edit-candidacy]')!.click();
+    page.detectChanges();
     expect(el.querySelector('#file-photo')).not.toBeNull();
     expect(el.querySelector<HTMLInputElement>('#file-photo')!.accept).toBe('image/jpeg,image/png'); // une photo n'est pas un PDF
     button(/candidate\.withdraw$/).click();
@@ -392,12 +400,15 @@ describe('Une élection et ma candidature (étudiant)', () => {
     http.expectOne(`${API}/elections/e1/candidates`).flush([]);
     await settle(page);
     expect(el.querySelector('[data-testid=my-status]')!.textContent).toContain('WITHDRAWN');
-    expect(el.querySelector('#positionIdNew')).not.toBeNull(); // elle peut être redéposée tant que c'est ouvert
+    expect(el.querySelector('[data-testid=start-apply]')).not.toBeNull(); // elle peut être redéposée tant que c'est ouvert
   });
 
   it('candidature rejetée : motif visible, correction puis « redéposer » (tant que les candidatures sont ouvertes)', async () => {
     const { el, button, page, http } = await load('CANDIDACY_OPEN', own({ status: 'REJECTED', rejectionReason: 'Programme manquant' }));
     expect(el.textContent).toContain('Programme manquant');
+    expect(el.querySelector('#statement')).toBeNull();
+    el.querySelector<HTMLButtonElement>('[data-testid=edit-candidacy]')!.click();
+    page.detectChanges();
     expect(el.querySelector('#statement')).not.toBeNull();
     button(/candidate\.resubmit/).click();
     await settle(page);
@@ -476,9 +487,11 @@ describe('Fichiers des candidatures', () => {
 
   it('photo : un PDF ou une image GIF est refusé côté client (aucun envoi), un PNG est envoyé', async () => {
     const t = setup('STUDENT', MyElectionPage, { id: 'e1' });
-    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN' }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
+    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN', ...OPEN_WINDOW }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
     await t.reply(`${API}/elections/e1/candidates`, []);
     await t.reply(`${API}/elections/e1/candidates/me`, { id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'x', rejectionReason: null, hasPhoto: false, hasProgram: false });
+    t.el.querySelector<HTMLButtonElement>('[data-testid=edit-candidacy]')!.click();
+    t.page.detectChanges();
     const pick = async (file: File) => {
       const input = t.el.querySelector<HTMLInputElement>('#file-photo')!;
       const dt = new DataTransfer();
@@ -498,9 +511,11 @@ describe('Fichiers des candidatures', () => {
 
   it('sélecteur de fichier : libellé traduit (pas le texte natif du navigateur), champ natif masqué mais présent', async () => {
     const t = setup('STUDENT', MyElectionPage, { id: 'e1' });
-    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN' }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
+    await t.reply(`${API}/elections/e1`, { ...detail({ status: 'CANDIDACY_OPEN', ...OPEN_WINDOW }), rules: undefined, committeeCount: undefined, minCommittee: undefined, eligible: true });
     await t.reply(`${API}/elections/e1/candidates`, []);
     await t.reply(`${API}/elections/e1/candidates/me`, { id: 'c1', positionId: 'p1', status: 'PENDING', statement: 'x', rejectionReason: null, hasPhoto: false, hasProgram: false });
+    t.el.querySelector<HTMLButtonElement>('[data-testid=edit-candidacy]')!.click();
+    t.page.detectChanges();
     const label = t.el.querySelector<HTMLLabelElement>('label.app-file-button')!;
     expect(label.textContent).toContain('common.chooseFile');
     expect(label.htmlFor).toBe('file-photo');
