@@ -18,33 +18,17 @@ describe('HomePage', () => {
   }
   const url = `${environment.apiUrl}/health`;
 
-  it('affiche API OK et base OK', () => {
+  it("n'affiche pas l'état du système et n'appelle pas /health (réservé au SUPER_ADMIN)", () => {
     const { fixture, http } = setup();
-    expect(fixture.nativeElement.textContent).toContain('Vérification en cours');
-    http.expectOne(url).flush({ api: 'ok', database: 'ok' });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelectorAll('.text-bg-success').length).toBe(2);
-    expect(fixture.nativeElement.querySelector('.text-bg-danger')).toBeNull();
-  });
-
-  it('signale la base indisponible', () => {
-    const { fixture, http } = setup();
-    http.expectOne(url).flush({ api: 'ok', database: 'down' }, { status: 503, statusText: 'x' });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.text-bg-danger')?.textContent).toContain('Indisponible');
-  });
-
-  it('signale un serveur injoignable', () => {
-    const { fixture, http } = setup();
-    http.expectOne(url).error(new ProgressEvent('error'));
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Serveur injoignable');
+    http.expectNone(url);
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.app-status')).toBeNull();
+    expect(el.textContent).not.toContain('Vérification en cours');
+    expect(el.querySelector('.badge')).toBeNull();
   });
 
   it('affiche les deux logos et les liens de connexion / inscription pour un visiteur', () => {
-    const { fixture, http } = setup();
-    http.expectOne(url).flush({ api: 'ok', database: 'ok' });
-    fixture.detectChanges();
+    const { fixture } = setup();
     const el = fixture.nativeElement as HTMLElement;
     const logos = Array.from(el.querySelectorAll('img.app-hero-logo')).map((i) => i.getAttribute('src'));
     expect(logos).toEqual(['branding/logo-un.jpg', 'branding/logo-fsjp.jpg']);

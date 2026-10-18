@@ -51,7 +51,7 @@ docker compose up -d --build
 
 > `down -v` **efface** la base de développement. C'est voulu : on repart propre (nouvelles migrations, groupes A/B). Ne le fais pas si tu veux garder des données.
 
-Attends 1 à 2 minutes, puis ouvre <http://localhost:4200>. En bas de la page d'accueil (ou sur `/api/v1/health`), l'API et la base doivent être « OK ».
+Attends 1 à 2 minutes, puis ouvre <http://localhost:4200>. Dans l’espace SUPER_ADMIN (ou sur `/api/v1/health`), l'API et la base doivent être « OK ».
 
 Si ça ne démarre pas : `docker compose logs backend` (voir §12).
 
