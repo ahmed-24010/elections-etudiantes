@@ -58,6 +58,13 @@ describe('permissions.ts (03 §5)', () => {
     for (const r of [Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'election:voting:extend')).toBe(false);
   });
 
+  it('la publication des résultats est réservée au comité ; l’administrateur d’institution lit et regénère le PV (D-41)', () => {
+    expect(can(Role.ELECTION_COMMITTEE, 'results:publish')).toBe(true);
+    for (const r of [Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'results:publish')).toBe(false);
+    for (const p of ['report:read', 'report:generate'] as const) for (const r of [Role.INSTITUTION_ADMIN, Role.ELECTION_COMMITTEE]) expect(can(r, p)).toBe(true);
+    for (const r of [Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'report:read')).toBe(false);
+  });
+
   it('le comité calcule les résultats, pas l’administrateur d’institution', () => {
     expect(can(Role.ELECTION_COMMITTEE, 'results:compute')).toBe(true);
     expect(can(Role.INSTITUTION_ADMIN, 'results:compute')).toBe(false);

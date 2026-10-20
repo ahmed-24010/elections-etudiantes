@@ -6,7 +6,8 @@ import type { RequestInfo } from '../auth/auth.service';
 import type { AuthUser } from '../common/authz/auth-user';
 import { AuthzService } from '../common/authz/authz.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { analyzePosition, MIN_VOTERS_FOR_DETAIL } from './tally';
+import { ReportsService } from '../reports/reports.service';
+import { analyzePosition, detailPublished } from './tally';
 
 const DIGEST_PAGE = 2_000;
 
@@ -21,6 +22,7 @@ export class ResultsService {
     private readonly prisma: PrismaService,
     private readonly authz: AuthzService,
     private readonly audit: AuditService,
+    private readonly reports: ReportsService,
   ) {}
 
   // ------------------------------------------------------------------ décompte
@@ -136,9 +138,8 @@ export class ResultsService {
         const mine = results.filter((r) => r.positionId === p.id);
         const analysis = analyzePosition(mine.filter((r) => r.candidateId).map((r) => ({ candidateId: r.candidateId as string, votes: r.votes })), p.seats);
         const blank = mine.find((r) => !r.candidateId)?.votes ?? 0;
-        const voters = mine.reduce((sum, r) => sum + r.votes, 0);
         const head = { positionId: p.id, title: p.title, titleAr: p.titleAr, seats: p.seats, tie: analysis.tie, winners: analysis.winners.map(person) };
-        if (voters < MIN_VOTERS_FOR_DETAIL) return { ...head, detailPublished: false, note: 'DETAIL_WITHHELD_SMALL_TURNOUT' };
+        if (!detailPublished(tally.participantCount)) return { ...head, detailPublished: false, note: 'DETAIL_WITHHELD_SMALL_TURNOUT' };
         return {
           ...head,
           detailPublished: true,
@@ -164,7 +165,12 @@ export class ResultsService {
 
   // ------------------------------------------------------------------ publication 🔐
 
-  /** VOTING_CLOSED → RESULTS_PUBLISHED, seulement si le décompte existe et que l'intégrité est confirmée (04 §4.5). */
+  /**
+   * VOTING_CLOSED → RESULTS_PUBLISHED, comité seulement (D-41). Refusée (409, toutes les conditions listées) si le décompte
+   * manque, si l'intégrité a échoué (votants ≠ bulletins ou > inscrits), si l'urne n'est plus celle du décompte (nombres de
+   * votants et de bulletins, empreinte recalculée) ou si la chaîne d'audit est rompue. Le PV (fr et ar) est créé juste après ;
+   * un échec de sa génération ne défait pas la publication : il se relance (`POST /elections/:id/report`).
+   */
   async publish(actor: AuthUser, electionId: string, info: RequestInfo) {
     const election = await this.prisma.election.findUnique({ where: { id: electionId } });
     if (!election) throw new NotFoundException();
@@ -172,12 +178,40 @@ export class ResultsService {
     const tally = await this.prisma.electionTally.findUnique({ where: { electionId } });
     const missing: string[] = [];
     if (!tally) missing.push('tally_missing');
-    else if (!tally.integrityOk) missing.push('integrity_failed');
+    else {
+      if (!tally.integrityOk) missing.push('integrity_failed');
+      // Ceinture de sécurité : après la clôture l'urne ne peut plus changer ; si elle a changé, le décompte n'est plus fiable.
+      const [participantCount, ballotCount] = await Promise.all([this.prisma.votingParticipation.count({ where: { electionId } }), this.prisma.ballot.count({ where: { electionId } })]);
+      if (participantCount !== tally.participantCount || ballotCount !== tally.ballotCount || (await this.digest(this.prisma, electionId)) !== tally.ballotsDigest) missing.push('tally_stale');
+    }
+    if (!(await this.audit.verifyChain()).valid) missing.push('audit_chain_broken');
     if (missing.length > 0) throw new ConflictException({ message: 'conditions_not_met', conditions: missing });
     const res = await this.prisma.election.updateMany({ where: { id: electionId, status: ElectionStatus.VOTING_CLOSED }, data: { status: ElectionStatus.RESULTS_PUBLISHED } });
     if (res.count !== 1) throw new ConflictException('invalid_state');
     await this.record(actor, election, 'ELECTION_RESULTS_PUBLISHED', info);
-    return { status: ElectionStatus.RESULTS_PUBLISHED };
+    const report = await this.reports.generateAfterPublication(actor, electionId, info);
+    return { status: ElectionStatus.RESULTS_PUBLISHED, report };
+  }
+
+  /**
+   * « Vérifier l'urne » (D-45) : recalcule l'empreinte SHA-256 des bulletins MAINTENANT et la compare à celle du décompte et à
+   * celle imprimée sur le PV le plus récent. Lecture seule ; le résultat est tracé. Aucun bulletin, aucun choix n'est renvoyé.
+   */
+  async verifyUrn(user: AuthUser, electionId: string, info: RequestInfo) {
+    const { election, tally } = await this.access(user, electionId);
+    const computed = await this.digest(this.prisma, electionId);
+    const report = await this.prisma.electionReport.findFirst({ where: { electionId, revokedAt: null }, orderBy: { generatedAt: 'desc' } });
+    const result = {
+      computedDigest: computed,
+      tallyDigest: tally.ballotsDigest,
+      reportDigest: report?.ballotsDigest ?? null,
+      reportId: report?.reportId ?? null,
+      matchesTally: computed === tally.ballotsDigest,
+      matchesReport: report ? computed === report.ballotsDigest : null,
+      checkedAt: new Date(),
+    };
+    await this.record(user, election, 'URN_VERIFIED', info, { matchesTally: result.matchesTally, matchesReport: result.matchesReport });
+    return result;
   }
 
   private record(actor: AuthUser, election: { id: string; institutionId: string }, action: string, info: RequestInfo, metadata?: Record<string, unknown>) {

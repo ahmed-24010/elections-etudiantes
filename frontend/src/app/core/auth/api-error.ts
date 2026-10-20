@@ -53,6 +53,10 @@ const BY_MESSAGE: Record<string, string> = {
   extension_not_after_current: 'errors.extensionNotAfterCurrent',
   extension_exceeds_outage: 'errors.extensionExceedsOutage',
   extension_exceeds_24h: 'errors.extensionExceeds24h',
+  report_not_found: 'errors.reportNotFound',
+  report_corrupted: 'errors.reportCorrupted',
+  RESULTS_NOT_AVAILABLE: 'errors.resultsNotAvailable',
+  RESULTS_NOT_READY: 'errors.resultsNotReady',
   // Vote (04 §6.2) : les codes sont dans `message`.
   INVALID_PASSWORD: 'errors.invalidPassword',
   ELECTION_NOT_OPEN: 'errors.electionNotOpen',

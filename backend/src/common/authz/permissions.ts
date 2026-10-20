@@ -30,7 +30,7 @@ export const PERMISSIONS = [
   'ballot:cast', 'participation:read:self',
   // 5.7 Résultats
   'results:compute', 'results:read', 'results:publish', 'results:read:published',
-  'report:generate', 'report:revoke',
+  'report:generate', 'report:read', 'report:revoke',
   // 5.8 Audit
   'audit:read', 'audit:read:election', 'audit:read:platform', 'audit:verify_chain',
 ] as const;
@@ -54,7 +54,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'election:candidacy:close', 'election:voting:open', 'election:voting:close', 'election:cancel',
     'election:read', 'voter_roll:read:count', 'turnout:read',
     'candidate:read:approved', 'candidate:read:all',
-    'results:read', 'results:publish', 'results:read:published', 'report:generate', 'report:revoke',
+    'results:read', 'results:read:published', 'report:generate', 'report:read', 'report:revoke',
     'audit:read', 'audit:read:election', 'audit:verify_chain',
   ],
   VERIFICATION_OFFICER: [
@@ -69,7 +69,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:read', 'voter_roll:add',
     'voter_roll:read:count', 'turnout:read',
     'candidate:review', 'candidate:add', 'candidate:read:approved', 'candidate:read:all',
-    'results:compute', 'results:read', 'results:publish', 'results:read:published', 'report:generate',
+    'results:compute', 'results:read', 'results:publish', 'results:read:published', 'report:generate', 'report:read',
     'audit:read:election',
   ],
   STUDENT: [

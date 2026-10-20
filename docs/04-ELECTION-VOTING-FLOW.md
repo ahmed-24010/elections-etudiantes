@@ -116,11 +116,11 @@ Effet : à partir de cet instant, toute transaction de vote échoue (le contrôl
 
 ### 4.5 `VOTING_CLOSED` → `RESULTS_PUBLISHED`
 
-Qui : comité ou admin d'institution (🔐).
+Qui : **comité seulement** (🔐, D-41). L'administrateur d'institution lit les résultats et peut regénérer le procès-verbal, mais ne publie pas.
 
-Condition : le décompte existe et `election_tallies.integrityOk = true`.
+Conditions : le décompte existe, `election_tallies.integrityOk = true` (votants = bulletins, votants ≤ inscrits) et la chaîne d'audit est intègre. Sinon la publication est refusée (409) avec la liste des conditions manquantes.
 
-Effet : résultats visibles par tous les éligibles ; génération du procès-verbal.
+Effet : résultats visibles par tous les éligibles ; génération du procès-verbal en **deux versions, arabe et français** (D-42).
 
 ### 4.6 Annulation
 
@@ -321,7 +321,7 @@ Mokhtar      8 voix
 Blancs       2
 ```
 
-Procès-verbal PDF : institution, élection, dates, inscrits (dont ajouts exceptionnels), votants, bulletins, participation, résultats par poste, élus, empreinte de l'urne, identifiant du rapport, membres du comité. QR de vérification en Phase 3.
+Procès-verbal PDF, **un par langue** (arabe et français, créés ensemble à la publication : mêmes chiffres, même identifiant de rapport et même code de vérification, un SHA-256 chacun, D-42) : institution, élection, dates, inscrits (dont ajouts exceptionnels), votants, bulletins, participation, panne et prolongation, résultats par poste (D-32 respecté), élus, égalités (avec la proposition de second tour), empreinte de l'urne, identifiant et code du rapport, et une case Nom / Signature par membre du comité (vide, à remplir à la main) plus une case Observations. Le téléchargement donne la version de la langue du site. QR de vérification en Phase 3.
 
 ---
 

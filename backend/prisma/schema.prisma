@@ -66,6 +66,11 @@ enum FilePurpose {
   ELECTION_REPORT
 }
 
+enum ReportLanguage {
+  FR
+  AR
+}
+
 enum ElectionStatus {
   DRAFT
   CANDIDACY_OPEN
@@ -652,20 +657,27 @@ model PositionResult {
   @@map("position_results")
 }
 
+// Un procès-verbal = DEUX lignes, une par langue (D-42) : même reportId et même verificationCode, chacune avec son PDF
+// (fileId) et son SHA-256. ballotsDigest : l'empreinte de l'urne imprimée dans le PV, comparée à celle recalculée (D-45).
 model ElectionReport {
-  id               String    @id @default(uuid()) @db.Char(36)
-  electionId       String    @db.Char(36)
-  fileId           String    @unique @db.Char(36)
-  verificationCode String    @unique @db.VarChar(64) // contenu du QR
-  sha256           String    @db.Char(64) // hash du PDF
-  generatedById    String    @db.Char(36)
-  generatedAt      DateTime  @default(now())
+  id               String         @id @default(uuid()) @db.Char(36)
+  electionId       String         @db.Char(36)
+  reportId         String         @db.Char(36) // identifiant imprimé, commun aux deux langues
+  language         ReportLanguage
+  fileId           String         @unique @db.Char(36)
+  verificationCode String         @db.VarChar(64) // identique dans les deux langues ; contenu du QR en Phase 3
+  ballotsDigest    String         @db.Char(64)
+  sha256           String         @db.Char(64) // hash du PDF de cette langue
+  generatedById    String         @db.Char(36)
+  generatedAt      DateTime       @default(now())
   revokedAt        DateTime?
 
   election    Election   @relation(fields: [electionId], references: [id])
   file        StoredFile @relation(fields: [fileId], references: [id])
   generatedBy User       @relation(fields: [generatedById], references: [id])
 
+  @@unique([reportId, language])
+  @@unique([verificationCode, language])
   @@index([electionId])
   @@map("election_reports")
 }

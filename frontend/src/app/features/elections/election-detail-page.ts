@@ -75,6 +75,9 @@ const CONDITION_KEYS: Record<string, string> = {
           @if (d.status === 'CANDIDACY_CLOSED' || d.status === 'VOTING_OPEN' || d.status === 'VOTING_CLOSED' || d.status === 'RESULTS_PUBLISHED') {
             <a class="btn btn-primary" [routerLink]="['/admin/elections', d.id, 'vote']" data-testid="to-vote">{{ 'elections.detail.votePage' | transloco }}</a>
           }
+          @if (d.status === 'VOTING_CLOSED' || d.status === 'RESULTS_PUBLISHED') {
+            <a class="btn btn-primary" [routerLink]="['/admin/elections', d.id, 'results']" data-testid="to-results">{{ 'elections.detail.resultsPage' | transloco }}</a>
+          }
           @if (isAdmin && canCancel()) {
             <button type="button" class="btn btn-outline-danger" [disabled]="busy()" (click)="confirmCancel.set(true)">{{ 'elections.detail.cancel' | transloco }}</button>
           }

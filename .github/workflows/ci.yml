@@ -65,6 +65,8 @@ jobs:
       - name: Tests sur la vraie base MySQL (app_runtime)
         run: npm run test:db
         env:
+          # Chrome est préinstallé sur les runners GitHub : il imprime les procès-verbaux (D-43).
+          CHROMIUM_PATH: /usr/bin/google-chrome-stable
           DATABASE_READONLY_URL: mysql://app_readonly:ci-readonly@127.0.0.1:3306/elections_test
           DATABASE_URL: mysql://app_runtime:ci-runtime@127.0.0.1:3306/elections_test
 

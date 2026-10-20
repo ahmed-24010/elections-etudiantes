@@ -206,9 +206,10 @@ Un membre du comité qui est aussi étudiant inscrit **vote normalement** avec s
 |---|:-:|:-:|:-:|:-:|:-:|
 | `results:compute` (décompte après clôture) | — | — | — | 🔐 | — |
 | `results:read` (avant publication) | — | ✅ | — | ✅ | — |
-| `results:publish` | — | 🔐 | — | 🔐 | — |
+| `results:publish` (comité seulement, D-41) | — | — | — | 🔐 | — |
 | `results:read:published` | ✅ | ✅ | ✅ | ✅ | ✅ * |
-| `report:generate` (PDF + QR) | — | 🔐 | — | 🔐 | — |
+| `report:generate` (PDF, une version par langue, D-42 ; regénération possible par IA) | — | 🔐 | — | 🔐 | — |
+| `report:read` (téléchargement du PV dans la langue du site) | — | ✅ | — | ✅ | — |
 | `report:revoke` | — | 🔐 | — | — | — |
 | `report:verify` (page publique du QR) | Public, sans compte | | | | |
 

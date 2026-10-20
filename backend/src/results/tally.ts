@@ -38,3 +38,10 @@ export function analyzePosition(rows: CandidateVotes[], seats: number): Position
 
 /** D-32 : en dessous de 3 votants pour un poste, le détail n'est pas publié (chacun saurait pour qui l'autre a voté). */
 export const MIN_VOTERS_FOR_DETAIL = 3;
+
+/**
+ * D-32 : le détail d'un poste n'est publié que si l'ÉLECTION a au moins 3 votants. Chaque bulletin porte une ligne pour chaque
+ * poste (04 §6.2), donc les votants d'un poste sont ceux de l'élection. On n'additionne surtout pas les voix d'un poste : avec
+ * plusieurs choix par bulletin, un seul votant donnerait 3 voix et le détail de son vote serait publié.
+ */
+export const detailPublished = (electionVoters: number): boolean => electionVoters >= MIN_VOTERS_FOR_DETAIL;

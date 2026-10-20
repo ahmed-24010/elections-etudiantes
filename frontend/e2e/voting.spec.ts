@@ -234,8 +234,24 @@ for (const lang of ['ar', 'fr'] as const) {
       expect(navBox.y + navBox.height).toBeCloseTo(667, 0); // toujours en bas, même page non défilée
       const nextBox = (await page.getByTestId('vote-next').boundingBox())!;
       expect(nextBox.y + nextBox.height).toBeLessThanOrEqual(667);
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      // on mesure une fois le défilement terminé (WebKit sous Linux défile avec un léger retard)
+      // On redescend tout en bas à chaque image jusqu'à ce que la hauteur de la page et la position soient stables 6 images de suite :
+      // WebKit sous Linux défile avec retard et la mise en page (polices, images) peut encore bouger juste après le premier défilement.
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) => {
+            let previous = '';
+            let stable = 0;
+            const tick = () => {
+              window.scrollTo(0, document.documentElement.scrollHeight);
+              const now = `${document.documentElement.scrollHeight}:${Math.round(window.scrollY)}`;
+              stable = now === previous ? stable + 1 : 0;
+              previous = now;
+              if (stable >= 6) resolve();
+              else requestAnimationFrame(tick);
+            };
+            tick();
+          }),
+      );
       await page.waitForFunction(() => Math.abs(window.scrollY + window.innerHeight - document.documentElement.scrollHeight) < 2);
       const reserved = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('main')!).paddingBottom));
       expect(reserved, 'la page réserve la place de la barre').toBeGreaterThanOrEqual(navBox.height);
