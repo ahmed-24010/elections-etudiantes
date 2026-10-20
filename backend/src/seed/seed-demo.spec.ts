@@ -49,6 +49,17 @@ describe('seed de démonstration', () => {
     expect(prisma.users.find((u) => u.email === 'aicha@example.test')!.twoFactorEnabled).toBeFalsy();
   });
 
+  it('Mariam et Yacoub sont éligibles comme Aïcha et Omar : même filière, même niveau, même groupe, inscriptions vérifiées', async () => {
+    const { prisma, deps } = make();
+    const res = await runDemoSeed(deps, env);
+    const eligible = DEMO_STUDENTS.filter((s) => s.program === 'DPU' && s.group === 'A').map((s) => s.email);
+    expect(eligible).toEqual(['aicha@example.test', 'omar@example.test', 'mariam@example.test', 'yacoub@example.test']);
+    for (const email of ['mariam@example.test', 'yacoub@example.test']) expect(res.accounts.map((a) => a.email)).toContain(email);
+    const placements = prisma.studentEnrollment.rows.filter((e) => e.status === 'VERIFIED');
+    expect(new Set(placements.map((e) => `${e.programId}|${e.levelId}|${e.groupId}`)).size).toBeLessThanOrEqual(2); // DPU/A (4) et DP/A (Sara)
+    expect(placements).toHaveLength(DEMO_STUDENTS.length);
+  });
+
   it('est idempotent', async () => {
     const { prisma, deps } = make();
     await runDemoSeed(deps, env);
