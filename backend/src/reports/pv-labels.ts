@@ -46,6 +46,8 @@ export interface PvLabels {
   signaturesHelp: string;
   name: string;
   signature: string;
+  member: (n: number) => string;
+  observations: string;
   page: string;
   of: string;
   utc: string;
@@ -99,6 +101,8 @@ export const PV_LABELS: Record<PvLang, PvLabels> = {
     signaturesHelp: 'Les membres du comité attestent l’exactitude des chiffres ci-dessus.',
     name: 'Nom',
     signature: 'Signature',
+    member: (n) => `Membre ${n}`,
+    observations: 'Observations',
     page: 'Page',
     of: '/',
     utc: 'UTC',
@@ -150,6 +154,8 @@ export const PV_LABELS: Record<PvLang, PvLabels> = {
     signaturesHelp: 'يشهد أعضاء اللجنة بصحة الأرقام أعلاه.',
     name: 'الاسم',
     signature: 'التوقيع',
+    member: (n) => `العضو ${n}`,
+    observations: 'ملاحظات',
     page: 'صفحة',
     of: '/',
     utc: 'التوقيت العالمي',
