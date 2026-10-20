@@ -59,3 +59,17 @@ Si la génération a échoué (message sur l'écran), utilisez *Créer le procè
 ## Vérifier l'urne
 
 *Vérifier l'urne* recalcule à l'instant l'empreinte de tous les bulletins et la compare à celle du décompte et à celle imprimée sur le PV. **Identique** : l'urne n'a pas changé. **Différente** : ne publiez pas, ou signalez-le tout de suite à l'administrateur d'institution. La vérification ne montre jamais un bulletin ni un choix.
+
+## Égalité de voix : le second tour 🔐
+
+Si deux candidats ou plus sont à égalité pour le dernier siège d'un poste, personne n'est déclaré élu pour ce siège. Une fois les résultats **publiés**, l'écran *Résultats* propose *Créer le second tour* (comité seulement).
+
+1. Confirmez les **dates du vote** du second tour (proposées : le lendemain, de 8 h à 18 h ; vous pouvez les changer).
+2. Le second tour est créé **en un clic** : seuls les **candidats à égalité**, sur les **seuls postes concernés**, avec le **même comité**, les **mêmes règles** et la **même liste électorale** que le premier tour (ajouts exceptionnels compris). Les photos et programmes sont repris.
+3. Le vote s'ouvre à l'heure prévue, ou à la main (*Suivi du vote*). Ensuite tout se passe comme pour une élection : clôture, résultats, publication, procès-verbal (« Tour 2 »).
+
+Il n'y a qu'**un second tour actif** par élection. Si l'égalité persiste, créez un troisième tour depuis le second. Les sièges déjà attribués au premier tour restent acquis.
+
+## Marquer le PV signé 🔐
+
+Quand l'exemplaire imprimé est signé par les membres du comité, ouvrez *Résultats et procès-verbal* et choisissez *Marquer le PV signé*. C'est ce qui retire le PV de la liste « PV à signer » du tableau de bord de l'administrateur d'institution. Un PV regénéré est un nouveau rapport : il est à faire signer de nouveau.

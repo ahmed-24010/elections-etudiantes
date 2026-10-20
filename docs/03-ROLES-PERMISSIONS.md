@@ -156,6 +156,8 @@ Règles :
 | `election:cancel` | — | 🔐 | — | — | — |
 | `election:read` (détails) | ✅ | ✅ | — | ✅ | ✅ * |
 | `election:list:mine` (« mes élections ») | — | — | — | — | 👤 |
+| `election:second_round:create` (second tour en cas d'égalité, D-01, D-46) | — | — | — | 🔐 | — |
+| `dashboard:read` (tableau de bord, chiffres seulement, D-48) | — | ✅ | — | — | — |
 | `voter_roll:add` (ajout exceptionnel après gel, par matricule, D-39) | — | — | — | 🔐 | — |
 | `voter_roll:read:count` | ✅ | ✅ | — | ✅ | ✅ * |
 | `turnout:read` (taux de participation en cours) | — | ✅ | — | ✅ | — |
@@ -209,6 +211,7 @@ Un membre du comité qui est aussi étudiant inscrit **vote normalement** avec s
 | `results:publish` (comité seulement, D-41) | — | — | — | 🔐 | — |
 | `results:read:published` | ✅ | ✅ | ✅ | ✅ | ✅ * |
 | `report:generate` (PDF, une version par langue, D-42 ; regénération possible par IA) | — | 🔐 | — | 🔐 | — |
+| `report:sign` (marquer le PV signé, D-47) | — | — | — | 🔐 | — |
 | `report:read` (téléchargement du PV dans la langue du site) | — | ✅ | — | ✅ | — |
 | `report:revoke` | — | 🔐 | — | — | — |
 | `report:verify` (page publique du QR) | Public, sans compte | | | | |

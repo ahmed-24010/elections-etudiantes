@@ -41,7 +41,16 @@ const CONDITION_KEYS: Record<string, string> = {
         <div class="d-flex flex-wrap align-items-center gap-2">
           <h1 class="mb-0">{{ title() }}</h1>
           <span class="badge" [class]="badge()" data-testid="status">{{ 'elections.status.' + d.status | transloco }}</span>
+          @if ((d.round ?? 1) > 1) {
+            <span class="badge text-bg-warning" data-testid="round">{{ 'elections.round' | transloco: { round: d.round } }}</span>
+          }
         </div>
+        @if (d.parentElectionId) {
+          <p class="mb-1"><a [routerLink]="['/admin/elections', d.parentElectionId]" data-testid="parent-link">{{ 'elections.detail.parentLink' | transloco }}</a></p>
+        }
+        @if (d.secondRound; as next) {
+          <p class="mb-1"><a [routerLink]="['/admin/elections', next.id]" data-testid="next-round-link">{{ 'elections.detail.nextRoundLink' | transloco }}</a></p>
+        }
         @if (d.description) {
           <p>{{ d.description }}</p>
         }

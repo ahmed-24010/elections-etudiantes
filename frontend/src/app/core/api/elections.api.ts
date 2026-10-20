@@ -18,6 +18,9 @@ export interface ElectionSummary {
   candidacyEndsAt: string | null;
   votingStartsAt: string;
   votingEndsAt: string;
+  /** Second tour (D-01) : tour de cette élection (1, 2…) et élection du tour précédent. */
+  round?: number;
+  parentElectionId?: string | null;
   /** « Mes élections » seulement. */
   myCandidacy?: CandidateStatus | null;
   /** « Mes élections » seulement : l'étudiant a-t-il voté ? Un booléen, jamais le contenu du vote. */
@@ -48,6 +51,8 @@ export interface ElectionDetail extends ElectionSummary {
   rules?: { wholeInstitution: boolean; items: RuleItem[] };
   committeeCount?: number;
   minCommittee?: number;
+  /** Personnel : le second tour actif de cette élection, s'il existe (un seul à la fois, D-46). */
+  secondRound?: { id: string; status: ElectionStatus; round: number } | null;
   eligible?: boolean;
 }
 
@@ -108,6 +113,10 @@ export class ElectionsApi {
   /** 🔐 Administrateur d'institution seulement ; motif obligatoire (04 §4.6). */
   cancel(id: string, reason: string): Promise<ElectionDetail> {
     return firstValueFrom(this.http.post<ElectionDetail>(`${this.api}/elections/${id}/cancel`, { reason }));
+  }
+  /** 🔐 Comité seulement (D-01, D-46) : crée le second tour, limité aux ex-aequo, sur la même liste électorale. */
+  createSecondRound(id: string, body: { votingStartsAt: string; votingEndsAt: string }): Promise<{ id: string; round: number; status: ElectionStatus }> {
+    return firstValueFrom(this.http.post<{ id: string; round: number; status: ElectionStatus }>(`${this.api}/elections/${id}/second-round`, body));
   }
   /** Un nombre, jamais une liste (D-02). */
   eligibleCount(id: string): Promise<{ count: number }> {

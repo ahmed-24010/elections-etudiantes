@@ -304,7 +304,7 @@ Si deux candidats ou plus sont à égalité pour le dernier siège d'un poste (D
 
 - les autres postes peuvent être publiés normalement ;
 - pour ce poste, le résultat indique « égalité » ;
-- le comité crée un **second tour** : nouvelle élection liée (`parentElectionId`, `round = 2`), même liste électorale, seulement les candidats à égalité. L'interface pré-remplit ce second tour.
+- le comité crée un **second tour** (D-46) : nouvelle élection liée (`parentElectionId`, `round = 2`), même liste électorale (copiée à l'ouverture du vote, ajouts exceptionnels compris), seulement les candidats à égalité sur les seuls postes en égalité, mêmes règles et même comité, photos et programmes copiés. L'élection est créée directement en `CANDIDACY_CLOSED` (pas de nouvelle phase de candidatures) ; le comité confirme seulement les nouvelles dates du vote, puis le vote s'ouvre comme pour toute élection (à l'heure prévue ou à la main). Un seul second tour actif par élection ; s'il y a encore égalité, un troisième tour se crée depuis le second.
 
 ---
 
