@@ -45,3 +45,29 @@ export const MIN_VOTERS_FOR_DETAIL = 3;
  * plusieurs choix par bulletin, un seul votant donnerait 3 voix et le détail de son vote serait publié.
  */
 export const detailPublished = (electionVoters: number): boolean => electionVoters >= MIN_VOTERS_FOR_DETAIL;
+
+export interface PositionLike {
+  id: string;
+  title: string;
+  titleAr: string | null;
+  seats: number;
+  maxChoices: number;
+  allowBlank: boolean;
+  displayOrder: number;
+}
+
+/** Un poste dont le dernier siège est à égalité : les ex-aequo et le nombre de sièges qui restent à pourvoir (D-01). */
+export interface TiedPosition {
+  position: PositionLike;
+  remainingSeats: number;
+  tiedIds: string[];
+}
+
+/** Les postes en égalité, d'après les lignes de `position_results`. Source unique du pré-remplissage et de la création du second tour. */
+export function tiedPositions(positions: PositionLike[], results: { positionId: string; candidateId: string | null; votes: number }[]): TiedPosition[] {
+  return positions.flatMap((p) => {
+    const rows = results.filter((r) => r.positionId === p.id && r.candidateId).map((r) => ({ candidateId: r.candidateId as string, votes: r.votes }));
+    const analysis = analyzePosition(rows, p.seats);
+    return analysis.tie ? [{ position: p, remainingSeats: p.seats - analysis.winners.length, tiedIds: analysis.tiedIds }] : [];
+  });
+}

@@ -31,6 +31,7 @@ export interface Voter {
 }
 export interface PositionSpec {
   title: string;
+  titleAr?: string;
   seats?: number;
   maxChoices?: number;
   allowBlank?: boolean;
@@ -158,7 +159,7 @@ export class VotingWorld {
     const positions: World['positions'] = [];
     const specs = spec.positions ?? [{ title: 'Président' }];
     for (const [i, p] of specs.entries()) {
-      const pos = await this.prisma.position.create({ data: { electionId: e.id, title: p.title, seats: p.seats ?? 1, maxChoices: p.maxChoices ?? 1, allowBlank: p.allowBlank ?? true, displayOrder: i } });
+      const pos = await this.prisma.position.create({ data: { electionId: e.id, title: p.title, titleAr: p.titleAr ?? null, seats: p.seats ?? 1, maxChoices: p.maxChoices ?? 1, allowBlank: p.allowBlank ?? true, displayOrder: i } });
       const cands = await this.students(p.candidates ?? 2, 'cand');
       await this.prisma.candidate.createMany({ data: cands.map((c) => ({ electionId: e.id, positionId: pos.id, studentId: c.studentId, status: CandidateStatus.APPROVED })) });
       const rows = await this.prisma.candidate.findMany({ where: { positionId: pos.id }, orderBy: { createdAt: 'asc' } });

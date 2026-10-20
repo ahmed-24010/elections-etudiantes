@@ -22,6 +22,7 @@ export const PERMISSIONS = [
   // 5.4 Élections
   'election:create', 'election:update', 'election:rules:manage', 'election:candidacy:open',
   'election:candidacy:close', 'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:cancel',
+  'election:second_round:create', 'dashboard:read',
   'election:read', 'election:list:mine', 'voter_roll:add', 'voter_roll:read:count', 'turnout:read',
   // 5.5 Candidatures
   'candidate:apply', 'candidate:withdraw', 'candidate:update', 'candidate:review', 'candidate:add',
@@ -30,7 +31,7 @@ export const PERMISSIONS = [
   'ballot:cast', 'participation:read:self',
   // 5.7 Résultats
   'results:compute', 'results:read', 'results:publish', 'results:read:published',
-  'report:generate', 'report:read', 'report:revoke',
+  'report:generate', 'report:read', 'report:sign', 'report:revoke',
   // 5.8 Audit
   'audit:read', 'audit:read:election', 'audit:read:platform', 'audit:verify_chain',
 ] as const;
@@ -51,7 +52,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'user:read', 'user:suspend', 'user:update:self',
     'student:read', 'student:read:minimal', 'enrollment:expire', 'student:import',
     'election:create', 'election:update', 'election:rules:manage', 'election:candidacy:open',
-    'election:candidacy:close', 'election:voting:open', 'election:voting:close', 'election:cancel',
+    'election:candidacy:close', 'election:voting:open', 'election:voting:close', 'election:cancel', 'dashboard:read',
     'election:read', 'voter_roll:read:count', 'turnout:read',
     'candidate:read:approved', 'candidate:read:all',
     'results:read', 'results:read:published', 'report:generate', 'report:read', 'report:revoke',
@@ -66,10 +67,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'institution:read', 'academic:read', 'user:update:self',
     'student:read:minimal',
     'election:update', 'election:rules:manage', 'election:candidacy:open', 'election:candidacy:close',
-    'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:read', 'voter_roll:add',
+    'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:second_round:create', 'election:read', 'voter_roll:add',
     'voter_roll:read:count', 'turnout:read',
     'candidate:review', 'candidate:add', 'candidate:read:approved', 'candidate:read:all',
-    'results:compute', 'results:read', 'results:publish', 'results:read:published', 'report:generate', 'report:read',
+    'results:compute', 'results:read', 'results:publish', 'results:read:published', 'report:generate', 'report:read', 'report:sign',
     'audit:read:election',
   ],
   STUDENT: [
@@ -87,9 +88,9 @@ export const SENSITIVE: ReadonlySet<Permission> = new Set<Permission>([
   'role:assign:INSTITUTION_ADMIN', 'role:assign:VERIFICATION_OFFICER', 'role:assign:ELECTION_COMMITTEE',
   'role:revoke', 'user:suspend',
   'enrollment:review', 'enrollment:expire', 'student:import',
-  'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:cancel', 'voter_roll:add',
+  'election:voting:open', 'election:voting:close', 'election:voting:extend', 'election:cancel', 'voter_roll:add', 'election:second_round:create',
   'candidate:review', 'candidate:add',
-  'results:compute', 'results:publish', 'report:generate', 'report:revoke',
+  'results:compute', 'results:publish', 'report:generate', 'report:sign', 'report:revoke',
 ]);
 
 /** Rôles administratifs : 2FA obligatoire (D-10). STUDENT : optionnelle. */

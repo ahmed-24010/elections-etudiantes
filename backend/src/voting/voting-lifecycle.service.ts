@@ -59,13 +59,20 @@ export class VotingLifecycleService {
         if (now < election.votingStartsAt) missing.push('voting_not_started');
         if (missing.length > 0) throw new ConflictException({ message: 'conditions_not_met', conditions: missing });
 
-        const rules = await tx.eligibilityRule.findMany({ where: { electionId }, select: { facultyId: true, programId: true, levelId: true, groupId: true } });
-        const where = eligibleWhere(election, rules);
-        const enrollments = where ? await tx.studentEnrollment.findMany({ where, select: { id: true, studentId: true } }) : [];
-        // Une inscription par étudiant et par année : la clé primaire (electionId, studentId) refuserait un doublon.
-        await tx.voterRollEntry.createMany({ data: enrollments.map((e) => ({ electionId, studentId: e.studentId, enrollmentId: e.id })) });
+        // Second tour (D-01, D-46) : la MÊME liste électorale que le tour précédent (ajouts exceptionnels compris), pas un nouveau calcul
+        // d'éligibilité. Premier tour : calcul de la liste des éligibles (02 §5). Une inscription par étudiant (clé primaire).
+        let entries: { studentId: string; enrollmentId: string }[];
+        if (election.parentElectionId) {
+          entries = await tx.voterRollEntry.findMany({ where: { electionId: election.parentElectionId }, select: { studentId: true, enrollmentId: true } });
+        } else {
+          const rules = await tx.eligibilityRule.findMany({ where: { electionId }, select: { facultyId: true, programId: true, levelId: true, groupId: true } });
+          const where = eligibleWhere(election, rules);
+          const enrollments = where ? await tx.studentEnrollment.findMany({ where, select: { id: true, studentId: true } }) : [];
+          entries = enrollments.map((e) => ({ studentId: e.studentId, enrollmentId: e.id }));
+        }
+        await tx.voterRollEntry.createMany({ data: entries.map((e) => ({ electionId, studentId: e.studentId, enrollmentId: e.enrollmentId })) });
         await tx.election.update({ where: { id: electionId }, data: { status: ElectionStatus.VOTING_OPEN, voterRollFrozenAt: now } });
-        return { institutionId: election.institutionId, registered: enrollments.length };
+        return { institutionId: election.institutionId, registered: entries.length };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, maxWait: 20_000, timeout: 60_000 },
     );

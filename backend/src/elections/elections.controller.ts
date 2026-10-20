@@ -4,7 +4,8 @@ import type { Request } from 'express';
 import type { AuthUser } from '../common/authz/auth-user';
 import { CurrentUser, RequirePermission, ScopeFrom } from '../common/authz/decorators';
 import { requestInfo } from '../common/http/request-info';
-import { CancelElectionDto, CreateElectionDto, PositionDto, SetRulesDto, UpdateElectionDto, UpdatePositionDto } from './elections.dto';
+import { CancelElectionDto, CreateElectionDto, PositionDto, SecondRoundDto, SetRulesDto, UpdateElectionDto, UpdatePositionDto } from './elections.dto';
+import { SecondRoundService } from './second-round.service';
 import { ElectionsService } from './elections.service';
 
 /**
@@ -14,7 +15,10 @@ import { ElectionsService } from './elections.service';
 @ApiTags('elections')
 @Controller()
 export class ElectionsController {
-  constructor(private readonly elections: ElectionsService) {}
+  constructor(
+    private readonly elections: ElectionsService,
+    private readonly secondRound: SecondRoundService,
+  ) {}
 
   @Post('institutions/:institutionId/elections')
   @RequirePermission('election:create')
@@ -36,6 +40,15 @@ export class ElectionsController {
   @RequirePermission('election:list:mine')
   mine(@CurrentUser() u: AuthUser) {
     return this.elections.mine(u);
+  }
+
+  /** 🔐 Second tour en un clic (D-01, D-46) : élection liée, limitée aux ex-aequo, même liste électorale, nouvelles dates. Comité seulement. */
+  @Post('elections/:id/second-round')
+  @HttpCode(200)
+  @RequirePermission('election:second_round:create')
+  @ScopeFrom('election', 'id')
+  createSecondRound(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: SecondRoundDto, @Req() req: Request) {
+    return this.secondRound.create(u, id, dto, requestInfo(req));
   }
 
   @Get('elections/:id')

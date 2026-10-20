@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module';
 import { InstitutionsModule } from './institutions/institutions.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.service';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
 import { ResultsModule } from './results/results.module';
 import { StorageModule } from './storage/storage.module';
@@ -82,6 +83,7 @@ function hasModule(name: string): boolean {
     VotingModule,
     ResultsModule,
     ReportsModule,
+    DashboardModule,
     AuditModule,
     NotificationsModule,
   ],
