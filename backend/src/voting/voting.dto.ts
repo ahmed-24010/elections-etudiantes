@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsNotEmpty, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsDateString, IsNotEmpty, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 
 export class ChoiceDto {
   @IsString() @IsNotEmpty() @MaxLength(64)
@@ -22,6 +22,34 @@ export class CastBallotDto {
 
 export class CloseVotingDto {
   /** Motif obligatoire d'une clôture manuelle anticipée (04 §4.4). */
+  @IsString() @MinLength(3) @MaxLength(500)
+  reason: string;
+}
+
+/** Corps de POST /elections/:id/voting/extend (D-33, D-38) : le comité déclare la panne, puis la nouvelle fin. */
+export class ExtendVotingDto {
+  @IsDateString({ strict: true }) @MaxLength(40)
+  outageStartedAt: string;
+
+  @IsDateString({ strict: true }) @MaxLength(40)
+  outageEndedAt: string;
+
+  @IsDateString({ strict: true }) @MaxLength(40)
+  newEndsAt: string;
+
+  /** Motif obligatoire, écrit dans `audit_logs`. */
+  @IsString() @MinLength(3) @MaxLength(500)
+  reason: string;
+}
+
+/** Corps de POST /elections/:id/voter-roll/preview : le matricule seul (D-39). */
+export class VoterLookupDto {
+  @IsString() @IsNotEmpty() @MaxLength(64)
+  studentNumber: string;
+}
+
+/** Corps de POST /elections/:id/voter-roll : ajout exceptionnel après le gel (04 §5.2, D-39). */
+export class AddVoterDto extends VoterLookupDto {
   @IsString() @MinLength(3) @MaxLength(500)
   reason: string;
 }

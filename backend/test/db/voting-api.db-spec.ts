@@ -122,7 +122,7 @@ describe('Écrans du vote : bulletin, statut, notification, participation', () =
       await t.vote(w.voters[0], w.electionId, t.firstChoices(w)).expect(201);
       for (const token of [w.committee[0].token, t.admin.token]) {
         const res = await t.api('get', `/elections/${w.electionId}/turnout`, token).expect(200);
-        expect(Object.keys(res.body).sort()).toEqual(['asOf', 'rate', 'registered', 'sliced', 'voted']);
+        expect(Object.keys(res.body).sort()).toEqual(['addedAfterFreeze', 'asOf', 'extended', 'rate', 'registered', 'sliced', 'status', 'voted', 'votingEndsAt', 'votingStartsAt']);
         const text = JSON.stringify(res.body);
         for (const v of w.voters) expect(text).not.toContain(v.studentId);
       }

@@ -159,6 +159,7 @@ _Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et
 
 **Objectif :** une élection va jusqu'au bout, résultats publiés.
 
+- [ ] **6A — Écrans du comité** (mobile d'abord) : suivi du vote en chiffres (D-02, D-31), ouvrir / clôturer (🔐), prolongation unique après panne (D-33, D-38, D-40), ajout exceptionnel d'un électeur (04 §5.2, D-39) ; `docs/GUIDE-COMITE.md`
 - [ ] Module `results` : décompte, contrôle de l'invariant, empreinte SHA-256 de l'urne (02 §8)
 - [ ] Détection d'égalité → message au comité, création assistée du second tour (D-01)
 - [ ] Publication des résultats (2FA), résultats par poste uniquement (D-12)

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { AuditResult, CandidateStatus, ElectionStatus, Prisma, Role, UserStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import type { RequestInfo } from '../auth/auth.service';
@@ -8,6 +8,8 @@ import { eligibleWhere } from '../eligibility/eligibility.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ResultsService } from '../results/results.service';
+import { extensionRefusal } from './voting-extension';
+import type { ExtendVotingDto } from './voting.dto';
 
 /** Qui a déclenché la transition : un membre du comité / l'admin (manuel), ou le système (tâche planifiée, `null`). */
 type Actor = AuthUser | null;
@@ -92,6 +94,35 @@ export class VotingLifecycleService {
     await this.record(actor, institutionId, electionId, 'ELECTION_VOTING_CLOSED', info, { reason, automatic: actor === null });
     await this.results.compute(electionId);
     return { status: ElectionStatus.VOTING_CLOSED };
+  }
+
+  // ------------------------------------------------------------------ prolongation (D-33, D-38)
+
+  /**
+   * Prolongation UNIQUE après panne (04 §10.1). Seulement en VOTING_OPEN et AVANT l'heure de fin : une fois la clôture
+   * faite, le décompte est lancé et on ne rouvre pas. Sous le verrou de la ligne, donc sans course avec la clôture
+   * automatique ni avec une seconde prolongation ; la transaction de vote lit `votingEndsAt` en base, la nouvelle fin
+   * s'applique donc immédiatement. Motif, panne déclarée, ancienne et nouvelle fin sont écrits dans `audit_logs`.
+   */
+  async extend(actor: AuthUser, electionId: string, dto: ExtendVotingDto, info?: RequestInfo) {
+    const input = { outageStartedAt: new Date(dto.outageStartedAt), outageEndedAt: new Date(dto.outageEndedAt), newEndsAt: new Date(dto.newEndsAt) };
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const { election, now } = await this.lock(tx, electionId);
+        if (election.status !== ElectionStatus.VOTING_OPEN || now >= election.votingEndsAt) throw new ConflictException('invalid_state');
+        if (election.votingExtendedAt) throw new ConflictException('already_extended');
+        const refusal = extensionRefusal(election, now, input);
+        if (refusal) throw new UnprocessableEntityException(refusal);
+        await tx.election.update({ where: { id: electionId }, data: { votingEndsAt: input.newEndsAt, votingExtendedAt: now, votingEndsAtOriginal: election.votingEndsAt } });
+        return { institutionId: election.institutionId, previousEndsAt: election.votingEndsAt };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, maxWait: 20_000, timeout: 30_000 },
+    );
+    await this.record(actor, result.institutionId, electionId, 'ELECTION_VOTING_EXTENDED', info, {
+      reason: dto.reason, outageStartedAt: input.outageStartedAt.toISOString(), outageEndedAt: input.outageEndedAt.toISOString(),
+      previousEndsAt: result.previousEndsAt.toISOString(), newEndsAt: input.newEndsAt.toISOString(),
+    });
+    return { votingEndsAt: input.newEndsAt };
   }
 
   // ------------------------------------------------------------------ tâche planifiée

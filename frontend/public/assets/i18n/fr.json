@@ -154,7 +154,13 @@
     "alreadyVoted": "Votre vote a déjà été enregistré.",
     "invalidBallot": "Votre bulletin n'est pas valide. Recommencez depuis le début.",
     "voteUncertain": "Votre vote n'a PAS pu être confirmé et n'a peut-être pas été enregistré. Vérifiez votre connexion puis réessayez : si vous aviez déjà voté, l'application vous le dira.",
-    "voteNotRecorded": "Votre vote n'a PAS été enregistré. Réessayez."
+    "voteNotRecorded": "Votre vote n'a PAS été enregistré. Réessayez.",
+    "voterNotAddable": "Aucun électeur ne peut être ajouté avec ce matricule.",
+    "alreadyExtended": "Le vote a déjà été prolongé : une prolongation n'est possible qu'une seule fois.",
+    "outageInvalid": "La panne déclarée est incohérente : elle doit avoir eu lieu pendant le vote, être terminée, et la fin doit suivre le début.",
+    "extensionNotAfterCurrent": "La nouvelle fin doit être après la fin actuelle : on ne raccourcit jamais le vote.",
+    "extensionExceedsOutage": "La prolongation ne peut pas dépasser la durée de la panne.",
+    "extensionExceeds24h": "La prolongation ne peut pas dépasser 24 heures."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -439,7 +445,8 @@
       "notReady": "Pour ouvrir les candidatures : dates, au moins un poste, des règles d'éligibilité et 3 membres de comité.",
       "calendar": "Calendrier",
       "eligible": "Étudiants éligibles",
-      "cancelReason": "Motif de l'annulation (obligatoire)"
+      "cancelReason": "Motif de l'annulation (obligatoire)",
+      "votePage": "Suivi du vote"
     },
     "candidate": {
       "status": {
@@ -561,5 +568,77 @@
     "blank": "Votes blancs",
     "withheld": "Effectif trop faible pour publier le détail.",
     "pending": "Le vote est clos. Les résultats seront publiés prochainement."
+  },
+  "committeeVote": {
+    "title": "Suivi du vote",
+    "back": "Retour à l'élection",
+    "tracking": {
+      "title": "Participation",
+      "registered": "Inscrits",
+      "voted": "Votants",
+      "rate": "Taux",
+      "asOf": "Chiffres arrêtés à {{time}}",
+      "sliced": "Sous 50 électeurs, la participation n'est mise à jour que toutes les 15 minutes : on ne peut pas deviner qui vient de voter.",
+      "added": "Ajouts exceptionnels : {{count}}",
+      "numbersOnly": "Le comité ne voit que des chiffres, jamais la liste des votants.",
+      "refresh": "Actualiser"
+    },
+    "window": {
+      "title": "Fenêtre de vote",
+      "ends": "Fin du vote",
+      "extended": "Prolongé une fois",
+      "originalEnd": "Fin initiale : {{date}}"
+    },
+    "open": {
+      "button": "Ouvrir le vote maintenant",
+      "help": "Fige la liste électorale et verrouille les règles, les postes et les candidats. Un code 2FA récent est demandé.",
+      "done": "Le vote est ouvert."
+    },
+    "close": {
+      "button": "Clôturer le vote",
+      "title": "Clôturer le vote maintenant",
+      "help": "Le vote s'arrête immédiatement et le décompte est lancé. Cette action est définitive.",
+      "reason": "Motif de la clôture anticipée (obligatoire)",
+      "submit": "Clôturer le vote",
+      "done": "Le vote est clôturé."
+    },
+    "extend": {
+      "button": "Prolonger le vote après une panne",
+      "title": "Prolonger le vote",
+      "help": "Possible une seule fois, au plus la durée de la panne et 24 heures. À faire avant l'heure de fin : une fois le vote clôturé, il n'est plus possible de le prolonger.",
+      "dateFormat": "Format : AAAA-MM-JJ HH:mm",
+      "outageStart": "Début de la panne",
+      "outageEnd": "Fin de la panne",
+      "newEnd": "Nouvelle fin du vote",
+      "reason": "Motif (obligatoire)",
+      "submit": "Prolonger",
+      "done": "Le vote est prolongé jusqu'au {{date}}.",
+      "already": "Le vote a déjà été prolongé. Une prolongation n'est possible qu'une seule fois."
+    },
+    "addVoter": {
+      "button": "Ajouter un électeur oublié",
+      "title": "Ajouter un électeur",
+      "help": "Pour un étudiant éligible, au compte vérifié, oublié de la liste gelée. L'ajout est tracé dans le journal d'audit avec son motif.",
+      "studentNumber": "Matricule de l'étudiant",
+      "check": "Vérifier",
+      "previewTitle": "Cet étudiant sera ajouté à la liste :",
+      "faculty": "Faculté",
+      "program": "Filière",
+      "level": "Niveau",
+      "group": "Groupe",
+      "noGroup": "Aucun groupe",
+      "reason": "Motif de l'ajout (obligatoire)",
+      "submit": "Ajouter à la liste électorale",
+      "back": "Changer de matricule",
+      "done": "Électeur ajouté. Inscrits : {{count}}."
+    },
+    "conditions": {
+      "candidacies_pending": "Des candidatures sont encore en attente.",
+      "positions_required": "L'élection n'a aucun poste.",
+      "position_without_candidate": "Un poste n'a aucun candidat validé.",
+      "committee_incomplete": "Le comité compte moins de 3 membres actifs.",
+      "voting_not_started": "L'heure d'ouverture du vote n'est pas encore arrivée."
+    },
+    "notAvailable": "Le suivi du vote est disponible à partir de la clôture des candidatures."
   }
 }

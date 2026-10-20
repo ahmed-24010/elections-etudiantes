@@ -4,7 +4,8 @@ import type { Request } from 'express';
 import type { AuthUser } from '../common/authz/auth-user';
 import { CurrentUser, RequirePermission, ScopeFrom } from '../common/authz/decorators';
 import { requestInfo } from '../common/http/request-info';
-import { CastBallotDto, CloseVotingDto } from './voting.dto';
+import { AddVoterDto, CastBallotDto, CloseVotingDto, ExtendVotingDto, VoterLookupDto } from './voting.dto';
+import { VoterRollService } from './voter-roll.service';
 import { VotingLifecycleService } from './voting-lifecycle.service';
 import { VotingService } from './voting.service';
 
@@ -18,6 +19,7 @@ export class VotingController {
   constructor(
     private readonly voting: VotingService,
     private readonly lifecycle: VotingLifecycleService,
+    private readonly voterRoll: VoterRollService,
   ) {}
 
   @Post('voting/:id/ballot')
@@ -59,6 +61,33 @@ export class VotingController {
   @ScopeFrom('election', 'id')
   close(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: CloseVotingDto, @Req() req: Request) {
     return this.lifecycle.close(u, id, dto.reason, requestInfo(req));
+  }
+
+  /** 🔐 Prolongation unique après panne (D-33, D-38) : panne déclarée, nouvelle fin, motif. */
+  @Post('elections/:id/voting/extend')
+  @HttpCode(200)
+  @RequirePermission('election:voting:extend')
+  @ScopeFrom('election', 'id')
+  extend(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: ExtendVotingDto, @Req() req: Request) {
+    return this.lifecycle.extend(u, id, dto, requestInfo(req));
+  }
+
+  /** 🔐 Confirmation d'un ajout exceptionnel : filière, niveau et groupe seulement, jamais le nom (D-39). N'écrit rien. */
+  @Post('elections/:id/voter-roll/preview')
+  @HttpCode(200)
+  @RequirePermission('voter_roll:add')
+  @ScopeFrom('election', 'id')
+  previewVoter(@Param('id') id: string, @Body() dto: VoterLookupDto) {
+    return this.voterRoll.preview(id, dto.studentNumber);
+  }
+
+  /** 🔐 Ajout exceptionnel après le gel (04 §5.2, D-39), motif obligatoire. */
+  @Post('elections/:id/voter-roll')
+  @HttpCode(200)
+  @RequirePermission('voter_roll:add')
+  @ScopeFrom('election', 'id')
+  addVoter(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: AddVoterDto, @Req() req: Request) {
+    return this.voterRoll.add(u, id, dto.studentNumber, dto.reason, requestInfo(req));
   }
 
   /** « X votants sur Y inscrits » : des chiffres, jamais une liste nominative (D-02). */

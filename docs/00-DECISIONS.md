@@ -4,7 +4,7 @@
 
 Ce fichier liste toutes les décisions de conception validées. En cas de doute pendant le développement, **ce journal fait foi**. Pour changer une décision : ajouter une nouvelle ligne qui la remplace (ne jamais effacer l'ancienne), puis mettre à jour les documents concernés.
 
-**Dernière mise à jour :** 15/10/2026
+**Dernière mise à jour :** 20/10/2026
 
 ---
 
@@ -49,6 +49,9 @@ Ce fichier liste toutes les décisions de conception validées. En cas de doute 
 | D-35 | 15/10/2026 | Ordre des candidats sur le bulletin (A-11) | **Aléatoire pour chaque électeur** | Ne favorise personne | 04 §6.1 |
 | D-36 | 15/10/2026 | Notification de vote (A-12) | Après le vote, notification dans l'application : « Un vote a été enregistré pour vous dans l'élection X. Si ce n'est pas vous, contactez le comité. » Elle ne contient aucun choix | Détecte un vote frauduleux après vol de compte | 04 §7.5 |
 | D-37 | 15/10/2026 | Mobile d'abord | La plupart des étudiants utilisent un **téléphone** (iOS Safari et Android Chrome). Écrans conçus pour **320-430 px d'abord** ; cibles tactiles **≥ 44 px** ; champs de saisie **≥ 16 px** (pas de zoom automatique sur iOS) ; **aucune action au survol seulement** ; dépôt d'attestation possible **par l'appareil photo** ; pages légères sur réseau lent. La CI exécute des tests Playwright avec un profil iPhone (WebKit) et un profil Android (Chromium mobile) | Public cible réel ; le bureau est le cas secondaire | 01, 07, CLAUDE.md |
+| D-38 | 20/10/2026 | Prolongation du vote : bornes (précise D-33) | Le comité **déclare le début et la fin de la panne** (pendant le vote, déjà terminée, fin après début). La prolongation est **strictement positive** (jamais de raccourcissement), **≤ durée de la panne déclarée ET ≤ 24 h**. Motif obligatoire ; panne déclarée, ancienne et nouvelle fin, motif : tout dans `audit_logs` (`ELECTION_VOTING_EXTENDED`). La fin initiale est conservée (`votingEndsAtOriginal`) pour le procès-verbal. Permission `election:voting:extend` 🔐, **comité seulement** (pas l'administrateur d'institution) | Le système ne connaît pas la durée d'une panne : sans déclaration vérifiable, « au plus la durée de la panne » (D-33) n'est pas contrôlable ; la déclaration est auditée | 03 §5.4, 04 §10.1 |
+| D-39 | 20/10/2026 | Ajout exceptionnel d'un électeur : identification et refus | L'électeur est désigné par son **matricule**. L'étape de confirmation montre **faculté, filière, niveau et groupe, jamais le nom** (D-02). **Compte actif et inscription `VERIFIED` de l'année obligatoires**, et l'étudiant doit être éligible selon les règles de l'élection. **Tout refus lié au matricule est identique** (404 `voter_not_addable` : inconnu, non vérifié, hors règles, déjà inscrit) pour ne pas révéler son existence. Seulement en `VOTING_OPEN`, 🔐, motif obligatoire. L'audit (`ELECTION_VOTER_ADDED`) garde le motif et l'identifiant d'**inscription**, ni le nom ni le matricule. Les ajouts sont marqués (`voter_roll.addedAfterFreeze`) pour le procès-verbal | Évite d'énumérer les matricules et de constituer une liste nominative (D-02) tout en gardant la trace | 03 §5.4, 04 §5.2 |
+| D-40 | 20/10/2026 | Prolongation : seulement en `VOTING_OPEN`, avant l'heure de fin | La prolongation n'est possible qu'en `VOTING_OPEN` **et avant `votingEndsAt`**. Une fois le vote clôturé (automatiquement ou à la main), le décompte est lancé : on ne rouvre pas (pas de transition `VOTING_CLOSED` → `VOTING_OPEN`). Le **guide du comité** (`docs/GUIDE-COMITE.md`) indique de prolonger **avant** l'heure de fin | Rouvrir un scrutin dépouillé ruinerait la garantie d'un décompte unique | 04 §10.1 |
 
 ---
 

@@ -745,7 +745,8 @@ app-admin-layout {
 
 // D-37 « mobile d'abord » : cibles tactiles ≥ 44 px, champs ≥ 16 px (iOS ne zoome pas la page à la saisie).
 .btn,
-.navbar-toggler {
+.navbar-toggler,
+.btn-close {
   min-block-size: 44px;
   min-inline-size: 44px;
 }
@@ -967,4 +968,27 @@ app-admin-layout {
 .app-result {
   padding-block: 0.5rem;
   border-block-start: 1px solid var(--app-border);
+}
+
+// Suivi du vote du comité (D-37) : trois chiffres côte à côte dès 320 px, en propriétés logiques (RTL et LTR).
+.app-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  > div {
+    padding: 0.5rem;
+    border: 1px solid var(--app-border);
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+  dt {
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+  dd {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
 }

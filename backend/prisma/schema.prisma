@@ -423,24 +423,27 @@ model RegistrationDocument {
 // ---------------------------------------------------------------------
 
 model Election {
-  id                String         @id @default(uuid()) @db.Char(36)
-  institutionId     String         @db.Char(36)
-  academicYearId    String         @db.Char(36)
-  title             String         @db.VarChar(255)
-  titleAr           String?        @db.VarChar(255)
-  description       String?        @db.Text
-  status            ElectionStatus @default(DRAFT)
-  candidacyStartsAt DateTime?
-  candidacyEndsAt   DateTime?
-  votingStartsAt    DateTime
-  votingEndsAt      DateTime
-  voterRollFrozenAt DateTime? // renseigné à l'ouverture du vote
+  id                   String         @id @default(uuid()) @db.Char(36)
+  institutionId        String         @db.Char(36)
+  academicYearId       String         @db.Char(36)
+  title                String         @db.VarChar(255)
+  titleAr              String?        @db.VarChar(255)
+  description          String?        @db.Text
+  status               ElectionStatus @default(DRAFT)
+  candidacyStartsAt    DateTime?
+  candidacyEndsAt      DateTime?
+  votingStartsAt       DateTime
+  votingEndsAt         DateTime
+  voterRollFrozenAt    DateTime? // renseigné à l'ouverture du vote
+  // Prolongation unique après panne (D-33, D-38). NULL = jamais prolongé ; sinon fin initiale conservée pour le procès-verbal.
+  votingExtendedAt     DateTime?
+  votingEndsAtOriginal DateTime?
   // Second tour (décision D-01) : nouvelle élection limitée aux ex-aequo
-  parentElectionId  String?        @db.Char(36)
-  round             Int            @default(1)
-  createdById       String         @db.Char(36)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  parentElectionId     String?        @db.Char(36)
+  round                Int            @default(1)
+  createdById          String         @db.Char(36)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   institution  Institution  @relation(fields: [institutionId], references: [id])
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
@@ -544,10 +547,12 @@ model Candidate {
 
 // Liste électorale figée à l'ouverture du vote.
 model VoterRollEntry {
-  electionId   String   @db.Char(36)
-  studentId    String   @db.Char(36)
-  enrollmentId String   @db.Char(36)
-  addedAt      DateTime @default(now())
+  electionId       String   @db.Char(36)
+  studentId        String   @db.Char(36)
+  enrollmentId     String   @db.Char(36)
+  addedAt          DateTime @default(now())
+  // Ajout exceptionnel après le gel (04 §5.2, D-39) : compté dans le procès-verbal.
+  addedAfterFreeze Boolean  @default(false)
 
   election      Election             @relation(fields: [electionId], references: [id])
   student       Student              @relation(fields: [studentId], references: [id])

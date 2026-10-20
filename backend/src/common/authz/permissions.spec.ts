@@ -53,6 +53,11 @@ describe('permissions.ts (03 §5)', () => {
     }
   });
 
+  it('la prolongation du vote est réservée au comité, pas à l’administrateur d’institution (D-33, D-38)', () => {
+    expect(can(Role.ELECTION_COMMITTEE, 'election:voting:extend')).toBe(true);
+    for (const r of [Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'election:voting:extend')).toBe(false);
+  });
+
   it('le comité calcule les résultats, pas l’administrateur d’institution', () => {
     expect(can(Role.ELECTION_COMMITTEE, 'results:compute')).toBe(true);
     expect(can(Role.INSTITUTION_ADMIN, 'results:compute')).toBe(false);
@@ -63,7 +68,7 @@ describe('permissions.ts (03 §5)', () => {
       'institution:create', 'institution:update', 'institution:deactivate', 'role:assign:INSTITUTION_ADMIN',
       'role:assign:VERIFICATION_OFFICER', 'role:assign:ELECTION_COMMITTEE', 'role:revoke', 'user:suspend',
       'enrollment:review', 'enrollment:expire', 'student:import', 'election:voting:open', 'election:voting:close',
-      'election:cancel', 'voter_roll:add', 'candidate:review', 'candidate:add', 'results:compute', 'results:publish',
+      'election:voting:extend', 'election:cancel', 'voter_roll:add', 'candidate:review', 'candidate:add', 'results:compute', 'results:publish',
       'report:generate', 'report:revoke',
     ];
     for (const p of expected) {
