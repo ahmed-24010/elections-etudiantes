@@ -321,7 +321,7 @@ Mokhtar      8 voix
 Blancs       2
 ```
 
-Procès-verbal PDF : institution, élection, dates, inscrits (dont ajouts exceptionnels), votants, bulletins, participation, résultats par poste, élus, empreinte de l'urne, identifiant du rapport, membres du comité. QR de vérification en Phase 3.
+Procès-verbal PDF, **un par langue** (arabe et français, créés ensemble à la publication : mêmes chiffres, même identifiant de rapport et même code de vérification, un SHA-256 chacun, D-42) : institution, élection, dates, inscrits (dont ajouts exceptionnels), votants, bulletins, participation, panne et prolongation, résultats par poste (D-32 respecté), élus, égalités (avec la proposition de second tour), empreinte de l'urne, identifiant et code du rapport, et une case Nom / Signature par membre du comité (vide, à remplir à la main) plus une case Observations. Le téléchargement donne la version de la langue du site. QR de vérification en Phase 3.
 
 ---
 

@@ -160,7 +160,11 @@
     "outageInvalid": "La panne déclarée est incohérente : elle doit avoir eu lieu pendant le vote, être terminée, et la fin doit suivre le début.",
     "extensionNotAfterCurrent": "La nouvelle fin doit être après la fin actuelle : on ne raccourcit jamais le vote.",
     "extensionExceedsOutage": "La prolongation ne peut pas dépasser la durée de la panne.",
-    "extensionExceeds24h": "La prolongation ne peut pas dépasser 24 heures."
+    "extensionExceeds24h": "La prolongation ne peut pas dépasser 24 heures.",
+    "reportNotFound": "Aucun procès-verbal n'est disponible dans cette langue.",
+    "reportCorrupted": "Le fichier du procès-verbal ne correspond plus à son empreinte : il ne peut pas être téléchargé. Regénérez le PV.",
+    "resultsNotAvailable": "Les résultats ne sont pas encore disponibles.",
+    "resultsNotReady": "Le décompte n'est pas encore prêt."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -446,7 +450,8 @@
       "calendar": "Calendrier",
       "eligible": "Étudiants éligibles",
       "cancelReason": "Motif de l'annulation (obligatoire)",
-      "votePage": "Suivi du vote"
+      "votePage": "Suivi du vote",
+      "resultsPage": "Résultats et procès-verbal"
     },
     "candidate": {
       "status": {
@@ -640,5 +645,49 @@
       "voting_not_started": "L'heure d'ouverture du vote n'est pas encore arrivée."
     },
     "notAvailable": "Le suivi du vote est disponible à partir de la clôture des candidatures."
+  },
+  "committeeResults": {
+    "title": "Résultats",
+    "back": "Retour à l'élection",
+    "notAvailable": "Les résultats sont disponibles à partir de la clôture du vote.",
+    "participation": "Participation",
+    "integrityOk": "Contrôle d'intégrité réussi : votants = bulletins, et votants au plus égaux aux inscrits.",
+    "integrityFailed": "Le contrôle d'intégrité a échoué : le nombre de votants ne correspond pas au nombre de bulletins. Les résultats ne peuvent pas être publiés ; prévenez l'administrateur d'institution.",
+    "tieTitle": "Égalité de voix — second tour",
+    "tieHelp": "Le dernier siège est disputé à égalité : personne n'est déclaré élu pour ce siège. Un second tour limité aux ex-aequo est à organiser (il sera créé dans une prochaine étape).",
+    "tieBadge": "Égalité — second tour",
+    "elected": "Élu(e)",
+    "blank": "Votes blancs",
+    "withheld": "Effectif trop faible pour publier le détail des voix.",
+    "publish": "Publier les résultats",
+    "publishHelp": "Une fois publiés, les résultats sont visibles par tous les électeurs inscrits et le procès-verbal est créé en français et en arabe. Un code 2FA récent est demandé.",
+    "publishConfirm": "Publier maintenant les résultats ? Cette action est définitive : elle ne peut pas être annulée.",
+    "published": "Les résultats sont publiés et le procès-verbal est créé.",
+    "publishedNoReport": "Les résultats sont publiés, mais le procès-verbal n'a pas pu être créé. Utilisez « Créer le procès-verbal ».",
+    "reportTitle": "Procès-verbal",
+    "reportCode": "Code de vérification",
+    "download": {
+      "fr": "Télécharger le PV en français",
+      "ar": "Télécharger le PV en arabe"
+    },
+    "noReport": "Aucun procès-verbal n'a été créé pour le moment.",
+    "generate": "Créer le procès-verbal",
+    "regenerate": "Regénérer le procès-verbal",
+    "regenerated": "Un nouveau procès-verbal a été créé (français et arabe).",
+    "urnTitle": "Vérifier l'urne",
+    "urnHelp": "Recalcule maintenant l'empreinte de tous les bulletins et la compare à celle du décompte et à celle imprimée sur le procès-verbal.",
+    "urnVerify": "Vérifier l'urne",
+    "urnIdenticalReport": "Identique : l'urne n'a pas changé depuis le décompte, et son empreinte est celle du procès-verbal.",
+    "urnIdenticalTally": "Identique à l'empreinte du décompte. Aucun procès-verbal n'existe encore pour la comparer.",
+    "urnDifferent": "Différente : l'empreinte recalculée n'est pas celle enregistrée. Ne publiez pas et prévenez l'administrateur d'institution.",
+    "urnComputed": "Empreinte recalculée",
+    "urnTally": "Empreinte du décompte",
+    "urnReport": "Empreinte du procès-verbal",
+    "conditions": {
+      "tally_missing": "Le décompte n'a pas été calculé.",
+      "integrity_failed": "Le contrôle d'intégrité a échoué (votants ≠ bulletins).",
+      "tally_stale": "L'urne n'est plus celle du décompte (nombre de bulletins ou empreinte modifiés).",
+      "audit_chain_broken": "La chaîne du journal d'audit est rompue : la publication est bloquée tant qu'elle n'est pas vérifiée."
+    }
   }
 }

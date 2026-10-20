@@ -160,6 +160,7 @@ _Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et
 **Objectif :** une élection va jusqu'au bout, résultats publiés.
 
 - [ ] **6A — Écrans du comité** (mobile d'abord) : suivi du vote en chiffres (D-02, D-31), ouvrir / clôturer (🔐), prolongation unique après panne (D-33, D-38, D-40), ajout exceptionnel d'un électeur (04 §5.2, D-39) ; `docs/GUIDE-COMITE.md`
+- [x] **6B — Publication et procès-verbal** : publication par le comité seulement (D-41), bloquée si intégrité, urne modifiée ou chaîne d'audit rompue (D-45) ; PV PDF par langue, créés ensemble à la publication (D-42, D-43, D-44) ; écran « Résultats » du comité avec « Vérifier l'urne » ; Chromium dans Docker et la CI
 - [ ] Module `results` : décompte, contrôle de l'invariant, empreinte SHA-256 de l'urne (02 §8)
 - [ ] Détection d'égalité → message au comité, création assistée du second tour (D-01)
 - [ ] Publication des résultats (2FA), résultats par poste uniquement (D-12)
@@ -189,6 +190,7 @@ _Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et
 Points connus, volontairement reportés ; aucun ne doit rester ouvert au premier déploiement réel.
 
 - [ ] **Purge des attestations (D-07)** : tâche planifiée qui supprime les fichiers 12 mois après la fin de l'année universitaire (objet S3 + `stored_files.deletedAt`) et efface les données OCR dès la décision. Non implémentée au Sprint 3.
+- [ ] **Dépôt du PV signé scanné** : après impression et signature à la main, le comité dépose le scan du PV (PDF ou image) ; il est rattaché au rapport (`election_reports`), stocké comme une attestation (bucket privé, type vérifié par le contenu, URL signée, accès audité) avec son SHA-256, et affiché à côté du PV généré. Backlog : non fait au Sprint 6.
 - [ ] **Antivirus sur les dépôts (D-23)** : aucun scan aujourd'hui ; seul le type réel est vérifié.
 - [ ] `TRUST_PROXY` : vérifier la valeur contre la vraie chaîne de proxys (A-02).
 - [ ] Mots de passe et secrets de développement (`.env`, comptes du seed) : ne jamais les réutiliser ; le seed refuse `NODE_ENV=production`.

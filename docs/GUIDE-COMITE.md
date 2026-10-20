@@ -37,3 +37,25 @@ Cas : un étudiant éligible a été oublié de la liste gelée (par exemple, sa
 
 Son compte doit être actif et son inscription **vérifiée** ; il doit être éligible à cette élection. Si l'ajout est impossible, le message est toujours le même : il ne dit pas si le matricule existe, pour ne pas servir à fouiller la base. Vérifiez la saisie, ou demandez au vérificateur de contrôler l'inscription.
 Les ajouts sont comptés et signalés dans le procès-verbal. On **ne retire jamais** un électeur de la liste (04 §5.3).
+
+## Publier les résultats 🔐
+
+Une fois le vote clôturé, ouvrez **Résultats et procès-verbal**. Vous y voyez les chiffres, le contrôle d'intégrité, les éventuelles **égalités** (un second tour est alors à organiser, avec les seuls ex-aequo) et, si l'effectif est trop faible, les postes dont le détail n'est pas publié.
+
+- **Seul le comité publie** (*Publier les résultats*, avec confirmation et code 2FA). L'administrateur d'institution lit, télécharge le PV et peut le regénérer, mais ne publie pas.
+- La publication est **refusée** si le nombre de votants ne correspond pas au nombre de bulletins, si l'urne a changé depuis le décompte, ou si la chaîne du journal d'audit est rompue. L'écran liste les causes : prévenez l'administrateur d'institution, ne cherchez pas à contourner.
+- Elle est **définitive**.
+
+## Le procès-verbal
+
+À la publication, deux procès-verbaux sont créés ensemble, **un en arabe et un en français**, avec le même code de vérification. *Télécharger* donne la version de la langue de votre site ; l'autre langue est un bouton en dessous.
+
+1. Imprimez le PV (une page).
+2. Chaque membre du comité écrit son **nom** et **signe** dans sa case ; les **observations** éventuelles vont dans la case prévue.
+3. Conservez l'original signé. (Le dépôt du scan signé dans la plateforme viendra plus tard.)
+
+Si la génération a échoué (message sur l'écran), utilisez *Créer le procès-verbal*. *Regénérer* crée un nouveau rapport avec un nouveau code : l'ancien n'est pas effacé.
+
+## Vérifier l'urne
+
+*Vérifier l'urne* recalcule à l'instant l'empreinte de tous les bulletins et la compare à celle du décompte et à celle imprimée sur le PV. **Identique** : l'urne n'a pas changé. **Différente** : ne publiez pas, ou signalez-le tout de suite à l'administrateur d'institution. La vérification ne montre jamais un bulletin ni un choix.

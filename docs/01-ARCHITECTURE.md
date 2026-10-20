@@ -777,7 +777,9 @@ Statistiques :
 
 # 18. Procès-verbal
 
-Le backend pourra générer un PDF contenant :
+**Implémenté (Sprint 6B, D-42 à D-44) :** le module `reports` génère un PV **par langue** (arabe et français) à la publication. Le gabarit est du HTML (polices Noto et logo intégrés) imprimé en PDF par **Chromium** (`puppeteer-core`, variable `CHROMIUM_PATH`, installé dans l'image Docker du backend). Il tient sur une page jusqu'à 3 postes.
+
+Le PDF contient :
 
 -   institution ;
 -   élection ;

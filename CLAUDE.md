@@ -41,6 +41,7 @@ cd backend && npm run test:db              # tests sur la VRAIE base MySQL, SÉP
 # sur la base elections_test : le nom doit finir par « _test », sinon les tests refusent de démarrer (setup-env-db.ts)
 docker compose exec -T db bash /docker-entrypoint-initdb.d/02-test-db.sh   # une fois : crée elections_test (volume existant)
 cd backend && DATABASE_URL=mysql://app_migrate:<APP_MIGRATE_PASSWORD>@localhost:3306/elections_test npx prisma migrate deploy   # une fois, puis à chaque migration
+# test:db imprime de vrais PDF : CHROMIUM_PATH doit pointer vers Chrome / Chromium (préinstallé sur la CI ; Docker l'installe dans l'image du backend)
 cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
