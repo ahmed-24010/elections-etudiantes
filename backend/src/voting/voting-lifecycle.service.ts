@@ -119,7 +119,8 @@ export class VotingLifecycleService {
       { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, maxWait: 20_000, timeout: 30_000 },
     );
     await this.record(actor, result.institutionId, electionId, 'ELECTION_VOTING_EXTENDED', info, {
-      reason: dto.reason, outageStartedAt: input.outageStartedAt, outageEndedAt: input.outageEndedAt, previousEndsAt: result.previousEndsAt, newEndsAt: input.newEndsAt,
+      reason: dto.reason, outageStartedAt: input.outageStartedAt.toISOString(), outageEndedAt: input.outageEndedAt.toISOString(),
+      previousEndsAt: result.previousEndsAt.toISOString(), newEndsAt: input.newEndsAt.toISOString(),
     });
     return { votingEndsAt: input.newEndsAt };
   }

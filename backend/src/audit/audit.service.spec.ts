@@ -22,6 +22,11 @@ const entry = (n: number) => ({
 });
 
 describe('AuditService — chaîne de hachage (02 §9)', () => {
+  it('canonicalJson hache une Date comme sa chaîne ISO (MySQL la relit ainsi) : sinon la chaîne d’audit est rompue', () => {
+    const d = new Date('2026-10-20T10:00:00.000Z');
+    expect(canonicalJson({ at: d })).toBe(canonicalJson({ at: d.toISOString() }));
+  });
+
   it('canonicalJson trie les clés récursivement (MySQL réordonne les clés JSON)', () => {
     expect(canonicalJson({ b: 1, a: { d: [3, { y: 1, x: 2 }], c: null } })).toBe(canonicalJson({ a: { c: null, d: [3, { x: 2, y: 1 }] }, b: 1 }));
     expect(canonicalJson({ a: undefined, b: 1 })).toBe('{"b":1}');

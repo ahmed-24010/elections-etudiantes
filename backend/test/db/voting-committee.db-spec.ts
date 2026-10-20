@@ -1,4 +1,5 @@
 import { ElectionStatus } from '@prisma/client';
+import { AuditService } from '../../src/audit/audit.service';
 import { DAY, VotingWorld, World } from './voting-world';
 
 // Sprint 6A : prolongation unique (D-33, D-38), ajout exceptionnel d'un électeur (04 §5.2, D-39), suivi du vote (D-02, D-31).
@@ -16,7 +17,7 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
 
   describe('prolongation', () => {
     it('prolonge une fois, garde la fin initiale, écrit l’audit avec motif et panne', async () => {
-      const w = await t.election({ endsIn: DAY });
+      const w = await t.election({ startsIn: -6 * H, endsIn: DAY });
       const before = await ends(w);
       const res = await extend(w);
       expect(res.status).toBe(200);
@@ -27,10 +28,11 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
       const log = await t.prisma.auditLog.findFirst({ where: { resourceId: w.electionId, action: 'ELECTION_VOTING_EXTENDED' } });
       expect(log?.metadata).toMatchObject({ reason: 'panne du serveur' });
       expect(log?.actorId).toBe(w.committee[0].userId);
+      expect((await t.app.get(AuditService).verifyChain()).valid).toBe(true); // la chaîne d'audit reste intègre
     });
 
     it('deuxième prolongation refusée (409), la fin ne bouge plus', async () => {
-      const w = await t.election({ endsIn: DAY });
+      const w = await t.election({ startsIn: -6 * H, endsIn: DAY });
       await extend(w).expect(200);
       const after = await ends(w);
       const second = await extend(w, { newEndsAt: iso(DAY + 3 * H) });
@@ -40,7 +42,7 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
     });
 
     it('CONCURRENCE : dix prolongations simultanées → une seule réussit', async () => {
-      const w = await t.election({ endsIn: DAY });
+      const w = await t.election({ startsIn: -6 * H, endsIn: DAY });
       const results = await Promise.all(Array.from({ length: 10 }, (_, i) => extend(w, {}, w.committee[i % 3].token)));
       expect(results.filter((r) => r.status === 200)).toHaveLength(1);
       expect(results.filter((r) => r.status === 409)).toHaveLength(9);
@@ -48,7 +50,7 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
     });
 
     it('refuse plus que la panne, plus de 24 h, un raccourcissement, une panne incohérente (422)', async () => {
-      const w = await t.election({ endsIn: DAY });
+      const w = await t.election({ startsIn: -6 * H, endsIn: DAY });
       const cases: [string, Record<string, unknown>][] = [
         ['extension_exceeds_outage', { newEndsAt: iso(DAY + 3 * H) }],
         ['extension_not_after_current', { newEndsAt: iso(DAY - H) }],
@@ -64,23 +66,23 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
     it('refuse hors VOTING_OPEN et après l’heure de fin (409) : prolonger AVANT la fin', async () => {
       const closed = await t.election({ status: ElectionStatus.VOTING_CLOSED });
       expect((await extend(closed)).status).toBe(409);
-      const late = await t.election({ endsIn: -H }); // VOTING_OPEN mais l’heure de fin est passée
+      const late = await t.election({ startsIn: -6 * H, endsIn: -H }); // VOTING_OPEN mais l’heure de fin est passée
       const r = await extend(late, { outageStartedAt: iso(-5 * H), outageEndedAt: iso(-3 * H), newEndsAt: iso(-H + 2 * H) });
       expect(r.status).toBe(409);
     });
 
     it('exige la 2FA récente (401) et le rôle comité (pas un étudiant, pas un autre comité)', async () => {
-      const w = await t.election({ endsIn: DAY });
+      const w = await t.election({ startsIn: -6 * H, endsIn: DAY });
       await t.prisma.refreshToken.updateMany({ where: { userId: w.committee[1].userId }, data: { twoFactorVerifiedAt: new Date(Date.now() - 3 * H) } });
       expect((await extend(w, {}, w.committee[1].token)).status).toBe(401);
       expect((await extend(w, {}, w.voters[0].token)).status).toBe(403);
-      const other = await t.election({ endsIn: DAY });
+      const other = await t.election({ startsIn: -6 * H, endsIn: DAY });
       expect([403, 404]).toContain((await extend(w, {}, other.committee[0].token)).status);
       expect((await t.prisma.election.findUniqueOrThrow({ where: { id: w.electionId } })).votingExtendedAt).toBeNull();
     });
 
     it('un vote est possible après l’ancienne heure de fin, grâce à la prolongation', async () => {
-      const w = await t.election({ endsIn: 60_000 });
+      const w = await t.election({ startsIn: -6 * H, endsIn: 60_000 });
       await t.prisma.election.update({ where: { id: w.electionId }, data: { votingEndsAt: new Date(Date.now() + 2000) } });
       await extend(w, { newEndsAt: iso(2000 + 1.5 * H), outageStartedAt: iso(-3 * H), outageEndedAt: iso(-1 * H) }).expect(200);
       await new Promise((r) => setTimeout(r, 2500));
@@ -125,7 +127,9 @@ describe('Comité : prolongation, ajout exceptionnel, suivi (Sprint 6A)', () => 
       expect(JSON.stringify(log?.metadata)).not.toContain(number);
       await t.vote(late, w.electionId, t.firstChoices(w)).expect(201);
       const turnout = await t.api('get', `/elections/${w.electionId}/turnout`, w.committee[0].token).expect(200);
-      expect(turnout.body).toMatchObject({ registered: before + 1, voted: 1, addedAfterFreeze: 1 });
+      // Sous 50 électeurs le nombre de votants est arrêté à la tranche de 15 min (D-31) : le vote qui vient d'avoir lieu n'y figure pas encore.
+      expect(turnout.body).toMatchObject({ registered: before + 1, sliced: true, addedAfterFreeze: 1 });
+      expect((await t.counts(w.electionId)).participations).toBe(1);
     });
 
     it('tous les refus se ressemblent : inconnu, non vérifié, hors règles, déjà inscrit (404 voter_not_addable)', async () => {

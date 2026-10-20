@@ -25,6 +25,8 @@ const MAX_CHAIN_ATTEMPTS = 100;
 /** JSON canonique : clés triées récursivement, car MySQL réordonne les clés des colonnes JSON. */
 export function canonicalJson(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value ?? null);
+  // Une Date devient une chaîne ISO en base : sans cette ligne elle serait hachée comme « {} » et la chaîne serait rompue.
+  if (value instanceof Date) return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
   const obj = value as Record<string, unknown>;
   const keys = Object.keys(obj).filter((k) => obj[k] !== undefined).sort();

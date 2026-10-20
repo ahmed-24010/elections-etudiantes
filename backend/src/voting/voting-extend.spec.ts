@@ -30,7 +30,7 @@ describe('VotingLifecycleService.extend (D-33, D-38)', () => {
     expect(tx.election.update).toHaveBeenCalledWith({ where: { id: 'e1' }, data: { votingEndsAt: at(8), votingExtendedAt: now, votingEndsAtOriginal: at(6) } });
     expect(audit.record.mock.calls[0][0]).toMatchObject({
       actorId: 'u1', action: 'ELECTION_VOTING_EXTENDED', resourceId: 'e1',
-      metadata: { reason: 'panne du serveur', outageStartedAt: at(-4), outageEndedAt: at(-2), previousEndsAt: at(6), newEndsAt: at(8) },
+      metadata: { reason: 'panne du serveur', outageStartedAt: at(-4).toISOString(), outageEndedAt: at(-2).toISOString(), previousEndsAt: at(6).toISOString(), newEndsAt: at(8).toISOString() },
     });
   });
 
