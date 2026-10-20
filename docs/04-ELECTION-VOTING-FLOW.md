@@ -148,6 +148,7 @@ Avant l'ouverture, l'interface prévient les étudiants : « Faites vérifier vo
 Cas : un étudiant éligible a été oublié (par exemple, vérification faite en retard par erreur de la scolarité).
 
 - Permission `voter_roll:add`, comité uniquement, 🔐.
+- Le comité désigne l'étudiant par son **matricule** ; la confirmation montre faculté, filière, niveau et groupe, jamais le nom. Le compte doit être actif, l'inscription `VERIFIED` et l'étudiant éligible ; tout refus est identique pour ne pas révéler si le matricule existe (D-39).
 - Motif obligatoire, écrit dans `audit_logs`.
 - Possible seulement pendant `VOTING_OPEN`.
 - Le nombre d'électeurs du procès-verbal inclut ces ajouts, et le procès-verbal indique leur nombre.
@@ -332,7 +333,7 @@ Exemple : le serveur est indisponible de 10 h à 11 h.
 
 - Les votes enregistrés avant la panne restent valides (transactions validées).
 - Un vote interrompu en plein envoi : soit la transaction est validée (l'étudiant le verra en se reconnectant : « Vous avez voté »), soit rien n'est enregistré. Jamais d'état intermédiaire.
-- Le comité peut **prolonger** le vote (🔐, motif obligatoire, audité), **une seule fois**, d'une durée au plus égale à la panne. Jamais raccourcir.
+- Le comité peut **prolonger** le vote (🔐, motif obligatoire, audité), **une seule fois**, d'une durée au plus égale à la panne (qu'il déclare : début et fin) et **au plus 24 h**. Jamais raccourcir. Possible seulement en `VOTING_OPEN` et **avant l'heure de fin** : après la clôture, on ne rouvre pas (D-38, D-40).
 - **Ne jamais restaurer une sauvegarde pendant un vote ouvert** : une restauration effacerait des participations et permettrait de revoter. Si la base est perdue, l'élection est annulée et refaite.
 
 ### 10.2 Échec du contrôle d'intégrité

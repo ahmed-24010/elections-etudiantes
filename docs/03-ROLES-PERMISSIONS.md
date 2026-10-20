@@ -152,10 +152,11 @@ Règles :
 | `election:candidacy:open` / `close` | — | ✅ | — | ✅ | — |
 | `election:voting:open` (gèle la liste électorale) | — | 🔐 | — | 🔐 | — |
 | `election:voting:close` (manuel, anticipé) | — | 🔐 | — | 🔐 | — |
+| `election:voting:extend` (prolongation unique après panne, D-33/D-38/D-40) | — | — | — | 🔐 | — |
 | `election:cancel` | — | 🔐 | — | — | — |
 | `election:read` (détails) | ✅ | ✅ | — | ✅ | ✅ * |
 | `election:list:mine` (« mes élections ») | — | — | — | — | 👤 |
-| `voter_roll:add` (ajout exceptionnel après gel) | — | — | — | 🔐 | — |
+| `voter_roll:add` (ajout exceptionnel après gel, par matricule, D-39) | — | — | — | 🔐 | — |
 | `voter_roll:read:count` | ✅ | ✅ | — | ✅ | ✅ * |
 | `turnout:read` (taux de participation en cours) | — | ✅ | — | ✅ | — |
 

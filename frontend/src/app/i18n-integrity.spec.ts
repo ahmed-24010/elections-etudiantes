@@ -12,6 +12,7 @@ import { AcademicListPage } from './features/admin/academic-list-page';
 import { QueuePage } from './features/verification/queue-page';
 import { ReviewPage } from './features/verification/review-page';
 import { StudentHome } from './features/student/student-home';
+import { CommitteeVotePage } from './features/elections/committee-vote-page';
 import { CandidatesReviewPage } from './features/elections/candidates-review-page';
 import { ElectionDetailPage } from './features/elections/election-detail-page';
 import { ElectionWizardPage } from './features/elections/election-wizard-page';
@@ -119,6 +120,7 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     ['élections : création en étapes', ElectionWizardPage],
     ['élections : détail', ElectionDetailPage],
     ['élections : validation des candidatures', CandidatesReviewPage],
+    ['élections : suivi du vote (comité)', CommitteeVotePage],
     ['élections : mes élections', MyElectionsPage],
     ['élections : une élection (étudiant)', MyElectionPage],
   ];
@@ -183,6 +185,9 @@ describe('Traductions : aucune clé brute à l’écran', () => {
         'candidate_cannot_be_committee', 'candidate_not_eligible', 'election_not_reviewable', 'role_already_assigned', 'user_not_active',
       ].map((message) => new HttpErrorResponse({ status: 409, error: { message } })),
       ...['invalid_rule', 'invalid_position', 'file_required'].map((message) => new HttpErrorResponse({ status: 400, error: { message } })),
+      new HttpErrorResponse({ status: 404, error: { message: 'voter_not_addable' } }),
+      new HttpErrorResponse({ status: 409, error: { message: 'already_extended' } }),
+      ...['outage_invalid', 'extension_not_after_current', 'extension_exceeds_outage', 'extension_exceeds_24h'].map((message) => new HttpErrorResponse({ status: 422, error: { message } })),
       new HttpErrorResponse({ status: 403, error: { message: 'cannot_review_own_candidacy' } }),
       new HttpErrorResponse({ status: 400, error: { message: 'program_not_available_for_level' } }),
       new HttpErrorResponse({ status: 400, error: { message: 'level_not_allowed_for_program' } }),

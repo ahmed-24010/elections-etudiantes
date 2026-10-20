@@ -46,6 +46,13 @@ const BY_MESSAGE: Record<string, string> = {
   UNSUPPORTED_TYPE: 'errors.fileType',
   already_exists: 'errors.alreadyExists',
   invalid_dates: 'errors.invalidDates',
+  // Comité (D-38, D-39)
+  voter_not_addable: 'errors.voterNotAddable',
+  already_extended: 'errors.alreadyExtended',
+  outage_invalid: 'errors.outageInvalid',
+  extension_not_after_current: 'errors.extensionNotAfterCurrent',
+  extension_exceeds_outage: 'errors.extensionExceedsOutage',
+  extension_exceeds_24h: 'errors.extensionExceeds24h',
   // Vote (04 §6.2) : les codes sont dans `message`.
   INVALID_PASSWORD: 'errors.invalidPassword',
   ELECTION_NOT_OPEN: 'errors.electionNotOpen',

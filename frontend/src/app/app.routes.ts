@@ -66,6 +66,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/elections/candidates-review-page').then((m) => m.CandidatesReviewPage),
       },
       {
+        path: 'elections/:id/vote',
+        canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
+        loadComponent: () => import('./features/elections/committee-vote-page').then((m) => m.CommitteeVotePage),
+      },
+      {
         path: 'elections/:id',
         canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],
         loadComponent: () => import('./features/elections/election-detail-page').then((m) => m.ElectionDetailPage),
