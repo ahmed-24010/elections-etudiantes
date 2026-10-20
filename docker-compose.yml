@@ -52,6 +52,7 @@ services:
       S3_BUCKET: ${S3_BUCKET}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      CHROMIUM_PATH: /usr/bin/chromium # procès-verbal PDF (D-43), installé dans l'image du backend
     depends_on:
       db: { condition: service_healthy }
       s3: { condition: service_started }

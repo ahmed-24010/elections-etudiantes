@@ -9,11 +9,15 @@ RUN npx prisma generate && npm run build
 
 FROM node:22-bookworm-slim
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+# Chromium (+ polices de secours) pour imprimer le procès-verbal en PDF (D-43). Les polices du PV sont intégrées au document.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl chromium fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
+ENV CHROMIUM_PATH=/usr/bin/chromium
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
+# Polices et logo du procès-verbal (lus à l'exécution, relatifs à dist/).
+COPY assets ./assets
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY prisma ./prisma
 # Vérifie au build que argon2 se charge réellement dans l'image finale.

@@ -1,5 +1,8 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy, Optional } from '@nestjs/common';
 import puppeteer, { Browser } from 'puppeteer-core';
+
+/** Chemin de Chromium (variable CHROMIUM_PATH), fourni par ReportsModule. */
+export const CHROMIUM_PATH = Symbol('CHROMIUM_PATH');
 
 /**
  * HTML → PDF par Chromium (D-43) : le rendu de l'arabe (liaison des lettres, sens, mélange avec des noms latins) est celui
@@ -11,7 +14,7 @@ export class PvPdfService implements OnModuleDestroy {
   private readonly logger = new Logger(PvPdfService.name);
   private browser: Promise<Browser> | undefined;
 
-  constructor(private readonly executablePath: string | undefined = process.env.CHROMIUM_PATH) {}
+  constructor(@Optional() @Inject(CHROMIUM_PATH) private readonly executablePath?: string) {}
 
   private launch(): Promise<Browser> {
     if (!this.executablePath) throw new Error('CHROMIUM_PATH non défini : impossible de générer le procès-verbal.');

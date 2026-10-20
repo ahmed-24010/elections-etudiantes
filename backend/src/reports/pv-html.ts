@@ -39,48 +39,48 @@ const icon = (name: keyof typeof ICONS): string =>
 
 const CSS = (fontsCss: string) => `
 ${fontsCss}
-@page { size: A4; margin: 9mm 12mm 13mm; @bottom-center { content: var(--footer) "\\2066" counter(page) " / " counter(pages) "\\2069"; font: 7.5pt 'PV Sans', 'PV Naskh', sans-serif; color: #667085; } }
+@page { size: A4; margin: 8mm 12mm 11mm; @bottom-center { content: var(--footer) "\\2066" counter(page) " / " counter(pages) "\\2069"; font: 7.5pt 'PV Sans', 'PV Naskh', sans-serif; color: #667085; } }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; background: #fff; color: #1a2233; font: 9pt/1.45 'PV Sans', 'PV Naskh', sans-serif; }
+body { margin: 0; background: #fff; color: #1a2233; font: 8.6pt/1.4 'PV Sans', 'PV Naskh', sans-serif; }
 :root { --accent: #0b4f6c; --accent-soft: #e8f1f5; --line: #cfd6df; --muted: #5b6678; --warn: #8a4b00; --warn-soft: #fff4e0; --code: #f1f3f6; }
 .ic { flex: none; color: var(--accent); }
 .top { display: flex; align-items: center; gap: 12px; padding-bottom: 7px; border-bottom: 2px solid var(--accent); }
-.top img { height: 42px; width: auto; }
+.top img { height: 38px; width: auto; }
 .top .titles { flex: 1; }
 .kicker { font-size: 7.5pt; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
-h1 { margin: 0; font-size: 16pt; line-height: 1.25; color: var(--accent); }
-.election { margin: 7px 0 0; font-size: 11pt; font-weight: 700; }
+h1 { margin: 0; font-size: 14.5pt; line-height: 1.25; color: var(--accent); }
+.election { margin: 5px 0 0; font-size: 10.5pt; font-weight: 700; }
 .institution { margin: 0; color: var(--muted); font-size: 8.5pt; }
-.sec { margin-top: 8px; }
+.sec { margin-top: 6px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; }
-.grid2 > .pos { margin-top: 0; }
-.sec-head { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 3px; margin-bottom: 6px; }
+.grid2 > div > .pos { margin-top: 0; margin-bottom: 6px; }
+.sec-head { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 2px; margin-bottom: 4px; }
 .sec-head .no { min-width: 28px; padding: 0 5px; text-align: center; border: 1.5px solid var(--accent); border-radius: 5px; color: var(--accent); font-weight: 700; font-size: 9pt; }
 .sec-head h2 { margin: 0; font-size: 11pt; }
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.stat { border: 1.5px solid var(--line); border-radius: 7px; padding: 4px 6px 3px; text-align: center; }
+.stat { border: 1.5px solid var(--line); border-radius: 7px; padding: 2px 6px 2px; text-align: center; }
 .stat.main { border-color: var(--accent); background: var(--accent-soft); }
-.stat .n { display: block; font-size: 19pt; font-weight: 700; line-height: 1.15; color: var(--accent); }
+.stat .n { display: block; font-size: 17pt; font-weight: 700; line-height: 1.15; color: var(--accent); }
 .stat .l { display: block; font-size: 7.5pt; color: var(--muted); }
-.note { margin: 4px 0 0; font-size: 7.5pt; color: var(--muted); }
+.note { margin: 2px 0 0; font-size: 7.3pt; color: var(--muted); }
 .note.warn { color: var(--warn); }
 .cells { display: grid; gap: 6px; }
 .cells.c3 { grid-template-columns: repeat(3, 1fr); }
 .cells.ids { grid-template-columns: 1.7fr 1fr 1.1fr; }
 .cells.c4 { grid-template-columns: 1.1fr 1.5fr 1.1fr 1.6fr; }
-.cell { border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px 4px; min-width: 0; }
+.cell { border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px 3px; min-width: 0; }
 .cell .k { display: flex; align-items: center; gap: 5px; font-size: 7.5pt; color: var(--muted); }
 .cell .v { display: block; margin-top: 1px; font-weight: 600; font-size: 8.5pt; overflow-wrap: anywhere; }
 .cell.warn { border-color: var(--warn); background: var(--warn-soft); }
 .mono { display: inline-block; direction: ltr; unicode-bidi: isolate; font-family: 'PV Mono', monospace; font-weight: 700; font-size: 8pt; background: var(--code); border: 1px solid #e0e4ea; border-radius: 4px; padding: 1px 5px; letter-spacing: .01em; }
 .mono.digest { display: block; margin-top: 3px; font-size: 7.6pt; white-space: nowrap; text-align: start; }
-.pos { margin-top: 6px; border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px 6px; break-inside: avoid; }
+.pos { margin-top: 5px; border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px 5px; break-inside: avoid; }
 .pos-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .pos-head h3 { margin: 0; font-size: 10pt; }
 .chip { font-size: 7.5pt; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; }
 .badge-tie { margin-inline-start: auto; font-size: 7.5pt; font-weight: 700; color: var(--warn); background: var(--warn-soft); border: 1.5px solid var(--warn); border-radius: 99px; padding: 0 9px; }
-.cand { display: grid; grid-template-columns: 37% 1fr 29%; align-items: center; gap: 8px; margin-top: 3px; }
+.cand { display: grid; grid-template-columns: 37% 1fr 29%; align-items: center; gap: 8px; margin-top: 2px; }
 .cand .who { font-weight: 600; }
 .cand .bar { height: 7px; border-radius: 4px; background: #e6eaf0; overflow: hidden; }
 .cand .bar i { display: block; height: 100%; background: #9aa8bd; }
@@ -92,17 +92,17 @@ h1 { margin: 0; font-size: 16pt; line-height: 1.25; color: var(--accent); }
 .cand.blank { color: var(--muted); }
 .tienote { margin: 5px 0 0; padding: 3px 8px; font-size: 7.8pt; color: var(--warn); background: var(--warn-soft); border-radius: 5px; }
 .withheld { margin: 3px 0 1px; color: var(--muted); font-size: 8.5pt; }
-.committee { margin-top: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px 7px; }
+.committee { margin-top: 5px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px 6px; }
 .committee h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 9.5pt; }
-.committee .help { margin: 1px 0 5px; font-size: 7.5pt; color: var(--muted); }
-.sigs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.sig { border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px 5px; break-inside: avoid; }
+.committee .help { margin: 0; font-size: 7.3pt; color: var(--muted); font-weight: 400; }
+.sigs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 3px; }
+.sig { border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px 4px; break-inside: avoid; }
 .sig .who { font-size: 7.5pt; font-weight: 700; color: var(--accent); }
-.sig .lab { display: block; margin-top: 3px; font-size: 7pt; color: var(--muted); }
-.sig .field { height: 14px; border: 1px solid #aab4c2; border-radius: 3px; background: #fff; }
-.sig .field.tall { height: 26px; }
+.sig .lab { display: block; margin-top: 2px; font-size: 7pt; color: var(--muted); }
+.sig .field { height: 9.5mm; border: 1px solid #aab4c2; border-radius: 3px; background: #fff; }
+.sig .field.tall { height: 19mm; }
 .sig.obs { grid-column: 1 / -1; }
-.sig.obs .field { height: 22px; }
+.sig.obs .field { height: 16.5mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(5.5mm - 1px), #c3cad4 calc(5.5mm - 1px), #c3cad4 5.5mm); }
 `;
 
 const FONTS = (): string => `
@@ -119,7 +119,7 @@ function renderPosition(p: PvPosition, l: PvLabels, lang: PvLang): string {
   const head = `<div class="pos-head"><h3>${title}</h3><span class="chip">${esc(l.seats(p.seats))}</span>${p.tie ? `<span class="badge-tie">${esc(l.tieBadge)}</span>` : ''}</div>`;
   if (!p.detailPublished) {
     // D-32 : sous 3 votants, ni voix ni barres, seulement les élus.
-    return `<div class="pos">${head}<p class="withheld">${esc(l.withheld)} <b>${esc(l.winnersOnly)} :</b> ${p.winners.length ? p.winners.map(person).join(l.sep) : l.none}</p></div>`;
+    return `<div class="pos">${head}<p class="withheld">${esc(l.withheld)} <b>${esc(l.winnersLabel(p.winners.length))} :</b> ${p.winners.length ? p.winners.map(person).join(l.sep) : l.none}</p></div>`;
   }
   const tied = new Set((p.tie?.tied ?? []).map((t) => t.name));
   const total = p.candidates.reduce((s, c) => s + c.votes, 0) + (p.blank ?? 0);
@@ -135,6 +135,21 @@ function renderPosition(p: PvPosition, l: PvLabels, lang: PvLang): string {
   return `<div class="pos">${head}${rows}${blank}${tie}</div>`;
 }
 
+/** Poids approximatif d'un poste (lignes affichées), pour équilibrer deux colonnes sans trou. */
+const weight = (p: PvPosition): number => (p.detailPublished ? 2 + p.candidates.length + (p.tie ? 2 : 0) : 2);
+
+/** Deux colonnes : chaque poste, dans l'ordre, va dans la colonne la moins remplie ; l'ordre de lecture reste celui des postes dans chaque colonne. */
+function renderPositions(positions: PvPosition[], l: PvLabels, lang: PvLang): string {
+  const cols: [string[], string[]] = [[], []];
+  const sizes = [0, 0];
+  for (const p of positions) {
+    const i = sizes[0] <= sizes[1] ? 0 : 1;
+    cols[i].push(renderPosition(p, l, lang));
+    sizes[i] += weight(p);
+  }
+  return `<div class="grid2"><div>${cols[0].join('')}</div><div>${cols[1].join('')}</div></div>`;
+}
+
 /** Procès-verbal dans UNE langue (D-42) : HTML autonome (polices, icônes et logo intégrés), prêt à être imprimé en PDF par Chromium. */
 export function renderPvHtml(data: PvData, lang: PvLang): string {
   const l = PV_LABELS[lang];
@@ -148,7 +163,7 @@ export function renderPvHtml(data: PvData, lang: PvLang): string {
   const calendar =
     `<div class="cells c3">${cell(l.votingStart, date(d.votingStartsAt), 'calendar')}${cell(l.votingEnd, date(d.votingEndsAt), 'calendar')}${d.publishedAt ? cell(l.publishedAt, date(d.publishedAt), 'calendar') : ''}</div>` +
     (d.extension
-      ? `<div class="cells c4" style="margin-top:6px">${cell(l.originalEnd, date(d.extension.originalEndsAt), undefined, 'warn')}${cell(l.outage, `${l.outageRange(date(d.extension.outageStartedAt, false), date(d.extension.outageEndedAt, false))} ${esc(l.utc)}`, undefined, 'warn')}${cell(l.newEnd, date(d.extension.newEndsAt), undefined, 'warn')}${cell(`${l.incidentTitle} — ${l.reason}`, esc(d.extension.reason), undefined, 'warn')}</div>`
+      ? `<div class="cells c4" style="margin-top:6px">${cell(l.originalEnd, date(d.extension.originalEndsAt), undefined, 'warn')}${cell(l.outage, d.extension.outage ? `${l.outageRange(date(d.extension.outage.from, false), date(d.extension.outage.to, false))} ${esc(l.utc)}` : esc(l.none), undefined, 'warn')}${cell(l.newEnd, date(d.extension.newEndsAt), undefined, 'warn')}${cell(`${l.incidentTitle} — ${l.reason}`, esc(d.extension.reason ?? l.none), undefined, 'warn')}</div>`
       : `<p class="note" style="margin-top:5px">${esc(l.noIncident)}</p>`);
 
   const members = Array.from({ length: Math.max(3, d.committeeSize) }, (_, i) => `<div class="sig"><div class="who">${esc(l.member(i + 1))}</div><span class="lab">${esc(l.name)}</span><div class="field"></div><span class="lab">${esc(l.signature)}</span><div class="field tall"></div></div>`).join('');
@@ -157,7 +172,7 @@ export function renderPvHtml(data: PvData, lang: PvLang): string {
   const integrity =
     `<div class="cell"><span class="k">${icon('fingerprint')}${esc(l.digestTitle)}</span><span class="mono digest">${esc(d.ballotsDigest)}</span><p class="note" style="margin:2px 0 0">${esc(l.digestHelp)}</p></div>` +
     `<div class="cells ids" style="margin-top:5px">${cell(l.reportId, `<span class="mono">${esc(d.reportId)}</span>`, 'document')}${cell(l.verificationCode, `<span class="mono">${esc(d.verificationCode)}</span>`, 'shield')}${cell(l.generatedAt, `<span class="mono">${esc(formatPvDate(d.generatedAt, l, false))} UTC</span>`, 'calendar')}</div>` +
-    `<div class="committee"><h3>${icon('group')}${esc(l.signaturesTitle)}</h3><p class="help">${esc(l.signaturesHelp)}</p><div class="sigs">${members}${observations}</div></div>`;
+    `<div class="committee"><h3>${icon('group')}${esc(l.signaturesTitle)} <span class="help">— ${esc(l.signaturesHelp)}</span></h3><div class="sigs">${members}${observations}</div></div>`;
 
   return `<!doctype html><html lang="${lang}" dir="${l.dir}"><head><meta charset="utf-8"><title>${esc(l.title)}</title><style>${CSS(FONTS())}
 :root { --footer: "${esc(d.verificationCode)} · ${esc(l.page)} "; }</style></head><body>
@@ -166,7 +181,7 @@ export function renderPvHtml(data: PvData, lang: PvLang): string {
 <p class="institution">${esc(l.institution)} : ${local(d.institution.name, d.institution.nameAr)}</p>
 ${sec('01', l.s1, `<div class="stats">${stat(d.registered, l.registered)}${stat(d.voters, l.voters)}${stat(d.ballots, l.ballots)}${stat(`${d.turnoutRate} %`, l.turnout, true)}</div>${d.addedAfterFreeze > 0 ? `<p class="note warn">${esc(l.ofWhichAdded(d.addedAfterFreeze))}</p>` : ''}<p class="note">${esc(l.integrityOk)}</p>`)}
 ${sec('02', l.s2, calendar)}
-<section class="sec"><div class="sec-head"><span class="no">03</span><h2>${esc(l.s3)}</h2></div><div class="grid2">${d.positions.map((p) => renderPosition(p, l, lang)).join('')}</div></section>
+<section class="sec"><div class="sec-head"><span class="no">03</span><h2>${esc(l.s3)}</h2></div>${renderPositions(d.positions, l, lang)}</section>
 ${sec('04', l.s4, integrity)}
 </body></html>`;
 }

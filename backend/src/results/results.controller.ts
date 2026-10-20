@@ -29,6 +29,14 @@ export class ResultsController {
     return this.results.secondRound(u, id);
   }
 
+  /** « Vérifier l'urne » (D-45) : empreinte recalculée comparée à celle du décompte et du PV. Lecture seule. */
+  @Get('results/:id/verify')
+  @RequirePermission('results:read')
+  @ScopeFrom('election', 'id')
+  verify(@CurrentUser() u: AuthUser, @Param('id') id: string, @Req() req: Request) {
+    return this.results.verifyUrn(u, id, requestInfo(req));
+  }
+
   /** 🔐 Relance du décompte automatique (idempotent). */
   @Post('results/:id/compute')
   @HttpCode(200)

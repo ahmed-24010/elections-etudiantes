@@ -33,7 +33,8 @@ export interface PvData {
   voters: number;
   ballots: number;
   turnoutRate: number;
-  extension: { originalEndsAt: Date; outageStartedAt: Date; outageEndedAt: Date; newEndsAt: Date; reason: string } | null;
+  /** Prolongation unique (D-33). La panne et le motif viennent du journal d'audit ; absents, ils s'impriment « — ». */
+  extension: { originalEndsAt: Date; newEndsAt: Date; outage: { from: Date; to: Date } | null; reason: string | null } | null;
   positions: PvPosition[];
   ballotsDigest: string;
   /** Identique dans les deux langues : les deux versions sont un seul rapport. */

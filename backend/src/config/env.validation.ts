@@ -53,6 +53,9 @@ export class EnvironmentVariables {
   @IsString() @IsNotEmpty() S3_ACCESS_KEY: string;
   @IsString() @IsNotEmpty() S3_SECRET_KEY: string;
 
+  // Chromium pour le procès-verbal PDF (D-43). Facultatif : sans lui, l'application démarre mais le PV n'est pas généré.
+  @IsOptional() @IsString() CHROMIUM_PATH?: string;
+
   // Clé de signature des URL d'accès aux attestations (HMAC, 5 min). Distincte des secrets JWT.
   @IsString() @MinLength(32)
   FILE_SIGNING_SECRET: string;

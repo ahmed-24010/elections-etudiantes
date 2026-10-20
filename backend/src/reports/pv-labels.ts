@@ -14,6 +14,7 @@ export interface PvLabels {
   ballots: string;
   turnout: string;
   ofWhichAdded: (n: number) => string;
+  winnersLabel: (n: number) => string;
   integrityOk: string;
   s2: string;
   votingStart: string;
@@ -55,6 +56,13 @@ export interface PvLabels {
   sep: string;
 }
 
+/** Nombre + nom en arabe : 1 → singulier, 2 → duel, 3 à 10 → pluriel, au-delà → singulier avec le chiffre. */
+function arCount(n: number, one: string, two: string, few: string, oneText?: string): string {
+  if (n === 1) return oneText ?? `${one} واحدة`;
+  if (n === 2) return two;
+  return n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${one}`;
+}
+
 export const PV_LABELS: Record<PvLang, PvLabels> = {
   fr: {
     dir: 'ltr',
@@ -68,7 +76,8 @@ export const PV_LABELS: Record<PvLang, PvLabels> = {
     voters: 'Votants',
     ballots: 'Bulletins',
     turnout: 'Participation',
-    ofWhichAdded: (n) => `dont ${n} ajout(s) exceptionnel(s) après le gel de la liste électorale`,
+    ofWhichAdded: (n) => `dont ${n} ${n > 1 ? 'ajouts exceptionnels' : 'ajout exceptionnel'} après le gel de la liste électorale`,
+    winnersLabel: (n) => (n > 1 ? 'Élus' : 'Élu(e)'),
     integrityOk: 'Contrôle d’intégrité réussi : votants = bulletins, et votants au plus égaux aux inscrits.',
     s2: 'Calendrier et incident',
     votingStart: 'Ouverture du vote',
@@ -121,7 +130,8 @@ export const PV_LABELS: Record<PvLang, PvLabels> = {
     voters: 'المصوّتون',
     ballots: 'الأوراق',
     turnout: 'المشاركة',
-    ofWhichAdded: (n) => `منهم ${n} إضافة استثنائية بعد تجميد القائمة الانتخابية`,
+    ofWhichAdded: (n) => `منهم ${arCount(n, 'إضافة استثنائية', 'إضافتان استثنائيتان', 'إضافات استثنائية')} بعد تجميد القائمة الانتخابية`,
+    winnersLabel: (n) => (n === 1 ? 'الفائز' : n === 2 ? 'الفائزان' : 'الفائزون'),
     integrityOk: 'نجحت مراقبة السلامة: عدد المصوّتين = عدد الأوراق، وعدد المصوّتين لا يتجاوز عدد المسجّلين.',
     s2: 'الجدول الزمني والحوادث',
     votingStart: 'بداية التصويت',
@@ -135,14 +145,14 @@ export const PV_LABELS: Record<PvLang, PvLabels> = {
     newEnd: 'النهاية الجديدة',
     reason: 'السبب',
     s3: 'النتائج حسب المنصب',
-    seats: (n) => `${n} ${n > 2 && n < 11 ? 'مقاعد' : 'مقعد'}`,
+    seats: (n) => arCount(n, 'مقعد', 'مقعدان', 'مقاعد', 'مقعد واحد'),
     votes: 'صوت',
     elected: 'الفائز',
     blank: 'الأصوات البيضاء',
     withheld: 'عدد المصوّتين قليل جدًا لنشر تفاصيل الأصوات.',
     winnersOnly: 'الفائزون',
     tieBadge: 'تعادل — دور ثانٍ',
-    tieText: (left) => `تعادل على المقعد الأخير؛ ${left > 2 && left < 11 ? `${left} مقاعد` : `${left} مقعد`} شاغر. يجب تنظيم دور ثانٍ يقتصر على هؤلاء المرشحين، بالقائمة الانتخابية نفسها.`,
+    tieText: (left) => `تعادل على المقعد الأخير؛ ${arCount(left, 'مقعد', 'مقعدان', 'مقاعد', 'مقعد واحد')} شاغر. يجب تنظيم دور ثانٍ يقتصر على هؤلاء المرشحين، بالقائمة الانتخابية نفسها.`,
     tieNext: '',
     s4: 'السلامة والتوقيعات',
     digestTitle: 'بصمة الصندوق (SHA-256)',
