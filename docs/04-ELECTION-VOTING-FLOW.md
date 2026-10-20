@@ -116,11 +116,11 @@ Effet : à partir de cet instant, toute transaction de vote échoue (le contrôl
 
 ### 4.5 `VOTING_CLOSED` → `RESULTS_PUBLISHED`
 
-Qui : comité ou admin d'institution (🔐).
+Qui : **comité seulement** (🔐, D-41). L'administrateur d'institution lit les résultats et peut regénérer le procès-verbal, mais ne publie pas.
 
-Condition : le décompte existe et `election_tallies.integrityOk = true`.
+Conditions : le décompte existe, `election_tallies.integrityOk = true` (votants = bulletins, votants ≤ inscrits) et la chaîne d'audit est intègre. Sinon la publication est refusée (409) avec la liste des conditions manquantes.
 
-Effet : résultats visibles par tous les éligibles ; génération du procès-verbal.
+Effet : résultats visibles par tous les éligibles ; génération du procès-verbal en **deux versions, arabe et français** (D-42).
 
 ### 4.6 Annulation
 
