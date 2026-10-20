@@ -238,6 +238,12 @@ export class VotingService {
     const sliced = election.status === ElectionStatus.VOTING_OPEN && registered < SMALL_ELECTION_VOTERS;
     const asOf = sliced ? new Date(Math.floor(now / TURNOUT_SLOT_MS) * TURNOUT_SLOT_MS) : new Date(now);
     const voted = await this.prisma.votingParticipation.count({ where: { electionId, ...(sliced ? { votedAt: { lt: asOf } } : {}) } });
-    return { registered, voted, rate: registered === 0 ? 0 : Math.round((voted / registered) * 1000) / 10, asOf, sliced };
+    const addedAfterFreeze = await this.prisma.voterRollEntry.count({ where: { electionId, addedAfterFreeze: true } });
+    return {
+      registered, voted, rate: registered === 0 ? 0 : Math.round((voted / registered) * 1000) / 10, asOf, sliced,
+      // Des chiffres seulement (D-02) : fenêtre du vote, prolongation déjà faite ou non, ajouts exceptionnels.
+      status: election.status, votingStartsAt: election.votingStartsAt, votingEndsAt: election.votingEndsAt,
+      extended: election.votingExtendedAt !== null, addedAfterFreeze,
+    };
   }
 }
