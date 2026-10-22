@@ -46,10 +46,11 @@ cd backend && npm run build
 cd backend && npx prisma validate          # avec DATABASE_URL défini
 cd backend && npx prisma migrate dev       # nouvelle migration (base locale ; voir note ci-dessous)
 cd backend && npm run seed                  # SUPER_ADMIN + structure de démo FSJP + comptes de test vérificateur et admin d'institution (SEED_ADMIN_PASSWORD requis ; refusé si NODE_ENV=production ; lit le .env de la racine)
-cd backend && npm run seed:demo             # seed de DÉMO complet (étudiants Aïcha/Omar/Sara, comité comite1-3, élection en CANDIDACY_OPEN, 2FA de dev) : SEED_DEMO_PASSWORD et SEED_DEMO_TOTP_SECRET requis, refusé si NODE_ENV=production ; affiche la liste des comptes
+cd backend && npm run seed:demo             # seed de DÉMO complet (étudiants Aïcha/Omar/Mariam/Yacoub éligibles + Sara non éligible, comité comite1-3, élection en CANDIDACY_OPEN, 2FA de dev) : SEED_DEMO_PASSWORD et SEED_DEMO_TOTP_SECRET requis, refusé si NODE_ENV=production ; affiche la liste des comptes
 cd backend && npm run demo:open-vote       # DÉMO seulement (refusé si NODE_ENV=production) : avance les dates de l'élection de démo et ouvre le vote
 cd backend && npm run demo:close-vote      # DÉMO : ferme le vote et lance le décompte
 cd backend && npm run demo:results         # DÉMO : affiche les résultats dans le terminal (même seuil de 3 votants que l'API)
+# demo:open-vote, demo:close-vote et demo:results visent le premier tour ; avec « -- second » (ex. npm run demo:open-vote -- second), le second tour créé par le comité après une égalité (D-46)
 cd frontend && npm run lint && npm test    # lint + tests Karma (ChromeHeadless, sans watch)
 cd frontend && npm run test:mobile            # Playwright : iPhone (WebKit) et Android (Chromium mobile), D-37 ; port 4300, première fois : npx playwright install webkit chromium
 cd frontend && npm run build

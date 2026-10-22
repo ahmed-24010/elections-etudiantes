@@ -1,10 +1,25 @@
 import { SeedRefusedError } from './seed';
-import { assertDemoVoteAllowed, formatResults, ResultsData } from './demo-vote';
+import { assertDemoVoteAllowed, demoResults, formatResults, ResultsData } from './demo-vote';
 
 const data = (rows: { c: string; v: number }[][]): ResultsData => ({
   title: 'Bureau', status: 'VOTING_CLOSED',
   tally: { eligibleCount: 3, participantCount: 2, ballotCount: 2, integrityOk: true, ballotsDigest: 'ab'.repeat(32) },
   positions: rows.map((r, i) => ({ title: `Poste ${i + 1}`, seats: 1, rows: r.map((x) => ({ candidateId: x.c === 'blanc' ? null : x.c, name: x.c, votes: x.v })) })),
+});
+
+describe('démonstration : second tour', () => {
+  const prisma = (second: object | null) => ({
+    election: { findFirst: jest.fn().mockResolvedValueOnce({ id: 'e1', title: 'Bureau du groupe A — L3 Droit public', status: 'RESULTS_PUBLISHED' }).mockResolvedValueOnce(second) },
+    electionTally: { findUnique: jest.fn().mockResolvedValue(null) },
+  });
+  it('« second » sans second tour créé : message clair, rien n’est modifié', async () => {
+    await expect(demoResults({ prisma: prisma(null) as never, target: 'second' })).rejects.toThrow(/Aucun second tour/);
+  });
+  it('« second » vise l’élection liée au premier tour (jamais le premier)', async () => {
+    const p = prisma({ id: 'e2', title: 'Bureau — Tour 2', status: 'VOTING_OPEN' });
+    await expect(demoResults({ prisma: p as never, target: 'second' })).rejects.toThrow(/Pas de décompte.*VOTING_OPEN/);
+    expect(p.electionTally.findUnique).toHaveBeenCalledWith({ where: { electionId: 'e2' } });
+  });
 });
 
 describe('commandes de démonstration du vote', () => {

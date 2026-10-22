@@ -161,6 +161,7 @@ _Sprint 4 sans le vote : état maximal `CANDIDACY_CLOSED` ; ouverture du vote et
 
 - [ ] **6A — Écrans du comité** (mobile d'abord) : suivi du vote en chiffres (D-02, D-31), ouvrir / clôturer (🔐), prolongation unique après panne (D-33, D-38, D-40), ajout exceptionnel d'un électeur (04 §5.2, D-39) ; `docs/GUIDE-COMITE.md`
 - [x] **6B — Publication et procès-verbal** : publication par le comité seulement (D-41), bloquée si intégrité, urne modifiée ou chaîne d'audit rompue (D-45) ; PV PDF par langue, créés ensemble à la publication (D-42, D-43, D-44) ; écran « Résultats » du comité avec « Vérifier l'urne » ; Chromium dans Docker et la CI
+- [x] **6C — Second tour et tableau de bord** : second tour en un clic (D-01, D-46), « PV signé » (D-47), tableau de bord de l'administrateur d'institution (D-48)
 - [ ] Module `results` : décompte, contrôle de l'invariant, empreinte SHA-256 de l'urne (02 §8)
 - [ ] Détection d'égalité → message au comité, création assistée du second tour (D-01)
 - [ ] Publication des résultats (2FA), résultats par poste uniquement (D-12)

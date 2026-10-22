@@ -160,8 +160,8 @@ export class ReportsService {
 
   // ------------------------------------------------------------------ lecture
 
-  private summary(reportId: string, verificationCode: string, generatedAt: Date, ballotsDigest: string, sha256: Record<PvLang, string>, revokedAt: Date | null) {
-    return { reportId, verificationCode, generatedAt, ballotsDigest, sha256, revoked: revokedAt !== null };
+  private summary(reportId: string, verificationCode: string, generatedAt: Date, ballotsDigest: string, sha256: Record<PvLang, string>, revokedAt: Date | null, signedAt: Date | null = null) {
+    return { reportId, verificationCode, generatedAt, ballotsDigest, sha256, revoked: revokedAt !== null, signedAt };
   }
 
   /** Les rapports de l'élection, le plus récent d'abord : une entrée par rapport (avec le SHA-256 de chaque langue). */
@@ -171,7 +171,7 @@ export class ReportsService {
     for (const r of rows) groups.set(r.reportId, [...(groups.get(r.reportId) ?? []), r]);
     return [...groups.values()].map((g) => {
       const sha = Object.fromEntries(g.map((r) => [r.language === ReportLanguage.AR ? 'ar' : 'fr', r.sha256])) as Record<PvLang, string>;
-      return this.summary(g[0].reportId, g[0].verificationCode, g[0].generatedAt, g[0].ballotsDigest, sha, g.every((r) => r.revokedAt) ? g[0].revokedAt : null);
+      return this.summary(g[0].reportId, g[0].verificationCode, g[0].generatedAt, g[0].ballotsDigest, sha, g.every((r) => r.revokedAt) ? g[0].revokedAt : null, g.every((r) => r.signedAt) ? g[0].signedAt : null);
     });
   }
 
@@ -186,6 +186,23 @@ export class ReportsService {
     if (createHash('sha256').update(buffer).digest('hex') !== report.sha256) throw new ConflictException('report_corrupted');
     await this.record(user.id, election.institutionId, electionId, 'REPORT_DOWNLOADED', AuditResult.SUCCESS, info, { reportId: report.reportId, language: lang });
     return { buffer, filename: `${report.verificationCode}-${lang}.pdf` };
+  }
+
+  /**
+   * « PV signé » (D-47) : le comité atteste que l'exemplaire imprimé du rapport le plus récent (non révoqué) a été signé. Pose la date
+   * sur les deux langues. Une régénération crée un NOUVEAU rapport, à faire signer de nouveau. Audité.
+   */
+  async markSigned(actor: AuthUser, electionId: string, info?: RequestInfo) {
+    const election = await this.prisma.election.findUnique({ where: { id: electionId }, select: { institutionId: true, status: true } });
+    if (!election) throw new NotFoundException();
+    const latest = await this.prisma.electionReport.findFirst({ where: { electionId, revokedAt: null }, orderBy: { generatedAt: 'desc' } });
+    if (!latest) throw new NotFoundException('report_not_found');
+    if (latest.signedAt) throw new ConflictException('already_signed');
+    const now = new Date();
+    const res = await this.prisma.electionReport.updateMany({ where: { electionId, reportId: latest.reportId, revokedAt: null, signedAt: null }, data: { signedAt: now, signedById: actor.id } });
+    if (res.count === 0) throw new ConflictException('already_signed');
+    await this.record(actor.id, election.institutionId, electionId, 'REPORT_SIGNED', AuditResult.SUCCESS, info, { reportId: latest.reportId, verificationCode: latest.verificationCode });
+    return { reportId: latest.reportId, signedAt: now };
   }
 
   private record(actorId: string, institutionId: string, electionId: string, action: string, result: AuditResult, info: RequestInfo | undefined, metadata: Record<string, unknown>) {

@@ -668,6 +668,9 @@ model ElectionReport {
   verificationCode String         @db.VarChar(64) // identique dans les deux langues ; contenu du QR en Phase 3
   ballotsDigest    String         @db.Char(64)
   sha256           String         @db.Char(64) // hash du PDF de cette langue
+  // « PV signé » (D-47) : le comité atteste que l'exemplaire imprimé a été signé. Posé sur les deux langues du rapport.
+  signedAt         DateTime?
+  signedById       String?        @db.Char(36)
   generatedById    String         @db.Char(36)
   generatedAt      DateTime       @default(now())
   revokedAt        DateTime?

@@ -17,9 +17,9 @@ const API = '/api/v1';
 @Component({ template: '' })
 class Blank {}
 
-const election = (status: ElectionDetail['status']): ElectionDetail => ({
+const election = (status: ElectionDetail['status'], over: Partial<ElectionDetail> = {}): ElectionDetail => ({
   id: 'e1', institutionId: 'inst-1', academicYearId: 'y1', title: 'Bureau du groupe A', titleAr: null, description: null, status,
-  candidacyStartsAt: null, candidacyEndsAt: null, votingStartsAt: '2026-11-02T08:00:00.000Z', votingEndsAt: '2026-11-04T18:00:00.000Z', positions: [],
+  candidacyStartsAt: null, candidacyEndsAt: null, votingStartsAt: '2026-11-02T08:00:00.000Z', votingEndsAt: '2026-11-04T18:00:00.000Z', positions: [], ...over,
 });
 const person = (id: string, firstName: string, lastName: string) => ({ candidateId: id, firstName, lastName, fullNameAr: null });
 const results = (over: Partial<ResultsView> = {}): ResultsView => ({
@@ -33,13 +33,13 @@ const results = (over: Partial<ResultsView> = {}): ResultsView => ({
 });
 const report = (over: Partial<ReportSummary> = {}): ReportSummary => ({
   reportId: '7d9e2c14-5a3b-4f8e-9c21-0b6a8d4e1f73', verificationCode: 'PV-7D9E2C145A3B', generatedAt: '2026-11-04T19:01:00.000Z', ballotsDigest: 'a'.repeat(64),
-  sha256: { fr: 'b'.repeat(64), ar: 'c'.repeat(64) }, revoked: false, ...over,
+  sha256: { fr: 'b'.repeat(64), ar: 'c'.repeat(64) }, revoked: false, signedAt: null, ...over,
 });
 const urn = (over: Partial<UrnCheck> = {}): UrnCheck => ({
   computedDigest: 'a'.repeat(64), tallyDigest: 'a'.repeat(64), reportDigest: 'a'.repeat(64), reportId: 'r1', matchesTally: true, matchesReport: true, checkedAt: '2026-11-05T08:00:00.000Z', ...over,
 });
 
-async function load(role: Role, status: ElectionDetail['status'], opts: { results?: ResultsView | null; reports?: ReportSummary[]; lang?: 'fr' | 'ar' } = {}) {
+async function load(role: Role, status: ElectionDetail['status'], opts: { results?: ResultsView | null; reports?: ReportSummary[]; lang?: 'fr' | 'ar'; election?: Partial<ElectionDetail> } = {}) {
   TestBed.configureTestingModule({
     imports: [translocoTesting()],
     providers: [
@@ -60,7 +60,7 @@ async function load(role: Role, status: ElectionDetail['status'], opts: { result
     http.expectOne((r) => r.url === url).flush(body, { status, statusText: 'x' });
     await settle(page);
   };
-  await reply(`${API}/elections/e1`, election(status));
+  await reply(`${API}/elections/e1`, election(status, opts.election));
   if (status === 'VOTING_CLOSED' || status === 'RESULTS_PUBLISHED') {
     await reply(`${API}/results/e1`, opts.results ?? results({ status }));
     if (status === 'RESULTS_PUBLISHED') await reply(`${API}/elections/e1/reports`, opts.reports ?? [report()]);
@@ -210,6 +210,83 @@ describe('Résultats (comité)', () => {
       await reply(`${API}/results/e1/verify`, urn({ matchesReport: null, reportDigest: null, reportId: null }));
       expect(q('urn-identical')!.textContent).toContain('committeeResults.urnIdenticalTally');
       expect(q('digest-report')!.textContent).toContain('—');
+    });
+  });
+
+  describe('second tour (D-01, D-46)', () => {
+    it('égalité + résultats publiés : le comité crée le second tour en un clic, dates préremplies, 🔐, puis le lien apparaît', async () => {
+      const { btn, q, el, http, page, reply } = await load('ELECTION_COMMITTEE', 'RESULTS_PUBLISHED');
+      btn('second-round').click();
+      page.detectChanges();
+      const start = el.querySelector<HTMLInputElement>('#sr-votingStartsAt')!.value;
+      const end = el.querySelector<HTMLInputElement>('#sr-votingEndsAt')!.value;
+      expect(start).toMatch(/^\d{4}-\d{2}-\d{2} 08:00$/); // le lendemain, 8 h
+      expect(end).toMatch(/^\d{4}-\d{2}-\d{2} 18:00$/);
+      expect(btn('second-round-confirm').disabled).toBeFalse(); // un seul clic suffit
+      btn('second-round-confirm').click();
+      await settle(page);
+      const req = http.expectOne(`${API}/elections/e1/second-round`);
+      expect(req.request.body).toEqual({ votingStartsAt: new Date(start.replace(' ', 'T')).toISOString(), votingEndsAt: new Date(end.replace(' ', 'T')).toISOString() });
+      req.flush({ id: 'e2', round: 2, status: 'CANDIDACY_CLOSED' });
+      await settle(page);
+      await reply(`${API}/elections/e1`, election('RESULTS_PUBLISHED', { secondRound: { id: 'e2', status: 'CANDIDACY_CLOSED', round: 2 } }));
+      expect(q('notice')).not.toBeNull();
+      expect(q('second-round')).toBeNull();
+      expect(q('second-round-link')).not.toBeNull();
+    });
+
+    it('refus du serveur (dates) : le message s’affiche dans la fenêtre, qui reste ouverte et remplie', async () => {
+      const { btn, q, el, http, page } = await load('ELECTION_COMMITTEE', 'RESULTS_PUBLISHED');
+      btn('second-round').click();
+      page.detectChanges();
+      btn('second-round-confirm').click();
+      await settle(page);
+      http.expectOne(`${API}/elections/e1/second-round`).flush({ message: 'invalid_dates' }, { status: 400, statusText: 'x' });
+      await settle(page);
+      expect(q('dialog-error')).not.toBeNull();
+      expect(el.querySelector<HTMLInputElement>('#sr-votingStartsAt')!.value).not.toBe('');
+    });
+
+    it('un second tour existe déjà : lien vers lui, plus de bouton de création', async () => {
+      const { q } = await load('ELECTION_COMMITTEE', 'RESULTS_PUBLISHED', { election: { secondRound: { id: 'e2', status: 'VOTING_OPEN', round: 2 } } });
+      expect(q('second-round')).toBeNull();
+      expect(q('second-round-link')).not.toBeNull();
+    });
+
+    it('administrateur d’institution : pas de bouton, seulement la mention « comité seulement »', async () => {
+      const { q } = await load('INSTITUTION_ADMIN', 'RESULTS_PUBLISHED');
+      expect(q('second-round')).toBeNull();
+      expect(q('second-round-committee-only')).not.toBeNull();
+    });
+
+    it('résultats non publiés (VOTING_CLOSED) : pas de création de second tour', async () => {
+      const { q } = await load('ELECTION_COMMITTEE', 'VOTING_CLOSED');
+      expect(q('ties')).not.toBeNull();
+      expect(q('second-round')).toBeNull();
+    });
+  });
+
+  describe('« PV signé » (D-47)', () => {
+    it('le comité marque le PV signé (🔐) : le bouton laisse place à la date de signature', async () => {
+      const { btn, q, http, page, reply } = await load('ELECTION_COMMITTEE', 'RESULTS_PUBLISHED');
+      expect(q('signed')).toBeNull();
+      btn('sign').click();
+      await settle(page);
+      http.expectOne(`${API}/elections/e1/report/signed`).flush({ reportId: 'r', signedAt: '2026-11-05T10:00:00.000Z' });
+      await settle(page);
+      await reply(`${API}/elections/e1/reports`, [report({ signedAt: '2026-11-05T10:00:00.000Z' })]);
+      expect(q('signed')).not.toBeNull();
+      expect(q('sign')).toBeNull();
+    });
+
+    it('déjà signé : pas de bouton ; administrateur d’institution : voit « pas encore signé », sans bouton', async () => {
+      const signed = await load('ELECTION_COMMITTEE', 'RESULTS_PUBLISHED', { reports: [report({ signedAt: '2026-11-05T10:00:00.000Z' })] });
+      expect(signed.q('sign')).toBeNull();
+      expect(signed.q('signed')).not.toBeNull();
+      TestBed.resetTestingModule();
+      const ia = await load('INSTITUTION_ADMIN', 'RESULTS_PUBLISHED');
+      expect(ia.q('sign')).toBeNull();
+      expect(ia.q('not-signed')).not.toBeNull();
     });
   });
 });

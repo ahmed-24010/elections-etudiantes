@@ -23,10 +23,10 @@ function create(...roles: Role[]) {
 }
 
 describe('Layout d’administration : menu latéral', () => {
-  it('administrateur d’institution : section « Structure académique » (cinq pages), pas « Vérification »', () => {
+  it('administrateur d’institution : tableau de bord, « Structure académique » (cinq pages), « Élections », pas « Vérification »', () => {
     const { links, titles } = create('INSTITUTION_ADMIN');
-    expect(titles()).toEqual(['nav.academic', 'nav.electionsSection']);
-    expect(links()).toEqual(['/admin/academic/years', '/admin/academic/faculties', '/admin/academic/programs', '/admin/academic/levels', '/admin/academic/groups', '/admin/elections']);
+    expect(titles()).toEqual(['nav.dashboardSection', 'nav.academic', 'nav.electionsSection']);
+    expect(links()).toEqual(['/admin/dashboard', '/admin/academic/years', '/admin/academic/faculties', '/admin/academic/programs', '/admin/academic/levels', '/admin/academic/groups', '/admin/elections']);
   });
 
   it('comité d’élection : section « Élections » seulement', () => {
@@ -42,7 +42,7 @@ describe('Layout d’administration : menu latéral', () => {
   });
 
   it('deux rôles : les deux sections ; super administrateur : ni menu ni bouton ☰', () => {
-    expect(create('INSTITUTION_ADMIN', 'VERIFICATION_OFFICER').titles()).toEqual(['nav.academic', 'nav.electionsSection', 'nav.verification']);
+    expect(create('INSTITUTION_ADMIN', 'VERIFICATION_OFFICER').titles()).toEqual(['nav.dashboardSection', 'nav.academic', 'nav.electionsSection', 'nav.verification']);
     TestBed.resetTestingModule();
     const sa = create('SUPER_ADMIN');
     expect(sa.el.querySelector('.app-sidebar')).toBeNull();

@@ -18,6 +18,8 @@ export interface DemoVoteDeps {
   prisma: PrismaService;
   lifecycle: VotingLifecycleService;
   elections: ElectionsService;
+  /** `second` : la commande vise le second tour de l'élection de démo (créé par le comité après une égalité), pas le premier tour. */
+  target?: 'first' | 'second';
 }
 
 const MINUTE = 60_000;
@@ -31,15 +33,18 @@ const CONDITION_TEXT: Record<string, string> = {
   voting_not_started: 'l’heure de début du vote n’est pas atteinte',
 };
 
-async function demoElection(prisma: PrismaService) {
+async function demoElection(prisma: PrismaService, target: 'first' | 'second' = 'first') {
   const election = await prisma.election.findFirst({ where: { title: SEED_ELECTION.title } });
   if (!election) throw new SeedRefusedError(`Élection de démo « ${SEED_ELECTION.title} » introuvable : lancez d’abord « npm run seed » puis « npm run seed:demo ».`);
-  return election;
+  if (target === 'first') return election;
+  const second = await prisma.election.findFirst({ where: { parentElectionId: election.id, status: { not: ElectionStatus.CANCELLED } }, orderBy: { round: 'desc' } });
+  if (!second) throw new SeedRefusedError('Aucun second tour : publiez les résultats du premier tour (égalité) puis créez-le depuis l’écran « Résultats » du comité.');
+  return second;
 }
 
 /** Avance les dates, ferme les candidatures et ouvre le vote par le code de l'application (liste électorale gelée). */
-export async function demoOpenVote({ prisma, lifecycle, elections }: DemoVoteDeps, now = Date.now()): Promise<string[]> {
-  const election = await demoElection(prisma);
+export async function demoOpenVote({ prisma, lifecycle, elections, target }: DemoVoteDeps, now = Date.now()): Promise<string[]> {
+  const election = await demoElection(prisma, target);
   const out: string[] = [];
   if (election.status === ElectionStatus.VOTING_OPEN) return ['Le vote est déjà ouvert.'];
   if (election.status !== ElectionStatus.CANDIDACY_OPEN && election.status !== ElectionStatus.CANDIDACY_CLOSED) {
@@ -79,8 +84,8 @@ export async function demoOpenVote({ prisma, lifecycle, elections }: DemoVoteDep
 }
 
 /** Ferme le vote (la fin est ramenée à maintenant) : l'application clôt et lance le décompte. */
-export async function demoCloseVote({ prisma, lifecycle }: DemoVoteDeps, now = Date.now()): Promise<string[]> {
-  const election = await demoElection(prisma);
+export async function demoCloseVote({ prisma, lifecycle, target }: DemoVoteDeps, now = Date.now()): Promise<string[]> {
+  const election = await demoElection(prisma, target);
   if (election.status !== ElectionStatus.VOTING_OPEN) throw new SeedRefusedError(`Le vote n’est pas ouvert (état « ${election.status} »).`);
   await prisma.election.update({ where: { id: election.id }, data: { votingEndsAt: new Date(now - MINUTE) } });
   await lifecycle.close(null, election.id, null);
@@ -121,8 +126,8 @@ export function formatResults(d: ResultsData): string[] {
   return out;
 }
 
-export async function demoResults({ prisma }: Pick<DemoVoteDeps, 'prisma'>): Promise<string[]> {
-  const election = await demoElection(prisma);
+export async function demoResults({ prisma, target }: Pick<DemoVoteDeps, 'prisma' | 'target'>): Promise<string[]> {
+  const election = await demoElection(prisma, target);
   const tally = await prisma.electionTally.findUnique({ where: { electionId: election.id } });
   if (!tally) throw new SeedRefusedError(`Pas de décompte : l’élection est « ${election.status} ». Fermez le vote avec « npm run demo:close-vote ».`);
   const positions = await prisma.position.findMany({ where: { electionId: election.id }, orderBy: { displayOrder: 'asc' } });

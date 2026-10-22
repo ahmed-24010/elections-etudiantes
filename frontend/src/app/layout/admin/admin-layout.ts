@@ -19,6 +19,11 @@ interface MenuSection {
 
 export const ADMIN_MENU: readonly MenuSection[] = [
   {
+    title: 'nav.dashboardSection',
+    role: 'INSTITUTION_ADMIN',
+    items: [{ label: 'nav.dashboard', path: '/admin/dashboard' }],
+  },
+  {
     title: 'nav.academic',
     role: 'INSTITUTION_ADMIN',
     items: [

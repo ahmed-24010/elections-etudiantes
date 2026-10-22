@@ -86,3 +86,12 @@ export class PositionDto {
   displayOrder?: number;
 }
 export class UpdatePositionDto extends PartialType(PositionDto) {}
+
+/** Corps de POST /elections/:id/second-round (D-01, D-46) : les nouvelles dates du vote, confirmées par le comité. */
+export class SecondRoundDto {
+  @IsDateString({ strict: true }) @MaxLength(40)
+  votingStartsAt: string;
+
+  @IsDateString({ strict: true }) @MaxLength(40)
+  votingEndsAt: string;
+}

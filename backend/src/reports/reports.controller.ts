@@ -22,6 +22,15 @@ export class ReportsController {
     return this.reports.generate(u, id, requestInfo(req));
   }
 
+  /** 🔐 « PV signé » (D-47) : l'exemplaire imprimé du rapport le plus récent a été signé. Comité seulement. */
+  @Post('elections/:id/report/signed')
+  @HttpCode(200)
+  @RequirePermission('report:sign')
+  @ScopeFrom('election', 'id')
+  markSigned(@CurrentUser() u: AuthUser, @Param('id') id: string, @Req() req: Request) {
+    return this.reports.markSigned(u, id, requestInfo(req));
+  }
+
   @Get('elections/:id/reports')
   @RequirePermission('report:read')
   @ScopeFrom('election', 'id')

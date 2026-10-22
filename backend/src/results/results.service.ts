@@ -7,7 +7,7 @@ import type { AuthUser } from '../common/authz/auth-user';
 import { AuthzService } from '../common/authz/authz.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from '../reports/reports.service';
-import { analyzePosition, detailPublished } from './tally';
+import { analyzePosition, detailPublished, tiedPositions } from './tally';
 
 const DIGEST_PAGE = 2_000;
 
@@ -156,10 +156,7 @@ export class ResultsService {
     if (!staff) throw new NotFoundException();
     const positions = await this.prisma.position.findMany({ where: { electionId }, orderBy: { displayOrder: 'asc' } });
     const results = await this.prisma.positionResult.findMany({ where: { electionId, candidateId: { not: null } } });
-    const tied = positions.flatMap((p) => {
-      const analysis = analyzePosition(results.filter((r) => r.positionId === p.id).map((r) => ({ candidateId: r.candidateId as string, votes: r.votes })), p.seats);
-      return analysis.tie ? [{ positionId: p.id, title: p.title, titleAr: p.titleAr, seats: p.seats - analysis.winners.length, candidateIds: analysis.tiedIds }] : [];
-    });
+    const tied = tiedPositions(positions, results).map((t) => ({ positionId: t.position.id, title: t.position.title, titleAr: t.position.titleAr, seats: t.remainingSeats, candidateIds: t.tiedIds }));
     return { parentElectionId: election.id, round: election.round + 1, institutionId: election.institutionId, academicYearId: election.academicYearId, positions: tied };
   }
 

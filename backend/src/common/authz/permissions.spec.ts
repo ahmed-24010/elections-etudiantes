@@ -65,6 +65,15 @@ describe('permissions.ts (03 §5)', () => {
     for (const r of [Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'report:read')).toBe(false);
   });
 
+  it('second tour et « PV signé » : comité seulement ; tableau de bord : administrateur d’institution seulement (D-46 à D-48)', () => {
+    for (const p of ['election:second_round:create', 'report:sign'] as const) {
+      expect(can(Role.ELECTION_COMMITTEE, p)).toBe(true);
+      for (const r of [Role.INSTITUTION_ADMIN, Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, p)).toBe(false);
+    }
+    expect(can(Role.INSTITUTION_ADMIN, 'dashboard:read')).toBe(true);
+    for (const r of [Role.ELECTION_COMMITTEE, Role.SUPER_ADMIN, Role.VERIFICATION_OFFICER, Role.STUDENT]) expect(can(r, 'dashboard:read')).toBe(false);
+  });
+
   it('le comité calcule les résultats, pas l’administrateur d’institution', () => {
     expect(can(Role.ELECTION_COMMITTEE, 'results:compute')).toBe(true);
     expect(can(Role.INSTITUTION_ADMIN, 'results:compute')).toBe(false);
@@ -76,7 +85,7 @@ describe('permissions.ts (03 §5)', () => {
       'role:assign:VERIFICATION_OFFICER', 'role:assign:ELECTION_COMMITTEE', 'role:revoke', 'user:suspend',
       'enrollment:review', 'enrollment:expire', 'student:import', 'election:voting:open', 'election:voting:close',
       'election:voting:extend', 'election:cancel', 'voter_roll:add', 'candidate:review', 'candidate:add', 'results:compute', 'results:publish',
-      'report:generate', 'report:revoke',
+      'report:generate', 'report:sign', 'report:revoke', 'election:second_round:create',
     ];
     for (const p of expected) {
       expect(SENSITIVE.has(p)).toBe(true);

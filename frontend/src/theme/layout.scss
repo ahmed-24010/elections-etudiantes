@@ -1009,3 +1009,24 @@ app-admin-layout {
   display: block;
   margin-block-end: 0.4rem;
 }
+
+// Tableau de bord (D-48) : quatre chiffres en grille 2×2 sur téléphone, 4 colonnes dès 576 px ; une ligne par élection.
+.app-stats-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.app-dash-item {
+  padding-block: 0.6rem;
+  border-block-end: 1px solid var(--app-border);
+  &:last-child {
+    border-block-end: 0;
+  }
+}
+// D-37 : les liens du tableau de bord sont des cibles tactiles de 44 px au moins.
+.app-dash-item a:not(.badge) {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}

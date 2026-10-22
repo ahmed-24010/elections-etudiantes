@@ -45,6 +45,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/academic-list-page').then((m) => m.AcademicListPage),
       })),
       {
+        path: 'dashboard',
+        canActivate: [roleGuard('INSTITUTION_ADMIN')],
+        loadComponent: () => import('./features/admin/dashboard-page').then((m) => m.DashboardPage),
+      },
+      {
         path: 'elections',
         pathMatch: 'full',
         canActivate: [anyRoleGuard('INSTITUTION_ADMIN', 'ELECTION_COMMITTEE')],

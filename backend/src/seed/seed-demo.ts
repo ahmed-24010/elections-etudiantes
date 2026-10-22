@@ -28,6 +28,10 @@ interface DemoStudent {
 export const DEMO_STUDENTS: DemoStudent[] = [
   { email: `aicha@${DOMAIN}`, firstName: 'Aïcha', lastName: 'Démo', fullNameAr: 'عائشة', studentNumber: 'DEMO-0001', program: 'DPU', group: 'A' },
   { email: `omar@${DOMAIN}`, firstName: 'Omar', lastName: 'Démo', fullNameAr: 'عمر', studentNumber: 'DEMO-0002', program: 'DPU', group: 'A' },
+  // Mariam et Yacoub : éligibles à l'élection de démo (même filière, même niveau, même groupe que Aïcha et Omar). À quatre électeurs,
+  // le scénario « égalité → second tour » est possible (2 voix contre 2) et le détail des voix est publié (3 votants au moins, D-32).
+  { email: `mariam@${DOMAIN}`, firstName: 'Mariam', lastName: 'Démo', fullNameAr: 'مريم', studentNumber: 'DEMO-0004', program: 'DPU', group: 'A' },
+  { email: `yacoub@${DOMAIN}`, firstName: 'Yacoub', lastName: 'Démo', fullNameAr: 'يعقوب', studentNumber: 'DEMO-0005', program: 'DPU', group: 'A' },
   { email: `sara@${DOMAIN}`, firstName: 'Sara', lastName: 'Démo', fullNameAr: 'سارة', studentNumber: 'DEMO-0003', program: 'DP', group: 'A' },
 ];
 export const DEMO_COMMITTEE = [1, 2, 3].map((n) => `comite${n}@${DOMAIN}`);

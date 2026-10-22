@@ -65,7 +65,7 @@ import { electionTitle, statusClass } from './election-ui';
             <tbody>
               @for (e of visible(); track e.id) {
                 <tr>
-                  <td>{{ title(e) }}</td>
+                  <td>{{ title(e) }}@if ((e.round ?? 1) > 1) { <span class="badge text-bg-warning ms-1">{{ 'elections.round' | transloco: { round: e.round } }}</span> }</td>
                   <td><span class="badge" [class]="badge(e)">{{ 'elections.status.' + e.status | transloco }}</span></td>
                   <td><bdi dir="ltr">{{ e.votingStartsAt | date: 'yyyy-MM-dd HH:mm' }}</bdi></td>
                   <td class="app-actions">

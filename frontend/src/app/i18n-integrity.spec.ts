@@ -12,6 +12,7 @@ import { AcademicListPage } from './features/admin/academic-list-page';
 import { QueuePage } from './features/verification/queue-page';
 import { ReviewPage } from './features/verification/review-page';
 import { StudentHome } from './features/student/student-home';
+import { DashboardPage } from './features/admin/dashboard-page';
 import { CommitteeResultsPage } from './features/elections/committee-results-page';
 import { CommitteeVotePage } from './features/elections/committee-vote-page';
 import { CandidatesReviewPage } from './features/elections/candidates-review-page';
@@ -123,6 +124,7 @@ describe('Traductions : aucune clé brute à l’écran', () => {
     ['élections : validation des candidatures', CandidatesReviewPage],
     ['élections : suivi du vote (comité)', CommitteeVotePage],
     ['élections : résultats et procès-verbal (comité)', CommitteeResultsPage],
+    ['tableau de bord (administrateur d’institution)', DashboardPage],
     ['élections : mes élections', MyElectionsPage],
     ['élections : une élection (étudiant)', MyElectionPage],
   ];
@@ -191,6 +193,7 @@ describe('Traductions : aucune clé brute à l’écran', () => {
       ...['report_not_found', 'RESULTS_NOT_AVAILABLE'].map((message) => new HttpErrorResponse({ status: 404, error: { message } })),
       ...['report_corrupted', 'RESULTS_NOT_READY'].map((message) => new HttpErrorResponse({ status: 409, error: { message } })),
       new HttpErrorResponse({ status: 409, error: { message: 'already_extended' } }),
+      ...['second_round_exists', 'no_tie', 'already_signed'].map((message) => new HttpErrorResponse({ status: 409, error: { message } })),
       ...['outage_invalid', 'extension_not_after_current', 'extension_exceeds_outage', 'extension_exceeds_24h'].map((message) => new HttpErrorResponse({ status: 422, error: { message } })),
       new HttpErrorResponse({ status: 403, error: { message: 'cannot_review_own_candidacy' } }),
       new HttpErrorResponse({ status: 400, error: { message: 'program_not_available_for_level' } }),

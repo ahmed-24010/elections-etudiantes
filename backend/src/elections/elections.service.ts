@@ -73,6 +73,9 @@ export class ElectionsService {
       candidacyEndsAt: e.candidacyEndsAt,
       votingStartsAt: e.votingStartsAt,
       votingEndsAt: e.votingEndsAt,
+      // Second tour (D-01) : le tour de cette élection et l'élection du tour précédent.
+      round: e.round,
+      parentElectionId: e.parentElectionId,
     };
   }
 
@@ -99,6 +102,8 @@ export class ElectionsService {
       },
       committeeCount: await this.committeeCount(electionId),
       minCommittee: MIN_COMMITTEE,
+      // Le second tour actif de cette élection, s'il existe (le comité n'en crée qu'un à la fois, D-46).
+      secondRound: await this.prisma.election.findFirst({ where: { parentElectionId: electionId, status: { not: ElectionStatus.CANCELLED } }, select: { id: true, status: true, round: true } }),
     };
   }
 

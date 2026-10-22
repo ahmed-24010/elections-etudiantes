@@ -17,7 +17,9 @@
     "groups": "Groupes",
     "toggleMenu": "Afficher ou masquer le menu",
     "electionsSection": "Élections",
-    "elections": "Élections"
+    "elections": "Élections",
+    "dashboardSection": "Tableau de bord",
+    "dashboard": "Vue d'ensemble"
   },
   "home": {
     "title": "Élections étudiantes",
@@ -164,7 +166,10 @@
     "reportNotFound": "Aucun procès-verbal n'est disponible dans cette langue.",
     "reportCorrupted": "Le fichier du procès-verbal ne correspond plus à son empreinte : il ne peut pas être téléchargé. Regénérez le PV.",
     "resultsNotAvailable": "Les résultats ne sont pas encore disponibles.",
-    "resultsNotReady": "Le décompte n'est pas encore prêt."
+    "resultsNotReady": "Le décompte n'est pas encore prêt.",
+    "secondRoundExists": "Un second tour existe déjà pour cette élection.",
+    "noTie": "Aucune égalité à départager : il n'y a pas de second tour à créer.",
+    "alreadySigned": "Le procès-verbal est déjà marqué signé."
   },
   "institution": {
     "university": "Université de Nouakchott",
@@ -451,7 +456,9 @@
       "eligible": "Étudiants éligibles",
       "cancelReason": "Motif de l'annulation (obligatoire)",
       "votePage": "Suivi du vote",
-      "resultsPage": "Résultats et procès-verbal"
+      "resultsPage": "Résultats et procès-verbal",
+      "parentLink": "Voir le tour précédent",
+      "nextRoundLink": "Voir le second tour"
     },
     "candidate": {
       "status": {
@@ -517,7 +524,8 @@
       "review": "Examen",
       "voting": "Vote",
       "results": "Résultats"
-    }
+    },
+    "round": "Tour {{round}}"
   },
   "voting": {
     "title": "Voter",
@@ -688,6 +696,43 @@
       "integrity_failed": "Le contrôle d'intégrité a échoué (votants ≠ bulletins).",
       "tally_stale": "L'urne n'est plus celle du décompte (nombre de bulletins ou empreinte modifiés).",
       "audit_chain_broken": "La chaîne du journal d'audit est rompue : la publication est bloquée tant qu'elle n'est pas vérifiée."
+    },
+    "signed": "Le procès-verbal est marqué signé.",
+    "markSigned": "Marquer le PV signé",
+    "markSignedHelp": "À faire une fois l'exemplaire imprimé signé par les membres du comité. Un code 2FA récent est demandé ; l'action est tracée.",
+    "notSigned": "Le procès-verbal n'a pas encore été marqué signé par le comité.",
+    "signedOn": "Procès-verbal signé le {{date}}.",
+    "secondRound": {
+      "create": "Créer le second tour",
+      "help": "Crée une élection liée à celle-ci, limitée aux candidats à égalité, avec la même liste électorale et le même comité. Confirmez les dates du vote ; un code 2FA récent est demandé.",
+      "votingStartsAt": "Début du vote du second tour",
+      "votingEndsAt": "Fin du vote du second tour",
+      "confirm": "Créer le second tour",
+      "created": "Le second tour est créé. Le vote s'ouvrira à l'heure prévue, ou à la main par le comité.",
+      "view": "Voir le second tour (tour {{round}})",
+      "committeeOnly": "Seul le comité crée le second tour."
     }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble de l'institution. Des chiffres seulement : jamais de liste de votants.",
+    "counts": {
+      "votingOpen": "Votes ouverts",
+      "upcoming": "À venir",
+      "verifications": "Inscriptions à vérifier",
+      "reports": "PV à signer"
+    },
+    "inProgress": "Élections en cours",
+    "round": "Tour {{round}}",
+    "asOf": "chiffres arrêtés à {{time}}",
+    "noneInProgress": "Aucune élection en cours.",
+    "upcoming": "Élections à venir",
+    "startsAt": "Début du vote :",
+    "noneUpcoming": "Aucune élection à venir.",
+    "verificationsTitle": "Inscriptions en attente de vérification",
+    "verificationsText": "Inscriptions en attente : {{count}}. Elles sont traitées par le vérificateur.",
+    "reportsTitle": "Procès-verbaux à signer",
+    "noReportToSign": "Aucun procès-verbal en attente de signature.",
+    "withoutReport": "Résultats publiés sans procès-verbal : {{count}}. Ouvrez l'élection pour le créer."
   }
 }
